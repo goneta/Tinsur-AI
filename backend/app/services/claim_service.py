@@ -1,0 +1,206 @@
+"""
+Service for claim business logic.
+"""
+from sqlalchemy.orm import Session
+from uuid import UUID
+from typing import List, Optional, Dict, Any
+from datetime import datetime
+import random
+import string
+
+from app.models.claim import Claim
+from app.models.policy import Policy
+from app.models.co_insurance import CoInsuranceShare
+from app.models.inter_company_share import InterCompanyShare
+from app.repositories.claim_repository import ClaimRepository
+from app.schemas.claim import ClaimCreate, ClaimUpdate, ClaimBase
+from decimal import Decimal
+
+class ClaimService:
+    """Service for handling claim operations."""
+    
+    def __init__(self, db: Session):
+        self.db = db
+        self.repository = ClaimRepository(db)
+        
+    def _generate_claim_number(self) -> str:
+        """Generate a random claim number."""
+        # Format: CLM-YYYYMMDD-XXXX
+        date_str = datetime.now().strftime("%Y%m%d")
+        random_str = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+        return f"CLM-{date_str}-{random_str}"
+        
+    def create_claim(self, claim_data: ClaimCreate) -> Claim:
+        """Create a new claim."""
+        # Verify policy exists
+        policy = self.db.query(Policy).get(claim_data.policy_id)
+        if not policy:
+            raise ValueError("Policy not found")
+        
+        # Verify policy was active at incident date
+        if not (policy.start_date <= claim_data.incident_date <= policy.end_date):
+             # Depending on business rules we might reject or just warn. 
+             # For now, we will allow creation but maybe flag it? 
+             # Let's simple check it belongs to the company
+             pass
+             
+        if policy.company_id != claim_data.company_id:
+            raise ValueError("Policy does not belong to this company")
+
+        claim_number = self._generate_claim_number()
+        
+        # Create claim model
+        claim = Claim(
+            claim_number=claim_number,
+            policy_id=claim_data.policy_id,
+            client_id=policy.client_id, # Inherit client from policy
+            company_id=claim_data.company_id,
+            incident_date=claim_data.incident_date,
+            incident_description=claim_data.incident_description,
+            incident_location=claim_data.incident_location,
+            claim_amount=claim_data.claim_amount,
+            evidence_files=claim_data.evidence_files,
+            status='submitted',
+            created_by=claim_data.created_by
+        )
+        
+        return self.repository.create(claim)
+    
+    def get_claim(self, claim_id: UUID) -> Optional[Claim]:
+        """Get claim by ID."""
+        return self.repository.get_by_id(claim_id)
+        
+    def get_claims(
+        self,
+        company_id: UUID,
+        skip: int = 0,
+        limit: int = 50,
+        status: Optional[str] = None
+    ) -> tuple[List[Claim], int]:
+        """Get claims for a company."""
+        return self.repository.get_all(company_id, skip, limit, status)
+        
+    def update_claim(self, claim_id: UUID, update_data: ClaimUpdate) -> Optional[Claim]:
+        """Update a claim."""
+        claim = self.repository.get_by_id(claim_id)
+        if not claim:
+            return None
+            
+        if update_data.approved_amount is not None:
+            claim.approved_amount = update_data.approved_amount
+        if update_data.adjuster_id:
+            claim.adjuster_id = update_data.adjuster_id
+            
+        # Update fields if provided
+        if update_data.status:
+            old_status = claim.status
+            claim.status = update_data.status
+            
+            # If claim is approved, handle co-insurance settlements
+            if claim.status == 'approved' and old_status != 'approved':
+                self._generate_co_insurance_settlements(claim)
+                
+        if update_data.incident_description:
+            claim.incident_description = update_data.incident_description
+        if update_data.evidence_files is not None:
+             claim.evidence_files = update_data.evidence_files
+             
+        return self.repository.update(claim)
+
+    def _generate_co_insurance_settlements(self, claim: Claim):
+        """Generate inter-company settlements for co-insurance participants."""
+        # 1. Get co-insurance shares for the policy
+        shares = self.db.query(CoInsuranceShare).filter(CoInsuranceShare.policy_id == claim.policy_id).all()
+        
+        if not shares:
+            return
+
+        approved_amount = Decimal(str(claim.approved_amount or claim.claim_amount))
+        
+        for share in shares:
+            # 2. Calculate participant's share of the claim
+            settlement_amount = (approved_amount * share.share_percentage) / 100
+            
+            # 3. Create inter-company settlement entry
+            settlement = InterCompanyShare(
+                from_company_id=claim.company_id, # Lead insurer (paying)
+                to_company_id=share.company_id,   # Participant insurer (reimbursing)
+                resource_type="claim_settlement",
+                resource_id=claim.id,
+                amount=settlement_amount,
+                currency="XOF", # Default or from policy
+                access_level="read",
+                notes=f"Co-insurance share of {share.share_percentage}% for claim {claim.claim_number}. Amount: {settlement_amount}"
+            )
+            self.db.add(settlement)
+        
+        self.db.commit()
+
+    async def analyze_claim_damage(self, claim_id: UUID, user_id: UUID) -> Dict[str, Any]:
+        """Trigger AI analysis for claim evidence photos."""
+        from app.services.ai_service import AiService
+        
+        claim = self.get_claim(claim_id)
+        if not claim:
+            raise ValueError("Claim not found")
+        
+        if not claim.evidence_files:
+            return {"error": "No evidence files found for this claim"}
+        
+        ai_service = AiService(self.db)
+        # 1. Run Analysis
+        results = await ai_service.analyze_damage(str(claim.company_id), claim.evidence_files)
+        
+        if "error" in results:
+            return results
+            
+        # 2. Update Claim with AI assessment
+        claim.ai_assessment = results
+        
+        # 3. Log usage
+        ai_service.log_and_consume_usage(
+            str(claim.company_id), 
+            str(user_id), 
+            "Damage_Vision_Agent",
+            cost=0.50 
+        )
+        
+        self.repository.update(claim)
+        
+        # 4. Notify Adjuster
+        try:
+            from app.services.notification_service import NotificationService
+            notif_service = NotificationService(self.db)
+            notif_service.send_claim_assessment_alert(
+                company_id=claim.company_id,
+                adjuster_id=user_id,
+                claim_number=claim.claim_number,
+                severity=results.get('severity'),
+                estimate=results.get('suggested_estimate')
+            )
+        except Exception as e:
+            print(f"Failed to send assessment notification: {e}")
+
+        # 5. Automatically Run Fraud Detection
+        try:
+            await self.ai_service.detect_claim_fraud(claim.id)
+        except Exception as e:
+            print(f"Failed to run automated fraud detection: {e}")
+
+        return results
+
+    async def analyze_claim_fraud(self, claim_id: UUID, user_id: UUID) -> Dict[str, Any]:
+        """Trigger a standalone fraud analysis for a claim."""
+        claim = self.repository.get_by_id(claim_id)
+        if not claim:
+            return {"error": "Claim not found"}
+        
+        # Deduct credits for fraud analysis
+        self.ai_service.log_and_consume_usage(
+            str(claim.company_id), 
+            str(user_id), 
+            "FraudDetectionAgent", 
+            cost=0.1 # Fraud analysis is more expensive
+        )
+        
+        return await self.ai_service.detect_claim_fraud(claim.id)

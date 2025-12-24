@@ -1,0 +1,31 @@
+---
+description: Procedures for preventing and diagnosing backend hangs (infinite loading).
+globs: ["backend/**/*"]
+---
+
+# Backend Hang Prevention and Diagnosis
+
+## Context
+When the user reports that the "website keeps loading" or "loading non-stop," it often indicates that the backend process is hung or deadlocked, causing API requests to pend indefinitely.
+
+## Diagnosis Steps
+
+1.  **Check Running Processes**: Run `tasklist` (Windows) or `ps` (Linux) to check for multiple python/uvicorn processes.
+    - `tasklist /FI "IMAGENAME eq python.exe"`
+2.  **Check Terminal Output**: Look at the active terminal output for `uvicorn`. If it hasn't printed logs for a long time despite requests, it might be hung.
+3.  **Check Connection**: Try a simple `curl` request to the backend health or OpenAPI endpoint.
+    - `curl http://localhost:8000/openapi.json`
+    - If `curl` hangs, the backend is definitely hung.
+
+## Remediation Steps
+
+1.  **Force Kill**: Do not rely on `CTRL+C` in the terminal if the process is unresponsive. Use the system kill command.
+    - Windows: `taskkill /F /IM python.exe`
+2.  **Restart**: Restart the server immediately after killing.
+    - `python -m uvicorn app.main:app --reload`
+3.  **Verify**: Run the `curl` check again to ensure it responds immediately.
+
+## Prevention
+
+- **Database Locks**: Be careful with Alembic migrations running while the server is active. This can cause database locks that freeze the server. Always stop the server before running complex migrations if possible, or kill processes if a migration hangs.
+- **Infinite Loops**: Review recent changes for `while True` loops or recursions in python code.

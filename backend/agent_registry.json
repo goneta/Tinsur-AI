@@ -1,0 +1,100 @@
+[
+    {
+        "name": "orchestrator_agent",
+        "port": 8025,
+        "path": "agents/a2a_multi_ai_agents/__main__.py",
+        "type": "business",
+        "enabled": true
+    },
+    {
+        "name": "claims_agent",
+        "port": 8019,
+        "path": "agents/a2a_claims_agent/__main__.py",
+        "type": "business",
+        "enabled": true
+    },
+    {
+        "name": "quote_agent",
+        "port": 8020,
+        "path": "agents/a2a_quote_agent/__main__.py",
+        "type": "business",
+        "enabled": true
+    },
+    {
+        "name": "policy_agent",
+        "port": 8021,
+        "path": "agents/a2a_policy_agent/__main__.py",
+        "type": "business",
+        "enabled": true
+    },
+    {
+        "name": "finance_agent",
+        "port": 8022,
+        "path": "agents/a2a_finance_agent/__main__.py",
+        "type": "business",
+        "enabled": true
+    },
+    {
+        "name": "support_agent",
+        "port": 8023,
+        "path": "agents/a2a_support_agent/__main__.py",
+        "type": "business",
+        "enabled": true
+    },
+    {
+        "name": "tickets_agent",
+        "port": 8026,
+        "path": "agents/a2a_tickets_agent/__main__.py",
+        "type": "business",
+        "enabled": true
+    },
+    {
+        "name": "referrals_agent",
+        "port": 8027,
+        "path": "agents/a2a_referrals_agent/__main__.py",
+        "type": "business",
+        "enabled": true
+    },
+    {
+        "name": "loyalty_agent",
+        "port": 8028,
+        "path": "agents/a2a_loyalty_agent/__main__.py",
+        "type": "business",
+        "enabled": true
+    },
+    {
+        "name": "telematics_agent",
+        "port": 8029,
+        "path": "agents/a2a_telematics_agent/__main__.py",
+        "type": "business",
+        "enabled": true
+    },
+    {
+        "name": "ml_agent",
+        "port": 8030,
+        "path": "agents/a2a_ml_agent/__main__.py",
+        "type": "business",
+        "enabled": true
+    },
+    {
+        "name": "ocr_agent",
+        "port": 8018,
+        "path": "agents/a2a_ocr_agent/__main__.py",
+        "type": "business",
+        "enabled": true
+    },
+    {
+        "name": "tool_agent",
+        "port": 8002,
+        "path": "agents/a2a_tool_agent/__main__.py",
+        "type": "structural",
+        "enabled": true
+    },
+    {
+        "name": "memory_agent",
+        "port": 8031,
+        "path": "agents/a2a_persistent_storage_agent/__main__.py",
+        "type": "structural",
+        "enabled": true
+    }
+]

@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# AI Documentation (Consolidated Walkthroughs, Plans, and Tasks)
+ai_docs/references/walkthroughs/
+ai_docs/references/implementation_plan/
+ai_docs/references/ai_tasks/
+
+# Environment
+.env
+.env.local
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# Database
+*.db
+*.sqlite
+
+# Logs
+*.log
+logs/
+
+# Uploads
+uploads/
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db

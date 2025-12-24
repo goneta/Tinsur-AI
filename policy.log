@@ -1,0 +1,7 @@
+INFO:     Started server process [29684]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8021 (Press CTRL+C to quit)
+Starting a2a_policy_agent on port 8021
+INFO:     127.0.0.1:53647 - "POST /send-message HTTP/1.1" 200 OK
+^C

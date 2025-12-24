@@ -1,0 +1,7 @@
+INFO:     Started server process [9292]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8020 (Press CTRL+C to quit)
+Starting a2a_quote_agent on port 8020
+INFO:     127.0.0.1:53525 - "POST /send-message HTTP/1.1" 200 OK
+^C

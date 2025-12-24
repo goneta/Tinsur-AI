@@ -1,0 +1,40 @@
+---
+description: Procedures for preventing React DOM/Hydration instability and "removeChild" errors.
+globs: "frontend/**/*"
+alwaysApply: true
+---
+# Prevention: React DOM Instability
+
+This rule outlines how to avoid `Runtime NotFoundError: Failed to execute 'removeChild' on 'Node'` and hydration mismatches.
+
+## 1. Memoization of Complex Props
+- **Mandatory**: Always wrap `ColumnDef`, `DataTable` columns, or large configuration objects in `useMemo`.
+- **Reason**: Unstable column references cause the entire table implementation (e.g., TanStack Table) to reconstruct the DOM, which can conflict with Portals (Dialogs/Modals) triggered by the same state change.
+
+## 2. Unique IDs in Portals
+- **Standard**: Components mounted via Portals (Dialogs, Popovers, Drawers) MUST use unique ID prefixes if multiple instances exist in the DOM.
+- **Example**: `id={`${prefix}-email-field`}` instead of a static `id="email-field"`.
+
+## 3. Keyed Portals
+- **Best Practice**: When toggling between "Create" and "Edit" modes for the same dialog component, use a unique `key` to force a clean unmount/remount.
+- **Example**: `<ClientDialog key={editingClient ? 'edit' : 'create'} ... />`
+
+## 4. Hydration Safety
+- **Mandatory**: Use an `isMounted` pattern for any interactive UI that relies on client-side state or complex rendering (e.g., Search Selects, Data Tables).
+- **Example**:
+  ```tsx
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null; // or a stable placeholder
+  ```
+- **Reason**: Prevents "Hydration Mismatch" where the server-rendered HTML doesn't match the client's initial state, causing React to lose track of the DOM tree and throw `removeChild` errors during portals/modals.
+
+## 5. Blocking API Ban
+- **Mandatory**: NEVER use `confirm()`, `alert()`, or `prompt()` inside event handlers that trigger state changes, navigation, or component unmounting (especially Portals/Modals).
+- **Reason**: These APIs arrest the JavaScript event loop. If they occur during a React commit/unmount phase, they prevent React from finishing its DOM cleanup, causing `removeChild` errors when the thread resumes.
+- **Alternative**: Use non-blocking UI like `Toast` for notifications or custom `Dialog` components for confirmations.
+
+## 6. Verification Checklist
+- [ ] No `removeChild` errors in console when opening/closing modals.
+- [ ] Table does not flicker or lose focus when parent state changes.
+- [ ] No duplicate ID warnings in the browser console.

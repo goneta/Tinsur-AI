@@ -1,0 +1,19 @@
+---
+description: Rule for handling Build Errors
+globs: **/*.tsx, **/*.ts, **/*.js, **/*.jsx
+alwaysApply: false
+---
+
+# Build Integrity Rules
+
+## 1. Missing Components
+If a build error indicates `Module not found` for a component within `@/components/ui/`:
+- **Verify Existence**: Check if the file exists in `frontend/components/ui`.
+- **Install Missing**: Use `npx shadcn@latest add [component-name]` to install it.
+- **Do Not Manually Create**: Avoid simple placeholder files for library components; use the CLI to ensure full functionality and styling.
+
+## 2. Path Aliases
+- Ensure `@/` correctly points to the `src` or `frontend` root as defined in `tsconfig.json`.
+
+## 3. Dependency Checks
+- When adding new imports, verify they are listed in `package.json`.

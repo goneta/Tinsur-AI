@@ -1,0 +1,37 @@
+---
+description: Ensure Next.js 15+ page components await `params` and `searchParams`.
+globs: ["frontend/app/**/page.tsx", "frontend/app/**/layout.tsx"]
+---
+
+# Next.js 15 Async Params Rule
+
+## Context
+In Next.js 15+, the `params` and `searchParams` props passed to Page and Layout components are **Promises**, not plain objects. Accessing `params.id` directly without awaiting will result in `undefined` or runtime errors.
+
+## Rule: Always Await Params
+
+1.  **Component Type**:
+    *   **Server Component** (default): Make the component `async` and `await params`.
+    *   **Client Component** (`use client`): Use React `use()` hook to unwrap params (if using Next.js 15 app router features in client usage) or pass resolved params from a parent Server Component.
+
+2.  **Implementation Pattern**:
+
+    ```tsx
+    // ✅ CORRECT (Server Component)
+    export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+        const { id } = await params;
+        return <Detail id={id} />;
+    }
+
+    // ❌ INCORRECT (Old way)
+    export default function Page({ params }: { params: { id: string } }) {
+        // params.id is undefined here in Next 15!
+        return <Detail id={params.id} />;
+    }
+    ```
+
+## Verification Checklist
+- [ ] **Check Next.js Version**: Is it >= 15?
+- [ ] **Inspect Page/Layout**: Does it accept `params`?
+- [ ] **Check Async**: Is the function `async`?
+- [ ] **Check Await**: Is `await params` used?

@@ -1,0 +1,26 @@
+---
+description: MANDATORY DOCUMENTATION PERSISTENCE (WALKTHROUGH & PLANS)
+globs: "**/walkthrough.md, **/implementation_plan.md"
+---
+# MANDATORY DOCUMENTATION PERSISTENCE
+
+## 🚨 RULE
+Every time a `walkthrough.md` or `implementation_plan.md` is created or updated in the internal brain directory (e.g., `<appDataDir>/brain/<conversation-id>/...`), a copy MUST be immediately created or updated in the project's persistent documentation folder.
+
+## 📍 DESTINATIONS
+### Walkthroughs
+- **Directory**: `ai_docs/references/walkthroughs/`
+- **Filename**: `walkthrough_[feature_name].md`
+
+### Implementation Plans
+- **Directory**: `ai_docs/references/implementation_plan/`
+- **Filename**: `plan_[feature_name].md`
+
+## ✅ ACTION REQUIRED
+1.  Generate/Update `walkthrough.md` in the brain artifact directory.
+2.  Copy/Write the exact same content to `ai_docs/references/walkthroughs/walkthrough_[name].md`.
+3.  Ensure all file links in the persistent copy remain absolute or are correctly relative to the project root if necessary (absolute is preferred for internal tool compatibility).
+
+## ❌ PROHIBITED
+- Never finish a task without ensuring the persistent documentation is updated.
+- Never rely solely on the internal brain artifacts for long-term project documentation.

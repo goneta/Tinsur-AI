@@ -1,0 +1,32 @@
+---
+description: Procedures for diagnosing and fixing Axios Network Errors in the Frontend.
+globs: ["frontend/**/*"]
+---
+
+# Axios Network Error Diagnosis
+
+## Context
+"AxiosError: Network Error" or "XMLHttpRequest.handleError" typically implies the frontend cannot establish a TCP connection to the backend. It is rarely a code issue in the frontend itself.
+
+## Diagnosis Steps
+
+1.  **Check Backend Status**: Is the backend server running?
+    - Run `curl http://localhost:8000/health` (or appropriate port).
+    - If it hangs or fails, the backend is down or hung. See `backend_hang_prevention.mdc`.
+    
+2.  **Check Port Conflicts**: Are multiple backends running?
+    - Metadata often shows multiple `python -m uvicorn` commands.
+    - Solution: `taskkill /F /IM python.exe` and restart ONE instance.
+    
+3.  **Check CORS**: verify `ALLOWED_ORIGINS` in `backend/app/core/config.py`.
+    - Must match the frontend origin (e.g., `http://localhost:3000`).
+    - Attempting to access from `127.0.0.1` when only `localhost` is allowed will fail.
+
+4.  **Check URL Configuration**: Verify `NEXT_PUBLIC_API_URL` in `frontend/.env` or `lib/api.ts`.
+    - Ensure it points to the correct backend URL (e.g., `http://localhost:8000/api/v1`).
+
+## Remediation
+
+1.  Kill zombie backend processes.
+2.  Restart backend.
+3.  Ensure Frontend and Backend ports match configuration.

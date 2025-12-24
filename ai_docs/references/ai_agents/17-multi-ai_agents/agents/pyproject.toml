@@ -1,0 +1,24 @@
+[project]
+version = "0.1.0"
+name = "bake-off-agents"
+description = ""
+authors = [
+    {name = "Amit Dutta", email = "amitdutta@google.com"},
+    {name = "Deepak Moonat", email = "dmoonat@google.com"},
+    {name = "Elia Secchi", email = "eliasecchi@google.com"},
+    {name = "Erwin Huizenga", email = "erwinh@google.com"},
+    {name = "Lavi Nigam", email = "lavinigam@google.com"},
+]
+dependencies = [
+    # Shared ADK & A2A Dependencies
+    "google-adk>=1.10.0",
+    "a2a-sdk>=0.2.5",
+    "nest-asyncio>=1.6.0",
+    "python-dotenv",
+    "click",
+    "uvicorn",
+    "google-generativeai",
+    "httpx",
+]
+
+requires-python = ">=3.10,<3.13"

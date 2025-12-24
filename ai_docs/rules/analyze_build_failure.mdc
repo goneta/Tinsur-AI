@@ -1,0 +1,25 @@
+---
+description: Ensure deep analysis of generic build failures or exit code 1
+globs: package.json, *.ts, *.tsx
+alwaysApply: false
+---
+
+# Analyze Build Failure Rule
+
+## Root Cause
+Build tools like Next.js often return a generic "exit code 1" or "Next.js build worker exited with code: 1" without displaying the specific error message in the standard output, particularly for TypeScript errors or minification issues. This leads to wasted time guessing the error.
+
+## Corrective Action
+When a build fails with a generic error code:
+1.  **Do NOT assume the cause.**
+2.  **Capture Full Logs**: Run the build command with output redirection to a file to capture stderr and stdout.
+    ```powershell
+    npm run build > build_output.log 2>&1
+    type build_output.log
+    ```
+3.  **Isolate TypeScript**: If the build log is cluttered, run `npx tsc --noEmit` to strictly check for TypeScript errors, which are the most common cause of build failures.
+
+## Preventive Guidelines
+1.  **Always Check Logs First**: Never attempt a fix without seeing the specific error message.
+2.  **Clean Build**: Always run a clean build (`rm -rf .next`) before analyzing deeply, to ensure stale cache isn't the issue.
+3.  **Automated Check**: If you are fixing a build error, your verification step MUST include `npm run build` (or equivalent) and you MUST read the output if it fails.

@@ -1,0 +1,27 @@
+---
+description: Action to take when localhost connection is refused
+globs: "**/*.{ts,tsx,js,py,md}"
+---
+# Localhost Connection Refused
+
+This rule applies when the user reports "Ce site est inaccessible" or "localhost n'autorise pas la connexion" or "Connection Refused".
+
+## Root Cause
+The development servers (frontend or backend) are not running or have crashed.
+
+## Corrective Action
+1.  **Check Status**: Verify if ports 3000 (frontend) and 8000 (backend) are listening.
+    ```powershell
+    netstat -an | findstr "3000 8000"
+    ```
+2.  **Restart Servers**: If not listening, start them immediately.
+    -   Backend:
+        - Check if `venv` exists: `Test-Path backend\venv`
+        - If yes: `backend\venv\Scripts\python -m uvicorn app.main:app --reload`
+        - If no: `python -m uvicorn app.main:app --reload` (run in `backend` dir)
+    -   Frontend: `cd frontend; npm run dev`
+3.  **Verify**: Wait 5 seconds and check ports again.
+
+## Preventive Measure
+-   Before asking the user to test in the browser, **ALWAYS** check `run_command` history or use `netstat` to ensure servers are active.
+-   If you haven't started them in the current session, assume they are down.

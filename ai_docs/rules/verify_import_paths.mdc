@@ -1,0 +1,28 @@
+---
+description: Prevent "Module not found" errors by verifying exact import paths, especially for API clients.
+globs: ["frontend/**/*.tsx", "frontend/**/*.ts"]
+---
+
+# Verify Import Paths
+
+## Context
+"Module not found" errors often occur when importing from incorrect paths, particularly for API clients which might be organized inconsistently (e.g., `lib/api/clients` vs `lib/client-api`).
+
+## Requirements
+
+1.  **Verify Path Exists**:
+    *   Before adding an import, check the filesystem (using `ls` or `find_by_name`).
+    *   Do not guess paths like `@/lib/api/[module]`.
+    *   Check if it follows the pattern `@/lib/[module]-api` or `@/lib/api/[module]`.
+
+2.  **Verify Named Exports**:
+    *   After finding the file, view it to confirm the export name.
+    *   Example: Does `client-api.ts` export `ClientAPI` (class) or `clientApi` (object)?
+
+3.  **Strict Aliasing**:
+    *   Ensure the alias `@/` maps correctly to the expected root (usually `frontend/` or `src/`).
+
+## Verification Checklist
+- [ ] **Locate File**: Run `find_by_name` for the module (e.g., "client").
+- [ ] **Check Path**: Use the actual path found.
+- [ ] **Check Exports**: View file to match import name.

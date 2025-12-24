@@ -1,0 +1,14 @@
+Policy POL-TEST-e02f created with 30% co-insurance.
+
+Testing Premium Distribution...
+SUCCESS: Premium share created for 28500.00 XOF
+Calculation is CORRECT (28500 after 5% fee).
+
+Testing Claim Settlement...
+Claim CLM-20251221-UEJE created.
+DEBUG: Claim number: CLM-20251221-UEJE
+DEBUG: approved_amount in object: 40000.0
+DEBUG: claim_amount in object: 50000.00
+DEBUG: approved_amount used for settlement: 40000.0
+SUCCESS: Claim settlement shared for 12000.00 XOF
+Calculation is CORRECT (12000).

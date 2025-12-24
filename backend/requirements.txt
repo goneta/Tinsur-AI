@@ -1,0 +1,67 @@
+# FastAPI and ASGI server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.12.1
+psycopg2-binary==2.9.9
+pymongo==4.6.0
+redis==5.0.1
+
+# Authentication & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-dotenv==1.0.0
+pydantic[email]==2.5.2
+pydantic-settings==2.1.0
+
+# Validation
+email-validator==2.1.0
+
+# CORS
+python-cors==1.0.0
+
+# Task Queue
+celery==5.3.4
+flower==2.0.1
+
+# File handling
+aiofiles==23.2.1
+python-magic==0.4.27
+
+# Date/Time
+python-dateutil==2.8.2
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+httpx==0.25.2
+
+# Code Quality
+black==23.12.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Monitoring
+sentry-sdk==1.38.0
+
+# Phase 2 Dependencies
+# Payment Processing
+stripe==7.7.0
+
+# PDF Generation
+reportlab==4.0.7
+qrcode[pil]==7.4.2
+pillow==10.1.0
+
+# Excel Export
+openpyxl==3.1.2
+
+# Date Utilities
+python-dateutil==2.8.2
+
+# SMS/WhatsApp (Optional - configure as needed)
+twilio==8.11.0
