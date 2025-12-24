@@ -78,3 +78,23 @@ class TrialBalanceItem(BaseModel):
     total_debit: Decimal
     total_credit: Decimal
     balance: Decimal
+
+class FinancialReportItem(BaseModel):
+    name: str
+    code: str
+    amount: Decimal
+
+class ProfitLossResponse(BaseModel):
+    revenue: List[FinancialReportItem]
+    expenses: List[FinancialReportItem]
+    total_revenue: Decimal
+    total_expenses: Decimal
+    net_profit: Decimal
+
+class BalanceSheetResponse(BaseModel):
+    assets: List[FinancialReportItem]
+    liabilities: List[FinancialReportItem]
+    equity: List[FinancialReportItem]
+    total_assets: Decimal
+    total_liabilities: Decimal
+    total_equity: Decimal

@@ -17,15 +17,17 @@ class OcrAgentExecutor(AgentExecutor):
         )
 
     async def execute(self, context: RequestContext, event_queue: EventQueue):
-        user_input = "Scan this invoice"
+        user_input = ""
         if context.events:
              for event in reversed(context.events):
                  if event.type == "user_text_message":
                      user_input = event.text
                      break
         
+        company_id = context.metadata.get("company_id")
+        
         # Mock OCR logic
-        response_text = f"Processing document request: '{user_input}'...\n\n[OCR Result]\nInvoice #1234\nTotal: $500.00\nDate: 2024-12-14"
+        response_text = f"Processing document request for company {company_id}: '{user_input}'...\n\n[OCR Result]\nInvoice #1234\nTotal: $500.00\nDate: 2024-12-14"
         
         event_queue.enqueue_event(new_agent_text_message(response_text))
 

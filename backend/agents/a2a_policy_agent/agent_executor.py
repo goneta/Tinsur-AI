@@ -30,8 +30,10 @@ class PolicyAgentExecutor(AgentExecutor):
         """Fetch quotes with status 'draft' or 'accepted' or 'sent' for a specific company."""
         query = db_session.query(Quote).options(joinedload(Quote.policy_type))
         
-        if company_id:
-            query = query.filter(Quote.company_id == uuid.UUID(str(company_id)))
+        if not company_id:
+            return []
+            
+        query = query.filter(Quote.company_id == uuid.UUID(str(company_id)))
             
         quotes = query.filter(
             Quote.status.in_(['draft', 'accepted', 'sent'])
@@ -129,9 +131,11 @@ class PolicyAgentExecutor(AgentExecutor):
                 else:
                      # Look up quote with company isolation
                      company_id = context.metadata.get("company_id")
-                     query = db.query(Quote)
-                     if company_id:
-                         query = query.filter(Quote.company_id == uuid.UUID(str(company_id)))
+                     if not company_id:
+                         event_queue.enqueue_event(new_agent_text_message("Error: Access denied. Company context missing."))
+                         return
+
+                     query = db.query(Quote).filter(Quote.company_id == uuid.UUID(str(company_id)))
                      
                      quote = query.filter(Quote.quote_number == req.quote_id).first()
                      if not quote:

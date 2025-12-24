@@ -21,8 +21,13 @@ class InterCompanyShareUpdate(BaseModel):
 class InterCompanyShare(InterCompanyShareBase):
     id: UUID
     from_company_id: UUID
+    from_company_name: Optional[str] = None
+    to_company_name: Optional[str] = None
     is_revoked: bool
     created_at: datetime
+    amount: Optional[float] = None
+    currency: Optional[str] = None
+    notes: Optional[str] = None
 
     class Config:
         from_attributes = True

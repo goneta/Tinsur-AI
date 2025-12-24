@@ -1,4 +1,4 @@
-# Insurance SaaS Platform - Backend
+# Tinsur.AI - Backend
 
 Python FastAPI backend for the Insurance Management SaaS Platform.
 
@@ -159,4 +159,4 @@ pytest tests/test_auth.py
 
 ## License
 
-Proprietary - Insurance SaaS Platform © 2025
+Proprietary - Tinsur.AI © 2025

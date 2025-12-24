@@ -32,9 +32,15 @@ class TelematicsAgentExecutor(AgentExecutor):
                      break
         
         policy_id = context.metadata.get("policy_id")
+        company_id = context.metadata.get("company_id")
         prompt = user_input
-        if policy_id:
-            prompt = f"[Context: policy_id={policy_id}] {user_input}"
+        
+        context_str = []
+        if policy_id: context_str.append(f"policy_id={policy_id}")
+        if company_id: context_str.append(f"company_id={company_id}")
+        
+        if context_str:
+            prompt = f"[Context: {', '.join(context_str)}] {user_input}"
         
         try:
             response_text = await self.agent.run(prompt, google_api_key=context.metadata.get("google_api_key"))

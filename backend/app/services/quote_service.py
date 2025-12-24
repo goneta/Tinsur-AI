@@ -153,7 +153,8 @@ class QuoteService:
         premium_frequency: str = 'annual',
         duration_months: int = 12,
         discount_percent: Decimal = Decimal('0'),
-        created_by: UUID = None
+        created_by: UUID = None,
+        pos_location_id: UUID = None
     ) -> Quote:
         """Create a new quote with calculated premium."""
         # Calculate premium
@@ -191,17 +192,37 @@ class QuoteService:
             status='draft',
             valid_until=valid_until,
             details=risk_factors,
-            created_by=created_by
+            created_by=created_by,
+            pos_location_id=pos_location_id
         )
         
         return self.quote_repo.create(quote)
     
     def mark_as_sent(self, quote_id: UUID) -> Quote:
-        """Mark quote as sent to client."""
+        """Mark quote as sent to client and trigger notification."""
         quote = self.quote_repo.get_by_id(quote_id)
         if quote:
             quote.status = 'sent'
-            return self.quote_repo.update(quote)
+            updated_quote = self.quote_repo.update(quote)
+            
+            # Send notification
+            try:
+                from app.services.notification_service import NotificationService
+                # Assuming client relationship is loaded or accessible
+                client_email = quote.client.email if quote.client else "customer@example.com"
+                
+                notif_service = NotificationService(self.quote_repo.db)
+                notif_service.send_quote_notification(
+                    company_id=quote.company_id,
+                    client_id=quote.client_id,
+                    client_email=client_email,
+                    quote_number=quote.quote_number,
+                    quote_pdf_url=f"/api/v1/quotes/{quote.id}/pdf" # Placeholder URL
+                )
+            except Exception as e:
+                print(f"Failed to send quote notification: {e}")
+                
+            return updated_quote
         return None
     
     def accept_quote(self, quote_id: UUID) -> Quote:

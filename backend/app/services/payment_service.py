@@ -138,7 +138,7 @@ class PaymentService:
             self.db.add(company)
             # Ensure it's committed here so it's reflected immediately
             self.db.commit()
-            print(f"Top-up processed: Added {credits_to_add} to {company.name}. New balance: {company.ai_credits_balance}")
+            # print(f"Top-up processed: Added {credits_to_add} to {company.name}. New balance: {company.ai_credits_balance}")
             
             # 2. Notify User
             try:

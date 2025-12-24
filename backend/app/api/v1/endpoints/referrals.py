@@ -47,3 +47,34 @@ def read_referrals(
         Referral.company_id == current_user.company_id
     ).offset(skip).limit(limit).all()
     return referrals
+
+@router.get("/stats")
+def read_referral_stats(
+    db: Session = Depends(deps.get_db),
+    current_user = Depends(deps.get_current_active_user),
+):
+    """
+    Get company-wide referral statistics.
+    """
+    from sqlalchemy import func
+    
+    total_rewards = db.query(func.sum(Referral.reward_amount)).filter(
+        Referral.company_id == current_user.company_id,
+        Referral.reward_paid == True
+    ).scalar() or 0
+    
+    pending_conversions = db.query(Referral).filter(
+        Referral.company_id == current_user.company_id,
+        Referral.status == "pending"
+    ).count()
+
+    converted_count = db.query(Referral).filter(
+        Referral.company_id == current_user.company_id,
+        Referral.status == "converted"
+    ).count()
+    
+    return {
+        "total_rewards": total_rewards,
+        "pending_conversions": pending_conversions,
+        "converted_count": converted_count
+    }

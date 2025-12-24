@@ -7,22 +7,25 @@ import random
 import string
 
 @tool
-def get_referral_info(client_id: str) -> str:
+def get_referral_info(company_id: str, client_id: str) -> str:
     """
     Retrieves referral information for a specific client, including their code and status of referrals.
     Args:
+        company_id: The UUID of the company.
         client_id: The UUID of the client.
     """
     db = SessionLocal()
     try:
-        # Get referrals initiated by this client
-        referrals = db.query(Referral).filter(Referral.referrer_client_id == uuid.UUID(client_id)).all()
+        # Get referrals initiated by this client in this company
+        referrals = db.query(Referral).filter(
+            Referral.company_id == uuid.UUID(company_id),
+            Referral.referrer_client_id == uuid.UUID(client_id)
+        ).all()
         
         if not referrals:
-            return f"No referral records found for client {client_id}. Use create_referral_link to generate one."
+            return f"No referral records found for client {client_id} in company {company_id}. Use create_referral_link to generate one."
         
-        # In this model, multiple records might exist if they have multiple referral links or instances.
-        # But usually, it's one code. Let's summarize.
+        # Summary
         codes = list(set([r.referral_code for r in referrals]))
         total = len(referrals)
         converted = len([r for r in referrals if r.status == 'converted'])
@@ -39,19 +42,22 @@ def get_referral_info(client_id: str) -> str:
         db.close()
 
 @tool
-def create_referral_link(client_id: str, company_id: str) -> str:
+def create_referral_link(company_id: str, client_id: str) -> str:
     """
     Generates a new unique referral code for a client.
     Args:
-        client_id: The UUID of the client.
         company_id: The UUID of the company.
+        client_id: The UUID of the client.
     """
     db = SessionLocal()
     try:
-        # Check if already has a code
-        existing = db.query(Referral).filter(Referral.referrer_client_id == uuid.UUID(client_id)).first()
+        # Check if already has a code in this company
+        existing = db.query(Referral).filter(
+            Referral.company_id == uuid.UUID(company_id),
+            Referral.referrer_client_id == uuid.UUID(client_id)
+        ).first()
         if existing:
-            return f"Client already has an active referral code: {existing.referral_code}"
+            return f"Client already has an active referral code in this company: {existing.referral_code}"
             
         # Generate random code
         new_code = "REF-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))

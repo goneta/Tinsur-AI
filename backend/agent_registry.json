@@ -77,9 +77,23 @@
         "enabled": true
     },
     {
+        "name": "document_agent",
+        "port": 8032,
+        "path": "agents/a2a_document_agent/__main__.py",
+        "type": "business",
+        "enabled": true
+    },
+    {
         "name": "ocr_agent",
         "port": 8018,
         "path": "agents/a2a_ocr_agent/__main__.py",
+        "type": "business",
+        "enabled": true
+    },
+    {
+        "name": "structured_outputs_agent",
+        "port": 8004,
+        "path": "agents/a2a_structured_outputs_agent/__main__.py",
         "type": "business",
         "enabled": true
     },
@@ -94,6 +108,27 @@
         "name": "memory_agent",
         "port": 8031,
         "path": "agents/a2a_persistent_storage_agent/__main__.py",
+        "type": "structural",
+        "enabled": true
+    },
+    {
+        "name": "voice_agent",
+        "port": 8015,
+        "path": "agents/a2a_adk_voice_agent/__main__.py",
+        "type": "structural",
+        "enabled": true
+    },
+    {
+        "name": "rag_agent",
+        "port": 8014,
+        "path": "agents/a2a_adk_rag_agent/__main__.py",
+        "type": "structural",
+        "enabled": true
+    },
+    {
+        "name": "mcp_agent",
+        "port": 8013,
+        "path": "agents/a2a_adk_mcp_agent/__main__.py",
         "type": "structural",
         "enabled": true
     }

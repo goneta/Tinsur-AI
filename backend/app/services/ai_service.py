@@ -92,7 +92,7 @@ class AiService:
         try:
             import google.generativeai as genai
             genai.configure(api_key=api_key)
-            print(f"DEBUG: Using Gemini model for damage analysis: gemini-3-pro-preview")
+            # print(f"DEBUG: Using Gemini model for damage analysis: gemini-3-pro-preview")
             model = genai.GenerativeModel('gemini-3-pro-preview')
             
             # Formulate prompt

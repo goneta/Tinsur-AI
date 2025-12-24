@@ -14,6 +14,7 @@ class LoyaltyPoint(Base):
     __tablename__ = "loyalty_points"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
     client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"))
     
     points_earned = Column(Integer, default=0)
@@ -26,6 +27,7 @@ class LoyaltyPoint(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
+    company = relationship("Company")
     client = relationship("Client")
     
     def __repr__(self):

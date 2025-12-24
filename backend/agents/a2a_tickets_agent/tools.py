@@ -41,17 +41,21 @@ def create_support_ticket(client_id: str, company_id: str, subject: str, descrip
         db.close()
 
 @tool
-def get_ticket_status(ticket_number: str) -> str:
+def get_ticket_status(company_id: str, ticket_number: str) -> str:
     """
     Retrieves the status and details of a specific support ticket.
     Args:
+        company_id: The UUID of the company.
         ticket_number: Examples: 'TKT-A1B2C3D4'
     """
     db = SessionLocal()
     try:
-        ticket = db.query(Ticket).filter(Ticket.ticket_number == ticket_number.upper()).first()
+        ticket = db.query(Ticket).filter(
+            Ticket.company_id == uuid.UUID(company_id),
+            Ticket.ticket_number == ticket_number.upper()
+        ).first()
         if not ticket:
-            return f"Ticket {ticket_number} not found."
+            return f"Ticket {ticket_number} not found in company {company_id}."
             
         return (f"Ticket {ticket.ticket_number}:\n"
                 f"- Subject: {ticket.subject}\n"
@@ -64,21 +68,23 @@ def get_ticket_status(ticket_number: str) -> str:
         db.close()
 
 @tool
-def list_active_tickets(client_id: str) -> str:
+def list_active_tickets(company_id: str, client_id: str) -> str:
     """
     Lists all active (non-closed) support tickets for a specific client.
     Args:
+        company_id: The UUID of the company.
         client_id: The UUID of the client.
     """
     db = SessionLocal()
     try:
         tickets = db.query(Ticket).filter(
+            Ticket.company_id == uuid.UUID(company_id),
             Ticket.client_id == uuid.UUID(client_id),
             Ticket.status != 'closed'
         ).all()
         
         if not tickets:
-            return "You have no active support tickets."
+            return "You have no active support tickets in this company."
             
         lines = [f"- {t.ticket_number}: {t.subject} ({t.status})" for t in tickets]
         return "Active Tickets:\n" + "\n".join(lines)

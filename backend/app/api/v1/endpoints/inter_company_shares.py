@@ -47,4 +47,10 @@ def read_shares(
         (InterCompanyShare.from_company_id == current_user.company_id) | 
         (InterCompanyShare.to_company_id == current_user.company_id)
     ).offset(skip).limit(limit).all()
+    
+    # Manually populate names if not using lazy-loaded properties in schema
+    for s in shares:
+        s.from_company_name = s.from_company.name if s.from_company else "Unknown"
+        s.to_company_name = s.to_company.name if s.to_company else "Unknown"
+        
     return shares

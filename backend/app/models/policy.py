@@ -15,13 +15,13 @@ class Policy(Base):
     __tablename__ = "policies"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
-    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"))
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), index=True)
+    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"), index=True)
     policy_type_id = Column(UUID(as_uuid=True), ForeignKey("policy_types.id"))
     quote_id = Column(UUID(as_uuid=True), ForeignKey("quotes.id"), nullable=True)
     pos_location_id = Column(UUID(as_uuid=True), ForeignKey("pos_locations.id"), nullable=True)
     
-    policy_number = Column(String(50), unique=True, nullable=False)
+    policy_number = Column(String(50), unique=True, nullable=False, index=True)
     sale_channel = Column(String(50), default='online')  # 'online', 'pos', 'agent', 'broker'
     
     # Coverage
@@ -34,7 +34,7 @@ class Policy(Base):
     end_date = Column(Date, nullable=False)
     
     # Status
-    status = Column(String(50), default='active')  # 'active', 'expired', 'canceled', 'lapsed'
+    status = Column(String(50), default='active', index=True)  # 'active', 'expired', 'canceled', 'lapsed'
     cancellation_reason = Column(Text)
     
     # Documents

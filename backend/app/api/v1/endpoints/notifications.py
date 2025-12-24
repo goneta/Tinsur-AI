@@ -18,14 +18,23 @@ async def get_notifications(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     unread_only: bool = False,
+    scope: str = Query("me", regex="^(me|all)$"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get recent notifications for the current user."""
-    query = db.query(Notification).filter(
-        Notification.company_id == current_user.company_id,
-        Notification.user_id == current_user.id
-    )
+    """
+    Get notifications.
+    scope='me': specific to current user.
+    scope='all': all company notifications (Admin only).
+    """
+    query = db.query(Notification).filter(Notification.company_id == current_user.company_id)
+    
+    if scope == "me":
+        query = query.filter(Notification.user_id == current_user.id)
+    elif scope == "all":
+        if current_user.role not in ['admin', 'super_admin', 'company_admin', 'manager']:
+            raise HTTPException(status_code=403, detail="Not authorized to view all notifications")
+        # No user_id filter, so returns all for company
     
     if unread_only:
         query = query.filter(Notification.status != 'read')

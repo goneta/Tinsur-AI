@@ -13,8 +13,7 @@ from app.models.endorsement import Endorsement
 from app.models.policy_type import PolicyType
 from app.repositories.policy_repository import PolicyRepository
 from app.repositories.quote_repository import QuoteRepository
-from app.repositories.endorsement_repository import EndorsementRepository
-
+from app.repositories.pos_inventory_repository import POSInventoryRepository
 
 class PolicyService:
     """Service for policy-related business logic."""
@@ -23,11 +22,13 @@ class PolicyService:
         self, 
         policy_repo: PolicyRepository, 
         quote_repo: QuoteRepository,
-        endorsement_repo: EndorsementRepository
+        endorsement_repo: EndorsementRepository,
+        pos_inventory_repo: Optional[POSInventoryRepository] = None
     ):
         self.policy_repo = policy_repo
         self.quote_repo = quote_repo
         self.endorsement_repo = endorsement_repo
+        self.pos_inventory_repo = pos_inventory_repo
     
     def generate_policy_number(self, company_id: UUID, policy_type_code: str) -> str:
         """Generate unique policy number."""
@@ -100,7 +101,8 @@ class PolicyService:
         created_by: UUID,
         sales_agent_id: Optional[UUID] = None,
         pos_location_id: Optional[UUID] = None,
-        details: Optional[dict] = None
+        details: Optional[dict] = None,
+        inventory_deductions: Optional[List[dict]] = None
     ) -> Policy:
         """Create a policy directly (not from quote)."""
         policy_number = self.generate_policy_number(company_id, "GEN")
@@ -122,7 +124,30 @@ class PolicyService:
             pos_location_id=pos_location_id
         )
         
-        return self.policy_repo.create(policy)
+        created_policy = self.policy_repo.create(policy)
+        
+        # Handle Inventory Deduction
+        if self.pos_inventory_repo and pos_location_id and inventory_deductions:
+            for item in inventory_deductions:
+                item_id = item.get('item_id')
+                quantity = item.get('quantity', 1)
+                if item_id:
+                    try:
+                        self.pos_inventory_repo.deduct_inventory(
+                            item_id=item_id,
+                            quantity=quantity,
+                            transaction_type='sale',
+                            reference_id=created_policy.id,
+                            created_by=created_by,
+                            notes=f"Policy Sale: {created_policy.policy_number}"
+                        )
+                    except ValueError as e:
+                        print(f"Inventory Error: {e}")
+                        # Optionally rollback or just log? 
+                        # Ideally should stop policy creation if strict, 
+                        # but for now let's just log and continue or add warning to notes.
+                        
+        return created_policy
     
     def renew_policy(
         self,

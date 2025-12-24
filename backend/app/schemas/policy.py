@@ -26,6 +26,7 @@ class PolicyCreate(PolicyBase):
     quote_id: Optional[UUID] = None
     sales_agent_id: Optional[UUID] = None
     pos_location_id: Optional[UUID] = None
+    inventory_deductions: Optional[List[Dict[str, Any]]] = None # List of {item_id: UUID, quantity: int}
 
 
 class PolicyUpdate(PolicyBase):

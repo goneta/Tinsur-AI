@@ -1,7 +1,8 @@
 """
 Ticket model for support system.
 """
-from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import Column, String, Boolean, DateTime, Text
+from sqlalchemy.schema import ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
@@ -18,9 +19,9 @@ class Ticket(Base):
     client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="SET NULL"), nullable=True)
     
     ticket_number = Column(String(50), unique=True, nullable=False)
-    category = Column(String(100)) # 'technical', 'billing', 'claim', 'complaint'
-    priority = Column(String(50), default='medium') # 'low', 'medium', 'high', 'urgent'
-    status = Column(String(50), default='open') # 'open', 'in_progress', 'resolved', 'closed'
+    category = Column(String(100)) 
+    priority = Column(String(50), default='medium')
+    status = Column(String(50), default='open')
     
     subject = Column(String(255), nullable=False)
     description = Column(Text)
@@ -40,3 +41,20 @@ class Ticket(Base):
     
     def __repr__(self):
         return f"<Ticket {self.ticket_number}>"
+
+class TicketMessage(Base):
+    """Message within a support ticket thread."""
+    __tablename__ = "ticket_messages"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    ticket_id = Column(UUID(as_uuid=True), ForeignKey("tickets.id", ondelete="CASCADE"))
+    sender_id = Column(UUID(as_uuid=True), nullable=True) 
+    
+    sender_type = Column(String(20), default='user') 
+    message = Column(Text, nullable=False)
+    is_internal = Column(Boolean, default=False) 
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    ticket = relationship("Ticket", backref="messages")

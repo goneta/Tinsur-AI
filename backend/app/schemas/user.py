@@ -30,6 +30,7 @@ class UserUpdate(BaseModel):
     last_name: Optional[str] = None
     phone: Optional[str] = None
     is_active: Optional[bool] = None
+    pos_location_id: Optional[uuid.UUID] = None
 
 
 class UserInDB(UserBase):

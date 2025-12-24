@@ -92,3 +92,59 @@ def remove_policy_share(
     db.commit()
     
     return {"status": "success", "message": "Participant removed"}
+
+@router.get("/my-policies", response_model=List[dict])
+def list_my_coinsurance_policies(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """List all policies where the current company is a co-insurance participant (including lead)."""
+    # 1. Policies where I am the lead insurer (company_id on Policy table) AND have shares
+    lead_policies = db.query(Policy).join(CoInsuranceShare).filter(
+        Policy.company_id == current_user.company_id
+    ).all()
+    
+    # 2. Policies where I am a participant (company_id on CoInsuranceShare table) but NOT lead
+    participant_shares = db.query(CoInsuranceShare).filter(
+        CoInsuranceShare.company_id == current_user.company_id,
+        # Exclude those already found in lead_policies if needed, 
+        # but simpler to just query policies directly via relationship
+    ).all()
+    
+    results = []
+    seen_ids = set()
+    
+    # Add Lead Policies
+    for p in lead_policies:
+        if p.id not in seen_ids:
+            results.append({
+                "id": p.id,
+                "policy_number": p.policy_number,
+                "lead_company": p.company.name,
+                "is_lead": True,
+                "my_share": 100 - sum([float(s.share_percentage) for s in p.co_insurance_shares]), # Simplified
+                "status": p.status,
+                "premium_amount": float(p.premium_amount),
+                "start_date": p.start_date,
+                "end_date": p.end_date
+            })
+            seen_ids.add(p.id)
+            
+    # Add Participant Policies
+    for s in participant_shares:
+        p = s.policy
+        if p.id not in seen_ids:
+            results.append({
+                "id": p.id,
+                "policy_number": p.policy_number,
+                "lead_company": p.company.name,
+                "is_lead": False,
+                "my_share": float(s.share_percentage),
+                "status": p.status,
+                "premium_amount": float(p.premium_amount),
+                "start_date": p.start_date,
+                "end_date": p.end_date
+            })
+            seen_ids.add(p.id)
+            
+    return results

@@ -8,7 +8,12 @@ from app.models.pos_location import POSLocation
 from app.models.pos_inventory import POSInventory
 from app.schemas.pos_location import POSLocationCreate, POSLocationUpdate, POSLocation as POSLocationSchema
 from app.schemas.pos_inventory import POSInventoryCreate, POSInventoryUpdate, POSInventory as POSInventorySchema
+from app.schemas.pos_inventory import POSInventoryCreate, POSInventoryUpdate, POSInventory as POSInventorySchema
 from app.models.user import User
+from app.models.policy import Policy
+from app.models.quote import Quote
+from sqlalchemy import func
+from app.schemas.user import User as UserSchema
 
 router = APIRouter()
 
@@ -147,3 +152,68 @@ def update_pos_inventory_item(
     db.commit()
     db.refresh(db_item)
     return db_item
+
+
+# Management Endpoints
+
+@router.get("/locations/{location_id}/agents", response_model=List[UserSchema])
+def get_pos_agents(
+    location_id: UUID,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+):
+    """List agents assigned to this POS location."""
+    # Verify location
+    location = db.query(POSLocation).filter(
+        POSLocation.id == location_id,
+        POSLocation.company_id == current_user.company_id
+    ).first()
+    if not location:
+        raise HTTPException(status_code=404, detail="POS location not found")
+        
+    return db.query(User).filter(User.pos_location_id == location_id).all()
+
+
+@router.get("/locations/{location_id}/stats")
+def get_pos_stats(
+    location_id: UUID,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_active_user),
+):
+    """Get statistics for this POS location."""
+    # Verify location
+    location = db.query(POSLocation).filter(
+        POSLocation.id == location_id,
+        POSLocation.company_id == current_user.company_id
+    ).first()
+    if not location:
+        raise HTTPException(status_code=404, detail="POS location not found")
+        
+    # Stats
+    active_agents = db.query(User).filter(
+        User.pos_location_id == location_id, 
+        User.is_active == True
+    ).count()
+    
+    total_policies = db.query(Policy).filter(
+        Policy.pos_location_id == location_id,
+        Policy.status == 'active'
+    ).count()
+    
+    total_premium = db.query(func.sum(Policy.premium_amount)).filter(
+        Policy.pos_location_id == location_id,
+        Policy.status == 'active'
+    ).scalar() or 0
+    
+    total_quotes = db.query(Quote).filter(
+        Quote.pos_location_id == location_id
+    ).count()
+    
+    return {
+        "location_id": str(location_id),
+        "location_name": location.name,
+        "active_agents": active_agents,
+        "total_policies_sold": total_policies,
+        "total_premium_collected": float(total_premium),
+        "total_quotes_generated": total_quotes
+    }

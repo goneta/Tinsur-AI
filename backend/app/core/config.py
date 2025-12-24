@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     """Application settings."""
     
     # Application
-    APP_NAME: str = "Insurance SaaS Platform"
+    APP_NAME: str = "Tinsur.AI"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
     ENVIRONMENT: str = "development"

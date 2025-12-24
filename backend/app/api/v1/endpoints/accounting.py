@@ -1,18 +1,57 @@
 """
 Accounting API endpoints.
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
-from typing import List, Optional
-import uuid
-
-from app.core.database import get_db
-from app.core.dependencies import get_current_user
-from app.models.user import User
+from datetime import date, datetime, timedelta
 from app.services.accounting_service import AccountingService
-from app.schemas.ledger import AccountResponse, JournalEntryResponse, TrialBalanceItem
+from app.schemas.ledger import (
+    AccountResponse, 
+    JournalEntryResponse, 
+    TrialBalanceItem,
+    ProfitLossResponse,
+    BalanceSheetResponse
+)
 
 router = APIRouter()
+
+# ... existing endpoints (get_accounts, get_ledger, get_trial_balance, initialize_accounts) ...
+
+@router.get("/profit-loss", response_model=ProfitLossResponse)
+def get_profit_loss(
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Retrieve Profit and Loss report."""
+    service = AccountingService(db)
+    
+    # Defaults
+    if not end_date:
+        end_date = date.today()
+    if not start_date:
+        start_date = end_date.replace(month=1, day=1) # YTD
+        
+    # Convert date to datetime for service
+    s_dt = datetime.combine(start_date, datetime.min.time())
+    e_dt = datetime.combine(end_date, datetime.max.time())
+    
+    return service.get_profit_loss(current_user.company_id, s_dt, e_dt)
+
+@router.get("/balance-sheet", response_model=BalanceSheetResponse)
+def get_balance_sheet(
+    as_of_date: Optional[date] = Query(None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Retrieve Balance Sheet report."""
+    service = AccountingService(db)
+    
+    if not as_of_date:
+        as_of_date = date.today()
+        
+    ao_dt = datetime.combine(as_of_date, datetime.max.time())
+    
+    return service.get_balance_sheet(current_user.company_id, ao_dt)
 
 @router.get("/accounts", response_model=List[AccountResponse])
 def get_accounts(

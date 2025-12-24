@@ -17,15 +17,17 @@ class VoiceAgentExecutor(AgentExecutor):
         )
 
     async def execute(self, context: RequestContext, event_queue: EventQueue):
-        user_input = "Hello"
+        user_input = ""
         if context.events:
              for event in reversed(context.events):
                  if event.type == "user_text_message":
                      user_input = event.text
                      break
         
+        company_id = context.metadata.get("company_id")
+        
         # Mocking voice response logic
-        response_text = f"I heard you say '{user_input}'. (Generating Voice Response...)"
+        response_text = f"Voice response for company {company_id}. I heard you say '{user_input}'. (Generating Voice...)"
         
         event_queue.enqueue_event(new_agent_text_message(response_text))
 

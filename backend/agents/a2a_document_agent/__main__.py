@@ -31,7 +31,7 @@ def main():
     agent_card = AgentCard(
         name="Document Agent",
         description="Agent for Secure Document Sharing & Collaboration",
-        url="http://localhost:8027/",
+        url="http://localhost:8032/",
         defaultInputModes=["text"],
         defaultOutputModes=["text"],
         skills=[share_skill, revoke_skill],
@@ -49,8 +49,8 @@ def main():
         agent_card=agent_card,
     )
 
-    print("Starting a2a_document_agent on port 8027")
-    uvicorn.run(server.build(), host="0.0.0.0", port=8027)
+    print("Starting a2a_document_agent on port 8032")
+    uvicorn.run(server.build(), host="0.0.0.0", port=8032)
 
 if __name__ == "__main__":
     main()

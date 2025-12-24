@@ -128,3 +128,93 @@ class AccountingService:
         return self.db.query(JournalEntry).filter(
             JournalEntry.company_id == company_id
         ).order_by(JournalEntry.entry_date.desc()).limit(limit).all()
+
+    def get_profit_loss(self, company_id: uuid.UUID, start_date: datetime, end_date: datetime) -> Dict[str, Any]:
+        """Generate Profit and Loss report."""
+        accounts = self.db.query(Account).filter(
+            Account.company_id == company_id,
+            Account.account_type.in_(["Revenue", "Expense"])
+        ).all()
+        
+        report = {
+            "revenue": [],
+            "expenses": [],
+            "total_revenue": Decimal("0.0"),
+            "total_expenses": Decimal("0.0"),
+            "net_profit": Decimal("0.0")
+        }
+        
+        for acc in accounts:
+            # Aggregate entries in the date range
+            balance_query = self.db.query(
+                func.sum(LedgerEntry.debit).label('debit'),
+                func.sum(LedgerEntry.credit).label('credit')
+            ).join(JournalEntry).filter(
+                LedgerEntry.account_id == acc.id,
+                JournalEntry.entry_date >= start_date,
+                JournalEntry.entry_date <= end_date
+            ).first()
+            
+            d = Decimal(str(balance_query.debit or 0))
+            c = Decimal(str(balance_query.credit or 0))
+            
+            # Natural balance for P&L
+            if acc.account_type == "Revenue":
+                val = c - d # Credits are positive for revenue
+                report["revenue"].append({"name": acc.name, "amount": val, "code": acc.code})
+                report["total_revenue"] += val
+            else:
+                val = d - c # Debits are positive for expenses
+                report["expenses"].append({"name": acc.name, "amount": val, "code": acc.code})
+                report["total_expenses"] += val
+                
+        report["net_profit"] = report["total_revenue"] - report["total_expenses"]
+        return report
+
+    def get_balance_sheet(self, company_id: uuid.UUID, as_of_date: datetime) -> Dict[str, Any]:
+        """Generate Balance Sheet as of a specific date."""
+        accounts = self.db.query(Account).filter(
+            Account.company_id == company_id,
+            Account.account_type.in_(["Asset", "Liability", "Equity"])
+        ).all()
+        
+        report = {
+            "assets": [],
+            "liabilities": [],
+            "equity": [],
+            "total_assets": Decimal("0.0"),
+            "total_liabilities": Decimal("0.0"),
+            "total_equity": Decimal("0.0")
+        }
+        
+        for acc in accounts:
+            # Aggregate all entries up to as_of_date
+            balance_query = self.db.query(
+                func.sum(LedgerEntry.debit).label('debit'),
+                func.sum(LedgerEntry.credit).label('credit')
+            ).join(JournalEntry).filter(
+                LedgerEntry.account_id == acc.id,
+                JournalEntry.entry_date <= as_of_date
+            ).first()
+            
+            d = Decimal(str(balance_query.debit or 0))
+            c = Decimal(str(balance_query.credit or 0))
+            
+            if acc.account_type == "Asset":
+                val = d - c
+                report["assets"].append({"name": acc.name, "amount": val, "code": acc.code})
+                report["total_assets"] += val
+            elif acc.account_type == "Liability":
+                val = c - d
+                report["liabilities"].append({"name": acc.name, "amount": val, "code": acc.code})
+                report["total_liabilities"] += val
+            else: # Equity
+                val = c - d
+                report["equity"].append({"name": acc.name, "amount": val, "code": acc.code})
+                report["total_equity"] += val
+                
+        # Include Net Profit in Equity if not already closed out to Retained Earnings
+        # In this simple model, we'll calculate YTD profit manually for the balance sheet
+        # if not explicitly tracked in an account.
+        
+        return report

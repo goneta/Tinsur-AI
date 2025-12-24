@@ -65,6 +65,11 @@ class MultiAiAgentsExecutor(AgentExecutor):
                 - loyalty_agent: For loyalty points and rewards.
                 - telematics_agent: For driving data and car tracking.
                 - ml_agent: For machine learning model management.
+                - document_agent: For secure document sharing and collaboration.
+                - ocr_agent: For scanning documents or images.
+                - voice_agent: For voice-related interactions.
+                - rag_agent: For knowledge retrieval from documents.
+                - mcp_agent: For using Model Context Protocol tools.
                 - structured_outputs_agent: General data extraction into JSON format.
                 - tool_agent: For web searching or using external tools.
                 - memory_agent: For long-term memory, saving facts about the user, or retrieving past information.

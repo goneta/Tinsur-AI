@@ -29,6 +29,8 @@ from app.services.premium_service import PremiumService
 router = APIRouter()
 
 
+from app.repositories.pos_inventory_repository import POSInventoryRepository
+
 @router.post("/", response_model=PolicyResponse, status_code=status.HTTP_201_CREATED)
 def create_policy(
     policy_data: PolicyCreate,
@@ -39,7 +41,9 @@ def create_policy(
     policy_repo = PolicyRepository(db)
     quote_repo = QuoteRepository(db)
     endorsement_repo = EndorsementRepository(db)
-    policy_service = PolicyService(policy_repo, quote_repo, endorsement_repo)
+    pos_inventory_repo = POSInventoryRepository(db)
+    
+    policy_service = PolicyService(policy_repo, quote_repo, endorsement_repo, pos_inventory_repo)
     
     policy = policy_service.create_policy(
         company_id=current_user.company_id,
@@ -52,8 +56,9 @@ def create_policy(
         end_date=policy_data.end_date,
         created_by=current_user.id,
         sales_agent_id=policy_data.sales_agent_id,
-        pos_location_id=policy_data.pos_location_id,
-        details=policy_data.details
+        pos_location_id=policy_data.pos_location_id or current_user.pos_location_id,
+        details=policy_data.details,
+        inventory_deductions=policy_data.inventory_deductions
     )
     
     # Generate payment schedule

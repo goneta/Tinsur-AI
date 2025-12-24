@@ -30,8 +30,13 @@ class MLAgentExecutor(AgentExecutor):
                      user_input = event.text
                      break
         
+        company_id = context.metadata.get("company_id")
+        prompt = user_input
+        if company_id:
+            prompt = f"[Context: company_id={company_id}] {user_input}"
+        
         try:
-            response_text = await self.agent.run(user_input, google_api_key=context.metadata.get("google_api_key"))
+            response_text = await self.agent.run(prompt, google_api_key=context.metadata.get("google_api_key"))
             event_queue.enqueue_event(new_agent_text_message(response_text))
         except Exception as e:
             event_queue.enqueue_event(new_agent_text_message(f"ML Agent Error: {str(e)}"))

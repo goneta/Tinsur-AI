@@ -16,7 +16,7 @@ class LoyaltyAgentExecutor(AgentExecutor):
             instruction="""
             You are a Loyalty Agent for InsurSaaS.
             Use the provided tools to check client points balance or redeem rewards.
-            ALWAYS ask for or confirm the client_id from the context metadata before performing actions.
+            ALWAYS ask for or confirm the client_id and company_id from the context metadata before performing actions.
             If the user asks about points, call get_loyalty_points.
             If they want to use points, call redeem_loyalty_points.
             """,
@@ -31,11 +31,14 @@ class LoyaltyAgentExecutor(AgentExecutor):
                      user_input = event.text
                      break
         
-        # Add client_id to the prompt so the agent knows who it's dealing with
+        # Add identifiers to the prompt so the agent knows the context
         client_id = context.metadata.get("client_id")
+        company_id = context.metadata.get("company_id")
         prompt = user_input
-        if client_id:
-            prompt = f"[Context: client_id={client_id}] {user_input}"
+        if client_id and company_id:
+            prompt = f"[Context: company_id={company_id}, client_id={client_id}] {user_input}"
+        elif company_id:
+            prompt = f"[Context: company_id={company_id}] {user_input}"
         
         try:
             response_text = await self.agent.run(prompt, google_api_key=context.metadata.get("google_api_key"))

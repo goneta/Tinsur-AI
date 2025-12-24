@@ -84,14 +84,19 @@ class QuoteAgentExecutor(AgentExecutor):
 
     def _load_from_db(self, req: QuoteRequest, context_metadata: dict):
         """Tries to fill missing fields from the database if user/client is known."""
+        # SECURITY: Enforce company_id isolation
+        company_id = context_metadata.get("company_id")
         user_id = context_metadata.get("user_id")
-        if not user_id:
+        if not company_id or not user_id:
             return
 
         db = SessionLocal()
         try:
-            # Find client by user_id
-            client = db.query(Client).filter(Client.user_id == uuid.UUID(user_id)).first()
+            # Find client by user_id AND company_id
+            client = db.query(Client).filter(
+                Client.user_id == uuid.UUID(str(user_id)),
+                Client.company_id == uuid.UUID(str(company_id))
+            ).first()
             if not client:
                 return
             
@@ -147,11 +152,13 @@ class QuoteAgentExecutor(AgentExecutor):
             company_id = context_metadata.get("company_id")
             
             client_id = None
-            if user_id:
-                client = db.query(Client).filter(Client.user_id == uuid.UUID(str(user_id))).first()
+            if user_id and company_id:
+                client = db.query(Client).filter(
+                    Client.user_id == uuid.UUID(str(user_id)),
+                    Client.company_id == uuid.UUID(str(company_id))
+                ).first()
                 if client:
                     client_id = client.id
-                    if not company_id: company_id = client.company_id
 
             if not company_id:
                 print("Cannot persist quote: company_id missing")

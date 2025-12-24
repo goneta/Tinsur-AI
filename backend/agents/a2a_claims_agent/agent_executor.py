@@ -194,9 +194,19 @@ class ClaimsAgentExecutor(AgentExecutor):
                 from app.models.claim import Claim
                 
                 # Fetch Policy to get client_id and company_id
-                policy = db.query(Policy).filter(Policy.id == uuid.UUID(final_policy_id)).first()
+                # SECURITY: Enforce company_id isolation
+                context_company_id = context.metadata.get("company_id")
+                if not context_company_id:
+                    response_text = "Error: Security context missing (company_id). Access denied."
+                    event_queue.enqueue_event(new_agent_text_message(response_text))
+                    return
+
+                policy = db.query(Policy).filter(
+                    Policy.id == uuid.UUID(final_policy_id),
+                    Policy.company_id == uuid.UUID(context_company_id)
+                ).first()
                 if not policy:
-                    response_text = f"Error: Policy {final_policy_id} not found."
+                    response_text = f"Error: Policy {final_policy_id} not found or access denied for your company."
                     event_queue.enqueue_event(new_agent_text_message(response_text))
                     return
 

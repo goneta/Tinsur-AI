@@ -67,7 +67,8 @@ def create_quote(
             premium_frequency=quote_data.premium_frequency,
             duration_months=quote_data.duration_months,
             discount_percent=quote_data.discount_percent,
-            created_by=quote_data.created_by or current_user.id
+            created_by=quote_data.created_by or current_user.id,
+            pos_location_id=quote_data.pos_location_id or current_user.pos_location_id
         )
         return quote
     except Exception as e:

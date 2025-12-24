@@ -13,6 +13,7 @@ class MLModel(Base):
     __tablename__ = "ml_models"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
     
     model_name = Column(String(255), nullable=False)
     model_type = Column(String(100)) # 'churn_prediction', 'fraud_detection', 'claim_likelihood'

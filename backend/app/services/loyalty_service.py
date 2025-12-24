@@ -9,6 +9,7 @@ from datetime import datetime
 
 from app.models.loyalty import LoyaltyPoint
 from app.models.client import Client
+from app.models.referral import Referral
 
 class LoyaltyService:
     """Service for handling loyalty points and tiers."""
@@ -52,7 +53,35 @@ class LoyaltyService:
         
         self.db.commit()
         self.db.refresh(loyalty)
+        
+        # Check if this first payment converts a referral
+        self.process_referral_reward(client_id)
+        
         return loyalty
+
+    def process_referral_reward(self, referred_client_id: UUID):
+        """Award points to referrer if this is the first payment of a referred client."""
+        # Find pending conversion referral
+        referral = self.db.query(Referral).filter(
+            Referral.referred_client_id == referred_client_id,
+            Referral.status == "converted", # Joined, but rewards not paid yet
+            Referral.reward_paid == False
+        ).first()
+        
+        if referral and referral.referrer_client_id:
+            # Rule: 500 bonus points for referrer
+            referrer_loyalty = self.get_or_create_loyalty(referral.referrer_client_id)
+            reward_points = 500
+            
+            referrer_loyalty.points_earned += reward_points
+            referrer_loyalty.points_balance += reward_points
+            self._update_tier(referrer_loyalty)
+            
+            referral.reward_paid = True
+            referral.reward_amount = Decimal('500') # Storing as decimal balance for records maybe?
+            # referral.status = "rewarded" # Optional
+            
+            self.db.commit()
         
     def redeem_points(self, client_id: UUID, points: int) -> Decimal:
         """

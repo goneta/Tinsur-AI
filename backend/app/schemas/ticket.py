@@ -18,6 +18,24 @@ class TicketUpdate(BaseModel):
     assigned_to: Optional[UUID] = None
     sla_breach_at: Optional[datetime] = None
 
+
+class TicketMessageBase(BaseModel):
+    message: str
+    is_internal: bool = False
+
+class TicketMessageCreate(TicketMessageBase):
+    sender_type: str = "user" # or client
+
+class TicketMessage(TicketMessageBase):
+    id: UUID
+    ticket_id: UUID
+    sender_id: Optional[UUID]
+    sender_type: str
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
 class Ticket(TicketBase):
     id: UUID
     ticket_number: str
@@ -28,6 +46,8 @@ class Ticket(TicketBase):
     created_at: datetime
     updated_at: datetime
     resolved_at: Optional[datetime]
+    
+    messages: list[TicketMessage] = []
 
     class Config:
         from_attributes = True

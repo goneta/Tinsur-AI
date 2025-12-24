@@ -18,15 +18,17 @@ class RagAgentExecutor(AgentExecutor):
         )
 
     async def execute(self, context: RequestContext, event_queue: EventQueue):
-        user_input = "What is in the document?"
+        user_input = ""
         if context.events:
              for event in reversed(context.events):
                  if event.type == "user_text_message":
                      user_input = event.text
                      break
         
+        company_id = context.metadata.get("company_id")
+        
         # Mocking retrieval
-        response_text = f"Searching knowledge base for '{user_input}'...\n\nFound relevant info: 'The document discusses AI Agents.'\n\nAnswer: The document is about AI Agents."
+        response_text = f"Searching knowledge base for company {company_id} regarding '{user_input}'...\n\nFound relevant info: 'The document discusses AI Agents for this tenant.'\n\nAnswer: The document is about AI Agents."
         
         event_queue.enqueue_event(new_agent_text_message(response_text))
 

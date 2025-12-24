@@ -20,15 +20,17 @@ class McpAgentExecutor(AgentExecutor):
         )
 
     async def execute(self, context: RequestContext, event_queue: EventQueue):
-        user_input = "Use MCP tool"
+        user_input = ""
         if context.events:
              for event in reversed(context.events):
                  if event.type == "user_text_message":
                      user_input = event.text
                      break
         
+        company_id = context.metadata.get("company_id")
+        
         # Mocking MCP execution
-        response_text = f"I am accessing MCP tools for '{user_input}'.\n\n[MCP Tool Output]: Found relevant data from FS/SQLite."
+        response_text = f"Accessing MCP tools for company {company_id} regarding '{user_input}'.\n\n[MCP Tool Output]: Found relevant data from FS/SQLite for this tenant."
         
         event_queue.enqueue_event(new_agent_text_message(response_text))
 
