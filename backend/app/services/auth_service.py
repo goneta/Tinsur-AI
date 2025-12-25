@@ -11,7 +11,9 @@ from app.models.company import Company
 from app.schemas.auth import RegisterRequest, LoginRequest, Token
 from app.schemas.user import UserCreate
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token
+from app.core.agent_client import AgentClient
 from fastapi import HTTPException, status
+import json
 
 
 class AuthService:
@@ -20,7 +22,7 @@ class AuthService:
     def __init__(self, db: Session):
         self.db = db
     
-    def register_user(self, request: RegisterRequest) -> User:
+    async def register_user(self, request: RegisterRequest) -> User:
         """Register a new user and optionally create a company."""
         # Check if user already exists
         existing_user = self.db.query(User).filter(User.email == request.email).first()
@@ -71,6 +73,41 @@ class AuthService:
             role=user_role,
             is_verified=False  # Require email verification
         )
+
+        # Compliance & AML Agent Screening
+        try:
+            agent_client = AgentClient()
+            reg_details = {
+                "first_name": request.first_name,
+                "last_name": request.last_name,
+                "email": request.email,
+                "phone": request.phone,
+                "role": user_role
+            }
+            
+            # Call agent asynchronously
+            response = await agent_client.send_message(
+                "compliance_aml_agent", 
+                json.dumps(reg_details),
+                context={"company_id": str(company_id)}
+            )
+            
+            if "messages" in response and response["messages"]:
+                last_msg = response["messages"][-1]
+                compliance_data = json.loads(last_msg["text"])
+                
+                user.compliance_status = compliance_data.get("status", "flagged")
+                user.is_high_risk = compliance_data.get("is_high_risk", False)
+                user.compliance_notes = compliance_data.get("notes", "No notes provided.")
+                
+                # If flagged or high risk, deactivate for manual review
+                if user.compliance_status == "flagged" or user.is_high_risk:
+                    user.is_active = False
+                    print(f"User {request.email} FLAGGED for compliance review.")
+        except Exception as e:
+            print(f"Compliance Agent Error: {str(e)}")
+            user.compliance_status = "error"
+            user.compliance_notes = f"Failed to run compliance check: {str(e)}"
         
         self.db.add(user)
         self.db.commit()

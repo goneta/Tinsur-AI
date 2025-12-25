@@ -22,7 +22,7 @@ async def register(
 ):
     """Register a new user and optionally create a company."""
     auth_service = AuthService(db)
-    user = auth_service.register_user(request)
+    user = await auth_service.register_user(request)
     return user
 
 

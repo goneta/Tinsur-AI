@@ -15,11 +15,11 @@ def check_permission(permissions, role, scope, action):
 class MultiAiAgentsExecutor(AgentExecutor):
     def __init__(self):
         self.agent = Agent(
-            name="orchestrator_agent",
-            model="gemini-3-pro-preview",
-            description="Main orchestrator for Insurance SaaS",
+            name="ai_agent_manager",
+            model="gemini-2.0-flash",
+            description="AI Agent Manager - Central orchestrator for the Agent Mesh",
             instruction="""
-            You are the main AI assistant for InsurSaaS.
+            You are the AI Agent Manager for InsurSaaS.
             You can help with Quotes, Policies, Claims, and more.
             Delegate detailed work to specialists.
             """,
@@ -73,6 +73,11 @@ class MultiAiAgentsExecutor(AgentExecutor):
                 - structured_outputs_agent: General data extraction into JSON format.
                 - tool_agent: For web searching or using external tools.
                 - memory_agent: For long-term memory, saving facts about the user, or retrieving past information.
+                - adk_base: Foundational reasoning and complex task execution.
+                - adk_a2a_base: Specialists in coordinating multi-agent workflows and inter-agent communication.
+                - adk_live: Real-time multimodal interactions (used for Voice Mode).
+                - agentic_rag: Document retrieval, knowledge grounding, and internal data Q&A.
+                - langgraph_base: Complex stateful workflows and multi-step orchestration.
 
                 Return a JSON object: {{"agent": "agent_name", "reasoning": "why you chose this"}}
                 If no specific agent matches, use {{"agent": null, "reasoning": "general greeting"}}

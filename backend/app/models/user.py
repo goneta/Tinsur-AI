@@ -1,7 +1,7 @@
 """
 User model for authentication and authorization.
 """
-from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
@@ -28,6 +28,9 @@ class User(Base):
     mfa_enabled = Column(Boolean, default=False)
     mfa_secret = Column(String(255))
     profile_picture = Column(String(500), nullable=True)
+    compliance_status = Column(String(50), default="pending")  # 'pending', 'approved', 'flagged'
+    is_high_risk = Column(Boolean, default=False)
+    compliance_notes = Column(Text, nullable=True)
     last_login = Column(DateTime)
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)

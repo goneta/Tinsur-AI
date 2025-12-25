@@ -131,5 +131,47 @@
         "path": "agents/a2a_adk_mcp_agent/__main__.py",
         "type": "structural",
         "enabled": true
+    },
+    {
+        "name": "adk_base",
+        "port": 8033,
+        "path": "agents/adk_base/__main__.py",
+        "type": "structural",
+        "enabled": true
+    },
+    {
+        "name": "adk_a2a_base",
+        "port": 8034,
+        "path": "agents/adk_a2a_base/__main__.py",
+        "type": "structural",
+        "enabled": true
+    },
+    {
+        "name": "adk_live",
+        "port": 8035,
+        "path": "agents/adk_live/__main__.py",
+        "type": "structural",
+        "enabled": true
+    },
+    {
+        "name": "agentic_rag",
+        "port": 8036,
+        "path": "agents/agentic_rag/__main__.py",
+        "type": "structural",
+        "enabled": true
+    },
+    {
+        "name": "langgraph_base",
+        "port": 8037,
+        "path": "agents/langgraph_base/__main__.py",
+        "type": "structural",
+        "enabled": true
+    },
+    {
+        "name": "compliance_aml_agent",
+        "port": 8038,
+        "path": "agents/compliance_aml_agent/__main__.py",
+        "type": "structural",
+        "enabled": true
     }
 ]
