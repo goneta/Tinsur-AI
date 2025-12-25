@@ -13,6 +13,7 @@ from app.models.endorsement import Endorsement
 from app.models.policy_type import PolicyType
 from app.repositories.policy_repository import PolicyRepository
 from app.repositories.quote_repository import QuoteRepository
+from app.repositories.endorsement_repository import EndorsementRepository
 from app.repositories.pos_inventory_repository import POSInventoryRepository
 
 class PolicyService:

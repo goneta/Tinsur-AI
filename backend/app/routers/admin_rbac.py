@@ -9,6 +9,9 @@ from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.models.rbac import Role, Permission
 from app.services.security_service import SecurityService
+import logging
+
+logger = logging.getLogger(__name__)
 
 class PermissionBase(BaseModel):
     id: str
@@ -34,23 +37,41 @@ class AssignPermissionsRequest(BaseModel):
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
+@router.get("/ping")
+def ping():
+    return {"status": "ok", "message": "Admin RBAC router is active"}
+
 @router.get("/roles", response_model=List[RoleBase])
 def list_roles(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    logger.info(f"User {current_user.email} (role: {current_user.role}) is listing roles")
     security = SecurityService(db)
-    security.enforce_permission(current_user, "admin", "read")
-    return db.query(Role).all()
+    try:
+        security.enforce_permission(current_user, "admin", "read")
+        roles = db.query(Role).all()
+        logger.info(f"Found {len(roles)} roles")
+        return roles
+    except Exception as e:
+        logger.error(f"Error listing roles: {str(e)}")
+        raise
 
 @router.get("/permissions", response_model=List[PermissionBase])
 def list_permissions(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    logger.info(f"User {current_user.email} is listing permissions")
     security = SecurityService(db)
-    security.enforce_permission(current_user, "admin", "read")
-    return db.query(Permission).all()
+    try:
+        security.enforce_permission(current_user, "admin", "read")
+        perms = db.query(Permission).all()
+        logger.info(f"Found {len(perms)} permissions")
+        return perms
+    except Exception as e:
+        logger.error(f"Error listing permissions: {str(e)}")
+        raise
 
 @router.post("/roles/{role_id}/permissions")
 def assign_permissions_to_role(

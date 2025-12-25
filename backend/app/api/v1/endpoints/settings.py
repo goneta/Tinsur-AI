@@ -142,8 +142,11 @@ async def upload_company_logo(
             detail=f"Invalid file type. Allowed types: {', '.join(allowed_extensions)}"
         )
     
-    # Create uploads directory if it doesn't exist
-    upload_dir = Path("backend/uploads/logos")
+    # Create uploads directory relative to backend root
+    # Use absolute path resolution to be safe
+    # backend/app/api/v1/endpoints/settings.py -> ... -> backend (root)
+    backend_root = Path(__file__).resolve().parents[4]
+    upload_dir = backend_root / "uploads" / "logos"
     upload_dir.mkdir(parents=True, exist_ok=True)
     
     # Generate unique filename

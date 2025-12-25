@@ -75,6 +75,41 @@ def require_role(allowed_roles: list[str]):
     return role_checker
 
 
+def require_permission(permission_code: str):
+    """Dependency to check if user has a specific permission via RBAC."""
+    async def permission_checker(
+        current_user: User = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ) -> User:
+        # 1. Super Admin bypass
+        if current_user.role == "super_admin":
+            return current_user
+            
+        # 2. Check Role in DB
+        from app.models.rbac import Role
+        # Check if user's role string maps to an RBAC Role
+        role_record = db.query(Role).filter(Role.name == current_user.role).first()
+        
+        if not role_record:
+            # Fallback: if role not in DB, deny or use legacy checks?
+            # For now, deny strict permissions if RBAC is active
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Role configuration not found for '{current_user.role}'"
+            )
+            
+        # 3. Check Permissions
+        has_perm = any(p.code == permission_code for p in role_record.permissions)
+        if not has_perm:
+             raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Missing permission: {permission_code}"
+            )
+
+        return current_user
+    return permission_checker
+
+
 # Pre-defined role dependencies
 require_admin = require_role(["super_admin", "company_admin"])
 require_manager = require_role(["super_admin", "company_admin", "manager"])

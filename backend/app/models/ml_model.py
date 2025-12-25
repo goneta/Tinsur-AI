@@ -1,7 +1,7 @@
 """
 ML Model metadata tracker.
 """
-from sqlalchemy import Column, String, Boolean, DateTime, Numeric
+from sqlalchemy import Column, String, Boolean, DateTime, Numeric, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime

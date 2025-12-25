@@ -13,7 +13,7 @@ from app.models.user import User
 from app.models.policy import Policy
 from app.models.quote import Quote
 from sqlalchemy import func
-from app.schemas.user import User as UserSchema
+from app.schemas.user import UserResponse as UserSchema
 
 router = APIRouter()
 

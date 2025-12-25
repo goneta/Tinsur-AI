@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, require_role
 from app.models.user import User
 from app.repositories.payment_repository import PaymentRepository
 from app.repositories.premium_schedule_repository import PremiumScheduleRepository
@@ -20,7 +20,7 @@ def get_revenue_summary(
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_role(["super_admin", "company_admin", "manager", "accountant"]))
 ):
     """Get revenue summary for a date range."""
     payment_repo = PaymentRepository(db)
@@ -48,7 +48,7 @@ def get_revenue_summary(
 def get_daily_revenue(
     days: int = Query(default=30, ge=1, le=365),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_role(["super_admin", "company_admin", "manager", "accountant"]))
 ):
     """Get daily revenue for the last N days."""
     payment_repo = PaymentRepository(db)
@@ -85,7 +85,7 @@ def get_daily_revenue(
 def get_monthly_revenue(
     months: int = Query(default=12, ge=1, le=24),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_role(["super_admin", "company_admin", "manager", "accountant"]))
 ):
     """Get monthly revenue for the last N months."""
     payment_repo = PaymentRepository(db)
@@ -183,7 +183,7 @@ def get_payment_breakdown(
 @router.get("/dashboard")
 def get_financial_dashboard(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_role(["super_admin", "company_admin", "manager", "accountant"]))
 ):
     """Get comprehensive financial dashboard data."""
     payment_repo = PaymentRepository(db)

@@ -29,6 +29,12 @@ def get_analytics_dashboard(
         if current_user.role != 'super_admin':
              raise HTTPException(status_code=403, detail="Not authorized to access this company's data")
     
+    # Check permissions (either admin/manager role or specific permission)
+    if current_user.role not in ['super_admin', 'company_admin', 'manager']:
+        # Could also use new require_permission("view_analytics") here if fully migrating
+        # For now, fix the immediate 403 by allowing manager
+        raise HTTPException(status_code=403, detail="Insufficient role for analytics")
+    
     service = AnalyticsService(db)
     return service.get_dashboard_metrics(filter_params)
 

@@ -26,7 +26,9 @@ def seed_rbac():
             "claim:write": "File or update claims",
             "policy:read": "View policies",
             "policy:write": "Create or modify policies",
-            "admin:access": "Access admin dashboard"
+            "admin:access": "Access admin dashboard",
+            "admin:read": "View RBAC settings",
+            "admin:write": "Modify RBAC settings"
         }
         
         db_perms = {}
@@ -45,7 +47,8 @@ def seed_rbac():
         roles_def = {
             "client": ["quote:read", "quote:create", "claim:read", "claim:write", "policy:read"],
             "agent": ["quote:read", "quote:create", "claim:read", "claim:write", "policy:read", "policy:write"],
-            "manager": ["quote:read", "quote:create", "claim:read", "claim:write", "policy:read", "policy:write", "admin:access"],
+            "manager": ["quote:read", "quote:create", "claim:read", "claim:write", "policy:read", "policy:write", "admin:access", "admin:read"],
+            "company_admin": list(permissions_map.keys()), # All for now
             "super_admin": list(permissions_map.keys()) # All
         }
 

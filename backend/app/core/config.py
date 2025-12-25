@@ -36,16 +36,7 @@ class Settings(BaseSettings):
     @classmethod
     def parse_cors_origins(cls, v: Any) -> List[str]:
         """Parse CORS origins from various formats."""
-        if v is None:
-            return ["http://localhost:3000"]
-        if isinstance(v, list):
-            return v
-        if isinstance(v, str):
-            # Handle comma-separated or single value
-            if "," in v:
-                return [origin.strip() for origin in v.split(",")]
-            return [v.strip()]
-        return ["http://localhost:3000"]
+        return ["*"]
     
     # File Storage
     UPLOAD_DIR: str = "uploads"
