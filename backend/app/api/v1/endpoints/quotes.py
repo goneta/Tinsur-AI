@@ -41,7 +41,8 @@ def calculate_quote(
         policy_type_id=calculation_request.policy_type_id,
         coverage_amount=calculation_request.coverage_amount,
         risk_factors=calculation_request.risk_factors,
-        duration_months=calculation_request.duration_months
+        duration_months=calculation_request.duration_months,
+        company_id=current_user.company_id
     )
     
     return result

@@ -1,0 +1,56 @@
+"""
+Premium Policy models for complex eligibility rules and pricing.
+"""
+from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey, Numeric, Table
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+import uuid
+from datetime import datetime
+
+from app.core.database import Base
+
+# Association table for PremiumPolicyType and PremiumPolicyCriteria
+premium_policy_type_criteria = Table(
+    "premium_policy_type_criteria",
+    Base.metadata,
+    Column("policy_type_id", UUID(as_uuid=True), ForeignKey("premium_policy_types.id", ondelete="CASCADE"), primary_key=True),
+    Column("criteria_id", UUID(as_uuid=True), ForeignKey("premium_policy_criteria.id", ondelete="CASCADE"), primary_key=True),
+)
+
+class PremiumPolicyCriteria(Base):
+    """Criteria for premium policy eligibility."""
+    __tablename__ = "premium_policy_criteria"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    field_name = Column(String(100), nullable=False)  # e.g., 'car_age', 'accidents_not_fault'
+    operator = Column(String(20), nullable=False)    # e.g., '<', '>', '=', 'between'
+    value = Column(String(255), nullable=False)      # e.g., '5', '0,1'
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    company = relationship("Company")
+    policy_types = relationship("PremiumPolicyType", secondary=premium_policy_type_criteria, back_populates="criteria")
+
+class PremiumPolicyType(Base):
+    """Premium Policy Type with pricing and eligibility rules."""
+    __tablename__ = "premium_policy_types"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
+    name = Column(String(100), nullable=False)
+    description = Column(Text)
+    price = Column(Numeric(15, 2), nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    company = relationship("Company")
+    criteria = relationship("PremiumPolicyCriteria", secondary=premium_policy_type_criteria, back_populates="policy_types")
+
+    def __repr__(self):
+        return f"<PremiumPolicyType {self.name}>"

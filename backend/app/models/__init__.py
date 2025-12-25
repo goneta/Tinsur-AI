@@ -35,6 +35,7 @@ from app.models.pos_inventory import POSInventory
 from app.models.employee import EmployeeProfile
 from app.models.payroll import PayrollTransaction
 from app.models.ledger import Account, JournalEntry, LedgerEntry
+from app.models.premium_policy import PremiumPolicyCriteria, PremiumPolicyType
 
 __all__ = [
     "Company", 
@@ -79,4 +80,6 @@ __all__ = [
     "Account",
     "JournalEntry",
     "LedgerEntry",
+    "PremiumPolicyCriteria",
+    "PremiumPolicyType",
 ]

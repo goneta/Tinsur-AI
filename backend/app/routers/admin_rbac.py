@@ -1,6 +1,6 @@
 from typing import List, Any
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from pydantic import BaseModel
 import uuid
 
@@ -32,6 +32,11 @@ class RoleBase(BaseModel):
     class Config:
         from_attributes = True
 
+class PermissionCreate(BaseModel):
+    scope: str
+    action: str
+    description: str | None = None
+
 class AssignPermissionsRequest(BaseModel):
     permission_ids: List[str]
 
@@ -50,7 +55,7 @@ def list_roles(
     security = SecurityService(db)
     try:
         security.enforce_permission(current_user, "admin", "read")
-        roles = db.query(Role).all()
+        roles = db.query(Role).options(joinedload(Role.permissions)).all()
         logger.info(f"Found {len(roles)} roles")
         return roles
     except Exception as e:
@@ -99,6 +104,34 @@ def assign_permissions_to_role(
     db.commit()
     db.refresh(role)
     return {"status": "success", "role": role.name, "permission_count": len(role.permissions)}
+
+@router.post("/permissions", response_model=PermissionBase)
+def create_permission(
+    permission_in: PermissionCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    security = SecurityService(db)
+    security.enforce_permission(current_user, "admin", "write")
+    
+    # Check if permission already exists
+    existing = db.query(Permission).filter(
+        Permission.scope == permission_in.scope,
+        Permission.action == permission_in.action
+    ).first()
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Permission already exists")
+    
+    permission = Permission(
+        scope=permission_in.scope,
+        action=permission_in.action,
+        description=permission_in.description
+    )
+    db.add(permission)
+    db.commit()
+    db.refresh(permission)
+    return permission
 
 # Helper to verify setup (dev only)
 @router.post("/init-rbac")

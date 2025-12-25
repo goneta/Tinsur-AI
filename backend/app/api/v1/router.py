@@ -41,7 +41,8 @@ from app.api.v1.endpoints import (
     accounting,
     analytics,
     notifications,
-    kyc
+    kyc,
+    premium_policies
 )
 
 api_router = APIRouter()
@@ -88,3 +89,4 @@ api_router.include_router(accounting.router, prefix="/accounting", tags=["Accoun
 api_router.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
 api_router.include_router(kyc.router, prefix="/kyc", tags=["KYC & Digital Identity"])
+api_router.include_router(premium_policies.router, prefix="/premium-policies", tags=["Premium Policies"])

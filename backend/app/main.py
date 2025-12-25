@@ -85,10 +85,10 @@ async def health_check():
 
 # Include API routers
 from app.api.v1.router import api_router
-from app.routers import admin_rbac
+# from app.routers import admin_rbac  # Removed duplicated admin rbac
 
 app.include_router(api_router, prefix="/api/v1")
-app.include_router(admin_rbac.router, prefix="/api/v1")
+# app.include_router(admin_rbac.router, prefix="/api/v1")  # Moved to api_router
 
 # Register Chat Router
 from app.api.v1.endpoints import chat

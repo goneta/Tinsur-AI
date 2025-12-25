@@ -1,7 +1,7 @@
 """
 Admin/stats endpoints for dashboard.
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
@@ -12,6 +12,7 @@ from app.models.user import User
 from app.models.client import Client
 from app.models.policy import Policy
 from app.models.quote import Quote
+from app.services.security_service import SecurityService
 from datetime import date, timedelta, datetime
 
 router = APIRouter()
@@ -195,3 +196,102 @@ async def get_recent_activity(
     return {
         "activities": activities[:10]
     }
+from app.models.rbac import Role, Permission
+from pydantic import BaseModel
+from typing import List, Optional
+
+class PermissionBase(BaseModel):
+    id: str
+    scope: str
+    action: str
+    description: Optional[str] = None
+    key: str
+
+    class Config:
+        from_attributes = True
+
+class RoleBase(BaseModel):
+    id: str
+    name: str
+    description: Optional[str] = None
+    permissions: List[PermissionBase] = []
+
+    class Config:
+        from_attributes = True
+
+class PermissionCreate(BaseModel):
+    scope: str
+    action: str
+    description: Optional[str] = None
+
+class AssignPermissionsRequest(BaseModel):
+    permission_ids: List[str]
+
+@router.get("/roles", response_model=List[RoleBase])
+def list_roles(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    security = SecurityService(db)
+    security.enforce_permission(current_user, "admin", "read")
+    return db.query(Role).options(joinedload(Role.permissions)).all()
+
+@router.get("/permissions", response_model=List[PermissionBase])
+def list_permissions(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    security = SecurityService(db)
+    security.enforce_permission(current_user, "admin", "read")
+    return db.query(Permission).all()
+
+@router.post("/roles/{role_id}/permissions")
+def assign_permissions_to_role(
+    role_id: str,
+    request: AssignPermissionsRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    security = SecurityService(db)
+    security.enforce_permission(current_user, "admin", "write")
+    
+    role = db.query(Role).filter(Role.id == role_id).first()
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+    
+    role.permissions = []
+    for pid in request.permission_ids:
+        perm = db.query(Permission).filter(Permission.id == pid).first()
+        if perm:
+            role.permissions.append(perm)
+            
+    db.commit()
+    db.refresh(role)
+    return {"status": "success", "role": role.name, "permission_count": len(role.permissions)}
+
+@router.post("/permissions", response_model=PermissionBase)
+def create_permission(
+    permission_in: PermissionCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    security = SecurityService(db)
+    security.enforce_permission(current_user, "admin", "write")
+    
+    existing = db.query(Permission).filter(
+        Permission.scope == permission_in.scope,
+        Permission.action == permission_in.action
+    ).first()
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Permission already exists")
+    
+    permission = Permission(
+        scope=permission_in.scope,
+        action=permission_in.action,
+        description=permission_in.description
+    )
+    db.add(permission)
+    db.commit()
+    db.refresh(permission)
+    return permission

@@ -10,6 +10,7 @@ import random
 from app.models.quote import Quote
 from app.models.client import Client
 from app.models.policy_type import PolicyType
+from app.models.premium_policy import PremiumPolicyType, PremiumPolicyCriteria
 from app.repositories.quote_repository import QuoteRepository
 
 
@@ -27,11 +28,10 @@ class QuoteService:
     
     def calculate_premium(
         self,
-        policy_type_id: UUID,
-        coverage_amount: Decimal,
         risk_factors: Dict[str, Any],
         duration_months: int = 12,
-        policy_id: Optional[UUID] = None  # Added for UBI adjustment
+        policy_id: Optional[UUID] = None,
+        company_id: Optional[UUID] = None
     ) -> Dict[str, Any]:
         """
         Calculate premium based on policy type and risk factors.
@@ -76,6 +76,7 @@ class QuoteService:
             'ubi_adjustment': ubi_adjustment_amount,
             'risk_score': risk_score,
             'final_premium': final_premium,
+            'premium_evaluation': self.evaluate_premium_policy(company_id, risk_factors) if company_id else None,
             'discount_amount': Decimal('0'),
             'risk_factors_analysis': self._analyze_risk_factors(risk_factors),
             'recommendations': self._generate_recommendations(risk_score, risk_factors)
@@ -157,19 +158,22 @@ class QuoteService:
         pos_location_id: UUID = None
     ) -> Quote:
         """Create a new quote with calculated premium."""
-        # Calculate premium
         calculation = self.calculate_premium(
-            policy_type_id,
-            coverage_amount,
-            risk_factors,
-            duration_months
+            risk_factors=risk_factors,
+            duration_months=duration_months,
+            company_id=company_id
         )
+        
+        # Override premium_amount if a premium policy match was found
+        if calculation.get('premium_evaluation'):
+            premium_amount = Decimal(str(calculation['premium_evaluation']['price']))
+        else:
+            premium_amount = calculation['final_premium']
         
         # Generate quote number
         quote_number = self.generate_quote_number(company_id, "AUTO")  # TODO: Get policy type code
         
         # Calculate final premium with discount
-        premium_amount = calculation['final_premium']
         discount_amount = premium_amount * (discount_percent / Decimal(100))
         final_premium = premium_amount - discount_amount
         
@@ -250,3 +254,66 @@ class QuoteService:
             self.quote_repo.update(quote)
             count += 1
         return count
+
+    def evaluate_premium_policy(self, company_id: UUID, client_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+        Evaluate client data against configured premium policy types.
+        Returns the best matching premium policy type and its price.
+        """
+        db = self.quote_repo.db
+        premium_types = db.query(PremiumPolicyType).filter(
+            PremiumPolicyType.company_id == company_id,
+            PremiumPolicyType.is_active == True
+        ).all()
+
+        best_match = None
+        
+        for ptype in premium_types:
+            all_criteria_met = True
+            if not ptype.criteria:
+                continue
+                
+            for criterion in ptype.criteria:
+                if not self._evaluate_criterion(criterion, client_data):
+                    all_criteria_met = False
+                    break
+            
+            if all_criteria_met:
+                # In this logic, we might want the most expensive match or first match. 
+                # The requirements imply specific tiers. We'll take the first match for now.
+                best_match = {
+                    "id": ptype.id,
+                    "name": ptype.name,
+                    "price": ptype.price
+                }
+                break
+                
+        return best_match
+
+    def _evaluate_criterion(self, criterion: PremiumPolicyCriteria, client_data: Dict[str, Any]) -> bool:
+        """Evaluate a single criterion against client data."""
+        val = client_data.get(criterion.field_name)
+        if val is None:
+            return False
+            
+        op = criterion.operator
+        target = criterion.value
+        
+        try:
+            if op == '=':
+                return str(val) == str(target)
+            elif op == '>':
+                return float(val) > float(target)
+            elif op == '<':
+                return float(val) < float(target)
+            elif op == '>=':
+                return float(val) >= float(target)
+            elif op == '<=':
+                return float(val) <= float(target)
+            elif op == 'between':
+                low, high = map(float, target.split(','))
+                return low <= float(val) <= high
+        except (ValueError, TypeError):
+            return False
+            
+        return False
