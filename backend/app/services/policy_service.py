@@ -18,6 +18,8 @@ from app.repositories.endorsement_repository import EndorsementRepository
 from app.repositories.pos_inventory_repository import POSInventoryRepository
 from app.services.reinsurance_service import ReinsuranceService
 from app.services.archive_service import ArchiveService
+from app.services.underwriting_service import UnderwritingService
+from app.services.regulatory_service import RegulatoryService
 
 class PolicyService:
     """Service for policy-related business logic."""
@@ -35,6 +37,8 @@ class PolicyService:
         self.pos_inventory_repo = pos_inventory_repo
         self.reinsurance_service = ReinsuranceService(policy_repo.db)
         self.archive_service = ArchiveService(policy_repo.db)
+        self.underwriting_service = UnderwritingService(policy_repo.db)
+        self.regulatory_service = RegulatoryService(policy_repo.db)
     
     def generate_policy_number(self, company_id: UUID, policy_type_code: str) -> str:
         """Generate unique policy number."""
@@ -225,11 +229,20 @@ class PolicyService:
         created_by: UUID,
         reason: Optional[str] = None
     ) -> Optional[Endorsement]:
-        """Create a new endorsement draft."""
+        """Create a new endorsement draft with authority check."""
         policy = self.policy_repo.get_by_id(policy_id)
         if not policy:
             return None
             
+        # Prevent multiple active endorsements
+        existing_pending = self.endorsement_repo.db.query(Endorsement).filter(
+            Endorsement.policy_id == policy_id,
+            Endorsement.status.in_(['draft', 'pending_approval'])
+        ).first()
+        if existing_pending:
+            # In a real app, maybe allow multiple? For safety, we limit to one at a time.
+            return None
+
         # Generate endorsement number
         timestamp = datetime.now().strftime('%Y%m%d')
         random_suffix = random.randint(1000, 9999)
@@ -252,12 +265,30 @@ class PolicyService:
             created_by=created_by
         )
         
-        return self.endorsement_repo.create(endorsement)
+        created_endorsement = self.endorsement_repo.create(endorsement)
+        
+        # Authority Check
+        # Check if the coverage change or premium change exceeds agent authority
+        new_coverage = Decimal(str(changes.get('coverage_amount', policy.coverage_amount)))
+        is_within = self.underwriting_service.is_within_authority(created_by, new_coverage)
+        
+        if not is_within:
+            # Divert to Decision Hub
+            limit_reason = f"Endorsement exceeds authority limit for coverage {new_coverage}"
+            self.underwriting_service.create_referral(
+                referred_by_id=created_by,
+                endorsement_id=created_endorsement.id,
+                reason=limit_reason
+            )
+            created_endorsement.status = 'pending_approval'
+            self.endorsement_repo.update(created_endorsement)
+            
+        return created_endorsement
 
     def approve_endorsement(self, endorsement_id: UUID, approved_by: UUID) -> Optional[Policy]:
         """Approve usage and apply changes to policy."""
         endorsement = self.endorsement_repo.get_by_id(endorsement_id)
-        if not endorsement or endorsement.status != 'draft':
+        if not endorsement or endorsement.status not in ['draft', 'approved']:
             return None
             
         policy = self.policy_repo.get_by_id(endorsement.policy_id)
@@ -265,9 +296,11 @@ class PolicyService:
             return None
             
         # Apply changes to policy
-        # 1. Premium
+        # 1. Premium Impact on CSM
         if endorsement.premium_adjustment:
             policy.premium_amount = policy.premium_amount + endorsement.premium_adjustment
+            # Trigger CSM Recalculation
+            self.regulatory_service.update_csm_for_modification(policy.id, endorsement.premium_adjustment)
             
         # 2. Update status and timestamp
         endorsement.status = 'active'
@@ -281,7 +314,19 @@ class PolicyService:
             if hasattr(policy, key):
                 setattr(policy, key, value)
         
-        return self.policy_repo.update(policy)
+        updated_policy = self.policy_repo.update(policy)
+        
+        # 4. Revised Document Archiving (Immutable Legal Proof)
+        # In a real system, we'd generate a new PDF first.
+        # Simulating revised document hash:
+        dummy_content = f"Revised Policy Contract: {policy.policy_number} - Endorsement: {endorsement.endorsement_number}".encode()
+        self.archive_service.archive_policy_document(
+            policy.id, 
+            policy.policy_document_url or f"/documents/{policy.id}/endorsement_{endorsement.id}.pdf", 
+            dummy_content
+        )
+        
+        return updated_policy
 
     def reinstate_policy(self, policy_id: UUID) -> Optional[Policy]:
         """Reinstate a canceled or lapsed policy."""

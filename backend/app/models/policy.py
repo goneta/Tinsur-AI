@@ -20,6 +20,7 @@ class Policy(Base):
     policy_type_id = Column(UUID(as_uuid=True), ForeignKey("policy_types.id"))
     quote_id = Column(UUID(as_uuid=True), ForeignKey("quotes.id"), nullable=True)
     pos_location_id = Column(UUID(as_uuid=True), ForeignKey("pos_locations.id"), nullable=True)
+    ifrs17_group_id = Column(UUID(as_uuid=True), ForeignKey("ifrs17_groups.id"), nullable=True)
     
     policy_number = Column(String(50), unique=True, nullable=False, index=True)
     sale_channel = Column(String(50), default='online')  # 'online', 'pos', 'agent', 'broker'
@@ -57,6 +58,7 @@ class Policy(Base):
     policy_type = relationship("PolicyType", back_populates="policies")
     quote = relationship("Quote", back_populates="policy")
     pos_location = relationship("POSLocation", back_populates="policies")
+    ifrs17_group = relationship("IFRS17Group")
     creator = relationship("User", foreign_keys=[created_by])
     sales_agent = relationship("User", foreign_keys=[sales_agent_id])
     endorsements = relationship("Endorsement", back_populates="policy", cascade="all, delete-orphan")

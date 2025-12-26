@@ -17,7 +17,8 @@ class UnderwritingReferral(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
-    quote_id = Column(UUID(as_uuid=True), ForeignKey("quotes.id", ondelete="CASCADE"), nullable=False, unique=True)
+    quote_id = Column(UUID(as_uuid=True), ForeignKey("quotes.id", ondelete="CASCADE"), nullable=True, unique=True)
+    endorsement_id = Column(UUID(as_uuid=True), ForeignKey("endorsements.id", ondelete="CASCADE"), nullable=True, unique=True)
     
     referred_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     assigned_to_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
@@ -35,6 +36,7 @@ class UnderwritingReferral(Base):
     # Relationships
     company = relationship("Company")
     quote = relationship("Quote")
+    endorsement = relationship("Endorsement")
     referrer = relationship("User", foreign_keys=[referred_by_id])
     assignee = relationship("User", foreign_keys=[assigned_to_id])
     decider = relationship("User", foreign_keys=[decided_by_id])

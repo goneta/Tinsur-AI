@@ -112,6 +112,36 @@ class RegulatoryService:
         self.db.commit()
         return release_amount
 
+    def update_csm_for_modification(self, policy_id: UUID, adjustment_amount: Decimal):
+        """
+        Adjusts the CSM of the group linked to the policy when a premium changes (MTA).
+        If the adjustment is positive (premium increase), CSM increases.
+        If negative (premium decrease), CSM decreases.
+        """
+        policy = self.db.query(Policy).get(policy_id)
+        if not policy or not policy.ifrs17_group_id:
+            return
+            
+        group = self.db.query(IFRS17Group).get(policy.ifrs17_group_id)
+        if not group:
+            return
+            
+        # In a real IFRS 17 model, the impact of premium change on CSM 
+        # is filtered through fulfillment cash flows and risk adjustment.
+        # Simplified: We treat a portion (e.g., 20% profit margin proxy) 
+        # of the premium adjustment as a direct CSM impact.
+        
+        profit_proxy_rate = Decimal("0.20")
+        csm_impact = adjustment_amount * profit_proxy_rate
+        
+        group.remaining_csm += csm_impact
+        # Ensure we don't go negative if a massive refund occurs
+        if group.remaining_csm < 0:
+            group.remaining_csm = Decimal("0.0")
+            
+        self.db.commit()
+        return float(csm_impact)
+
     def get_csm_projections(self, company_id: UUID) -> List[Dict[str, Any]]:
         """
         Calculates projected CSM revenue release for the next 12 months.
