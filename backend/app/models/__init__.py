@@ -2,6 +2,7 @@
 Models package.
 """
 from app.models.company import Company
+from app.models.policy_service import PolicyService
 from app.models.user import User
 from app.models.client import Client
 from app.models.policy_type import PolicyType
@@ -82,4 +83,5 @@ __all__ = [
     "LedgerEntry",
     "PremiumPolicyCriteria",
     "PremiumPolicyType",
+    "PolicyService",
 ]

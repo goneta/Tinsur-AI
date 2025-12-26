@@ -17,6 +17,14 @@ premium_policy_type_criteria = Table(
     Column("criteria_id", UUID(as_uuid=True), ForeignKey("premium_policy_criteria.id", ondelete="CASCADE"), primary_key=True),
 )
 
+# Association table for PremiumPolicyType and PolicyService
+premium_policy_service_association = Table(
+    "premium_policy_service_association",
+    Base.metadata,
+    Column("policy_type_id", UUID(as_uuid=True), ForeignKey("premium_policy_types.id", ondelete="CASCADE"), primary_key=True),
+    Column("service_id", UUID(as_uuid=True), ForeignKey("policy_services.id", ondelete="CASCADE"), primary_key=True),
+)
+
 class PremiumPolicyCriteria(Base):
     """Criteria for premium policy eligibility."""
     __tablename__ = "premium_policy_criteria"
@@ -50,7 +58,9 @@ class PremiumPolicyType(Base):
 
     # Relationships
     company = relationship("Company")
+    company = relationship("Company")
     criteria = relationship("PremiumPolicyCriteria", secondary=premium_policy_type_criteria, back_populates="policy_types")
+    services = relationship("PolicyService", secondary=premium_policy_service_association)
 
     def __repr__(self):
         return f"<PremiumPolicyType {self.name}>"

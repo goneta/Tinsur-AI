@@ -47,7 +47,8 @@ from app.api.v1.endpoints import (
     regulatory,
     underwriting,
     recovery,
-    archive
+    archive,
+    policy_services
 )
 
 api_router = APIRouter()
@@ -100,3 +101,5 @@ api_router.include_router(regulatory.router, prefix="/regulatory", tags=["Regula
 api_router.include_router(underwriting.router, prefix="/underwriting", tags=["Underwriting Management"])
 api_router.include_router(recovery.router, prefix="/recovery", tags=["Claims Recovery"])
 api_router.include_router(archive.router, prefix="/archive", tags=["Immutable Archive (Legal Proof)"])
+api_router.include_router(policy_services.router, prefix="/policy-services", tags=["Policy Services"])
+

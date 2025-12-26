@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, require_admin
 from app.models.user import User
+from app.models.user import User
 from app.models.premium_policy import PremiumPolicyCriteria, PremiumPolicyType
+from app.models.policy_service import PolicyService
 from app.schemas.premium_policy import (
     PremiumPolicyCriteriaCreate,
     PremiumPolicyCriteriaUpdate,
@@ -97,8 +99,12 @@ def create_premium_policy_type(
 ):
     """Create a new premium policy type."""
     criteria_ids = type_data.criteria_ids
+    service_ids_input = type_data.service_ids
     type_dict = type_data.model_dump()
-    del type_dict['criteria_ids']
+    if 'criteria_ids' in type_dict:
+        del type_dict['criteria_ids']
+    if 'service_ids' in type_dict:
+        del type_dict['service_ids']
     
     policy_type = PremiumPolicyType(
         company_id=current_user.company_id,
@@ -111,6 +117,13 @@ def create_premium_policy_type(
             PremiumPolicyCriteria.company_id == current_user.company_id
         ).all()
         policy_type.criteria = criteria
+
+    if service_ids_input:
+        services = db.query(PolicyService).filter(
+            PolicyService.id.in_(service_ids_input),
+            PolicyService.company_id == current_user.company_id
+        ).all()
+        policy_type.services = services
         
     db.add(policy_type)
     db.commit()
@@ -178,6 +191,14 @@ def update_premium_policy_type(
             PremiumPolicyCriteria.company_id == current_user.company_id
         ).all()
         policy_type.criteria = criteria
+
+    if 'service_ids' in update_data:
+        service_ids = update_data.pop('service_ids')
+        services = db.query(PolicyService).filter(
+            PolicyService.id.in_(service_ids),
+            PolicyService.company_id == current_user.company_id
+        ).all()
+        policy_type.services = services
         
     for field, value in update_data.items():
         setattr(policy_type, field, value)

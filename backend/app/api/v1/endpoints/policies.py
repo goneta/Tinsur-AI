@@ -58,7 +58,9 @@ def create_policy(
         sales_agent_id=policy_data.sales_agent_id,
         pos_location_id=policy_data.pos_location_id or current_user.pos_location_id,
         details=policy_data.details,
-        inventory_deductions=policy_data.inventory_deductions
+
+        inventory_deductions=policy_data.inventory_deductions,
+        services=policy_data.services
     )
     
     # Generate payment schedule

@@ -27,22 +27,30 @@ class PolicyCreate(PolicyBase):
     sales_agent_id: Optional[UUID] = None
     pos_location_id: Optional[UUID] = None
     inventory_deductions: Optional[List[Dict[str, Any]]] = None # List of {item_id: UUID, quantity: int}
+    services: Optional[List[Dict[str, Any]]] = None # List of {service_id: UUID, price: Decimal}
 
 
 class PolicyUpdate(PolicyBase):
     """Schema for updating a policy."""
-    # Note: Using PolicyBase fields as optional for update, but here recreating with Optionals for clarity or just inheriting logic
     client_id: Optional[UUID] = None
     policy_type_id: Optional[UUID] = None
-    # ... Wait, PolicyUpdate usually redeclares fields as optional.
-    # The existing file had:
-    # class PolicyUpdate(BaseModel):
-    #     coverage_amount: Optional[Decimal] ...
-    # I should only touch PolicyCreate and PolicyResponse.
-    # Re-reading file content from step 80 to ensure I don't break PolicyUpdate.
-    pass 
+    coverage_amount: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
+    premium_amount: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
+    premium_frequency: Optional[str] = Field(None, pattern='^(monthly|quarterly|semi-annual|annual)$')
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
 
-# Actually, I should just target PolicyCreate and PolicyResponse specifically.
+
+class PolicyServiceResponse(BaseModel):
+    """Schema for policy service in response."""
+    id: UUID
+    name_en: str
+    name_fr: Optional[str]
+    price: Decimal # effective price on policy
+    
+    class Config:
+        from_attributes = True
+
 
 class PolicyResponse(PolicyBase):
     """Schema for policy response."""
@@ -62,6 +70,7 @@ class PolicyResponse(PolicyBase):
     days_until_expiry: Optional[int]
     client_name: str
     created_by_name: str
+    # services: List[PolicyServiceResponse] = [] # Commented out for now until strict typed response handling is verified
     
     class Config:
         from_attributes = True

@@ -123,8 +123,10 @@ class PolicyService:
         created_by: UUID,
         sales_agent_id: Optional[UUID] = None,
         pos_location_id: Optional[UUID] = None,
+
         details: Optional[dict] = None,
-        inventory_deductions: Optional[List[dict]] = None
+        inventory_deductions: Optional[List[dict]] = None,
+        services: Optional[List[dict]] = None
     ) -> Policy:
         """Create a policy directly (not from quote)."""
         policy_number = self.generate_policy_number(company_id, "GEN")
@@ -143,10 +145,25 @@ class PolicyService:
             details=details or {},
             created_by=created_by,
             sales_agent_id=sales_agent_id,
+
             pos_location_id=pos_location_id
         )
         
         created_policy = self.policy_repo.create(policy)
+        
+        # Handle Policy Services
+        if services:
+            from app.models.policy_service import policy_service_association
+            for svc in services:
+                if 'service_id' in svc and 'price' in svc:
+                    self.policy_repo.db.execute(
+                        policy_service_association.insert().values(
+                            policy_id=created_policy.id,
+                            service_id=svc['service_id'],
+                            price=svc['price']
+                        )
+                    )
+
         
         # Trigger Reinsurance Cession
         self.reinsurance_service.process_policy_cessions(created_policy)

@@ -8,10 +8,13 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from passlib.context import CryptContext
 import uuid
-from datetime import datetime
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Database URL
-DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/insurance_saas"
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/insurance_saas")
 
 # Password hashing
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
@@ -55,7 +58,7 @@ try:
     
     if existing_user:
         print(f"User {admin_email} already exists. Updating password...")
-        existing_user.password_hash = get_password_hash("Admin123!")
+        existing_user.password_hash = get_password_hash("admin123")
         db.commit()
         print(f"✓ Password updated for {admin_email}")
     else:
@@ -78,7 +81,7 @@ try:
         admin = User(
             id=uuid.uuid4(),
             email=admin_email,
-            password_hash=get_password_hash("Admin123!"),
+            password_hash=get_password_hash("admin123"),
             first_name="Admin",
             last_name="User",
             role="super_admin",
@@ -95,7 +98,7 @@ try:
     print("✓ SUCCESS! Admin user is ready:")
     print("="*50)
     print(f"  Email: admin@demoinsurance.com")
-    print(f"  Password: Admin123!")
+    print(f"  Password: admin123")
     print(f"  Role: super_admin")
     print("="*50)
     

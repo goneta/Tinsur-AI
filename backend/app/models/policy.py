@@ -62,8 +62,17 @@ class Policy(Base):
     creator = relationship("User", foreign_keys=[created_by])
     sales_agent = relationship("User", foreign_keys=[sales_agent_id])
     endorsements = relationship("Endorsement", back_populates="policy", cascade="all, delete-orphan")
+
     claims = relationship("Claim", back_populates="policy", cascade="all, delete-orphan")
     co_insurance_shares = relationship("CoInsuranceShare", back_populates="policy", cascade="all, delete-orphan")
+    
+    # Services
+    services = relationship(
+        "PolicyService",
+        secondary="policy_service_association",
+        backref="policies",
+        lazy="selectin"
+    )
 
     
     def __repr__(self):

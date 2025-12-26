@@ -1,8 +1,19 @@
 from typing import List, Optional, Union
 from uuid import UUID
 from datetime import datetime
+from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 from decimal import Decimal
+
+# Minimal Schema for embedded PolicyService response
+class PolicyServiceRef(BaseModel):
+    id: UUID
+    name_en: str
+    name_fr: Optional[str] = None
+    default_price: Decimal
+    is_active: bool
+    
+    model_config = ConfigDict(from_attributes=True)
 
 class PremiumPolicyCriteriaBase(BaseModel):
     name: str
@@ -37,6 +48,7 @@ class PremiumPolicyTypeBase(BaseModel):
 
 class PremiumPolicyTypeCreate(PremiumPolicyTypeBase):
     criteria_ids: List[UUID] = []
+    service_ids: List[UUID] = []
 
 class PremiumPolicyTypeUpdate(BaseModel):
     name: Optional[str] = None
@@ -44,11 +56,13 @@ class PremiumPolicyTypeUpdate(BaseModel):
     price: Optional[Decimal] = None
     is_active: Optional[bool] = None
     criteria_ids: Optional[List[UUID]] = None
+    service_ids: Optional[List[UUID]] = None
 
 class PremiumPolicyTypeResponse(PremiumPolicyTypeBase):
     id: UUID
     company_id: UUID
     criteria: List[PremiumPolicyCriteriaResponse] = []
+    services: List[PolicyServiceRef] = []
     created_at: datetime
     updated_at: datetime
     
