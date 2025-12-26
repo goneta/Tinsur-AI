@@ -45,6 +45,8 @@ class AccountingService:
             ("2000", "Accounts Payable", "Liability"),
             ("2100", "Payroll Payable", "Liability"),
             ("2200", "Tax Payable", "Liability"),
+            ("2300", "IFRS 17 - CSM (Liability)", "Liability"),
+            ("2400", "IFRS 17 - Risk Adjustment", "Liability"),
             # Equity
             ("3000", "Retained Earnings", "Equity"),
             # Revenue
