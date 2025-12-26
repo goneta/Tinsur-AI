@@ -90,7 +90,7 @@ async def update_claim(
             detail="Claim not found"
         )
         
-    updated_claim = service.update_claim(claim_id, update_data)
+    updated_claim = await service.update_claim(claim_id, update_data, current_user.id)
     return updated_claim
 
 from typing import List, Optional, Dict, Any

@@ -12,15 +12,21 @@ class ComplianceAmlAgentExecutor(AgentExecutor):
             model="gemini-2.0-flash",
             description="Agent for KYC/AML and Sanctions screening",
             instruction="""
-            You are a Compliance & AML Specialist. Your role is to screen new user registrations 
-            against sanctions lists and assess money laundering risk.
+            You are a Compliance & AML Specialist. Your role is to screen financial entities 
+            (Users, Clients, or Beneficiaries) against sanctions lists and assess money laundering risk.
+            
+            Contexts:
+            - REGISTRATION: Initial platform user signup.
+            - ONBOARDING: Manual client record creation.
+            - PAYOUT: High-risk screening before releasing claim funds.
             
             Return a JSON object with the following fields:
             {
                 "status": "approved" | "flagged",
                 "is_high_risk": boolean,
-                "notes": "Reason for the decision",
-                "risk_score": 0-100
+                "notes": "Detailed reason for the decision based on the specific context",
+                "risk_score": 0-100,
+                "context": "as provided in input"
             }
             """
         )
@@ -28,9 +34,11 @@ class ComplianceAmlAgentExecutor(AgentExecutor):
         # Simulated Sanctions List
         self.sanctions_list = [
             "ivan the terrible",
-            "notorious biggs", # Simulated name
+            "notorious biggs",
             "vladimir the impaler",
-            "sanctioned_email@example.com"
+            "sanctioned_email@example.com",
+            "payout_fraudster@danger.com",
+            "shadowy corporate entity"
         ]
 
     async def execute(self, context: RequestContext, event_queue: EventQueue):
@@ -41,44 +49,51 @@ class ComplianceAmlAgentExecutor(AgentExecutor):
                      user_input = event.text
                      break
         
-        # In this context, user_input is expected to be a JSON string of user details
         try:
-            details = json.loads(user_input)
+            payload = json.loads(user_input)
         except:
-            details = {"name": user_input}
+            payload = {"name": user_input, "context": "UNKNOWN"}
 
-        full_name = f"{details.get('first_name', '')} {details.get('last_name', '')}".strip().lower()
-        email = details.get('email', '').lower()
+        ctx_type = payload.get("context", "REGISTRATION").upper()
         
+        # Determine identifiers to check
+        identifiers = []
+        if payload.get("email"): identifiers.append(payload["email"].lower())
+        if payload.get("first_name") and payload.get("last_name"):
+            identifiers.append(f"{payload['first_name']} {payload['last_name']}".lower())
+        if payload.get("business_name"): identifiers.append(payload["business_name"].lower())
+        if payload.get("name"): identifiers.append(payload["name"].lower())
+
         # 1. Manual Sanctions Check (Simulated)
         flagged = False
-        reason = "Manual check passed."
+        match_found = None
         
-        if full_name in self.sanctions_list or email in self.sanctions_list:
-            flagged = True
-            reason = f"MATCH FOUND ON SANCTIONS LIST: {full_name or email}"
+        for identifier in identifiers:
+            if identifier in self.sanctions_list:
+                flagged = True
+                match_found = identifier
+                break
 
         # 2. LLM Risk Assessment
         google_api_key = context.metadata.get("google_api_key")
         llm_instruction = f"""
-        Perform a risk assessment for the following registration:
-        Name: {full_name}
-        Email: {email}
-        Phone: {details.get('phone')}
-        Role: {details.get('role')}
+        Perform a {ctx_type} risk assessment:
+        Data: {json.dumps(payload, indent=2)}
         
         Internal Manual Check Status: {'FLAGGED' if flagged else 'CLEAN'}
-        Internal Manual Check Reason: {reason}
+        {'Internal Manual Check Match: ' + match_found if flagged else ''}
         
-        Evaluate geographical risk (simulated) and role-based risk.
+        Specific Contextual Guidance:
+        - If PAYOUT: Be extremely sensitive to mismatching names or high-value amounts.
+        - If ONBOARDING: Focus on business legitimacy and geographical risk.
+        - If REGISTRATION: Check for spam patterns or burner emails.
+
         Return ONLY the JSON object.
         """
         
         llm_response = await self.agent.run(user_input, instruction=llm_instruction, google_api_key=google_api_key)
         
-        # If LLM fails or returns non-JSON, fallback to manual check result
         try:
-            # Clean LLM response
             cleaned_json = llm_response.replace("```json", "").replace("```", "").strip()
             if "{" in cleaned_json:
                 cleaned_json = cleaned_json[cleaned_json.find("{"):cleaned_json.rfind("}")+1]
@@ -87,16 +102,17 @@ class ComplianceAmlAgentExecutor(AgentExecutor):
             response_data = {
                 "status": "flagged" if flagged else "approved",
                 "is_high_risk": flagged,
-                "notes": f"LLM assessment failed. {reason}",
-                "risk_score": 90 if flagged else 10
+                "notes": f"LLM parsing failed. Manual flag: {flagged}",
+                "risk_score": 95 if flagged else 15
             }
 
-        # Ensure manual flag overrides LLM if manual check found a match
+        # Enforcement
         if flagged:
             response_data["status"] = "flagged"
             response_data["is_high_risk"] = True
-            response_data["notes"] = f"CRITICAL: {reason}. " + response_data.get("notes", "")
+            response_data["notes"] = f"MATCH FOUND ON WATCHLIST: {match_found}. " + response_data.get("notes", "")
 
+        response_data["context"] = ctx_type
         event_queue.enqueue_event(new_agent_text_message(json.dumps(response_data)))
 
     async def cancel(self, context: RequestContext, event_queue: EventQueue):

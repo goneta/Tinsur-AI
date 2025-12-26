@@ -56,6 +56,9 @@ class Client(Base):
     driving_license_url = Column(String(500), nullable=True)
     tax_id = Column(String(100))
     risk_profile = Column(String(50), default='medium')  # 'low', 'medium', 'high'
+    compliance_status = Column(String(50), default='pending')  # 'pending', 'approved', 'flagged'
+    is_high_risk = Column(Boolean, default=False)
+    compliance_notes = Column(Text, nullable=True)
     status = Column(String(50), default='active')  # 'active', 'inactive', 'suspended'
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)

@@ -17,7 +17,10 @@ from app.schemas.client import (
 )
 from app.repositories.client_repository import ClientRepository
 from app.models.client_details import ClientAutomobile, ClientHousing, ClientHealth, ClientLife
+from app.models.client import Client
 from app.models.user import User
+from app.core.agent_client import AgentClient
+import json
 
 router = APIRouter()
 
@@ -36,6 +39,48 @@ async def create_client(
     
     repo = ClientRepository(db)
     client = repo.create(client_data)
+    
+    # Compliance & AML Agent Screening for Onboarding
+    try:
+        agent_client = AgentClient()
+        screening_payload = {
+            "context": "ONBOARDING",
+            "first_name": client.first_name,
+            "last_name": client.last_name,
+            "business_name": client.business_name,
+            "email": client.email,
+            "phone": client.phone,
+            "client_type": client.client_type,
+            "country": client.country
+        }
+        
+        response = await agent_client.send_message(
+            "compliance_aml_agent",
+            json.dumps(screening_payload),
+            context={"company_id": str(current_user.company_id)}
+        )
+        
+        if "messages" in response and response["messages"]:
+            last_msg = response["messages"][-1]
+            compliance_data = json.loads(last_msg["text"])
+            
+            client.compliance_status = compliance_data.get("status", "flagged")
+            client.is_high_risk = compliance_data.get("is_high_risk", False)
+            client.compliance_notes = compliance_data.get("notes", "No notes provided.")
+            
+            # If flagged, change status to suspended or similar
+            if client.compliance_status == "flagged" or client.is_high_risk:
+                client.status = "suspended"
+                print(f"Client {client.id} SUSPENDED for compliance review.")
+            
+            db.commit()
+            db.refresh(client)
+    except Exception as e:
+        print(f"Client Compliance Agent Error: {str(e)}")
+        client.compliance_status = "error"
+        client.compliance_notes = f"Failed to run onboarding compliance check: {str(e)}"
+        db.commit()
+
     return client
 
 

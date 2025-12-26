@@ -1,8 +1,8 @@
-
 import sys
 import os
 from decimal import Decimal
 import uuid
+import asyncio
 
 # Add backend to path
 sys.path.append(os.path.join(os.getcwd(), 'backend'))
@@ -15,7 +15,7 @@ from app.models.inter_company_share import InterCompanyShare
 from app.services.claim_service import ClaimService
 from app.schemas.claim import ClaimUpdate
 
-def test_coinsurance_distribution():
+async def test_coinsurance_distribution():
     print("Testing Co-insurance Distribution Logic...")
     db = SessionLocal()
     try:
@@ -67,7 +67,7 @@ def test_coinsurance_distribution():
         # 4. Approve the claim
         print("Approving claim...")
         update = ClaimUpdate(status="approved", approved_amount=10000.0)
-        service.update_claim(claim.id, update)
+        await service.update_claim(claim.id, update)
 
         # 5. Verify settlement generation
         settlement = db.query(InterCompanyShare).filter(
@@ -89,4 +89,4 @@ def test_coinsurance_distribution():
         db.close()
 
 if __name__ == "__main__":
-    test_coinsurance_distribution()
+    asyncio.run(test_coinsurance_distribution())
