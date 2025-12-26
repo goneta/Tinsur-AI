@@ -6,6 +6,7 @@ from uuid import UUID
 from decimal import Decimal
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+from sqlalchemy.orm import joinedload
 
 from app.models.underwriting import UnderwritingReferral
 from app.models.user import User
@@ -83,7 +84,10 @@ class UnderwritingService:
 
     def get_pending_referrals(self, company_id: UUID) -> List[UnderwritingReferral]:
         """Get all pending referrals for a company."""
-        return self.db.query(UnderwritingReferral).filter(
+        return self.db.query(UnderwritingReferral).options(
+            joinedload(UnderwritingReferral.quote).joinedload(Quote.client),
+            joinedload(UnderwritingReferral.referrer)
+        ).filter(
             UnderwritingReferral.company_id == company_id,
             UnderwritingReferral.status == 'pending'
         ).all()

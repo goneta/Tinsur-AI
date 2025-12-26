@@ -6,6 +6,7 @@ from uuid import UUID
 from decimal import Decimal
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+from sqlalchemy.orm import joinedload
 
 from app.models.recovery import ClaimRecovery
 from app.models.claim import Claim
@@ -67,7 +68,9 @@ class RecoveryService:
 
     def get_pending_recoveries(self, company_id: UUID) -> List[ClaimRecovery]:
         """Get all open recovery cases."""
-        return self.db.query(ClaimRecovery).filter(
+        return self.db.query(ClaimRecovery).options(
+            joinedload(ClaimRecovery.claim).joinedload(Claim.client)
+        ).filter(
             ClaimRecovery.company_id == company_id,
             ClaimRecovery.status.in_(['identified', 'in_progress', 'negotiation'])
         ).all()
