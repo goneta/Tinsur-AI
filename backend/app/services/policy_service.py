@@ -14,7 +14,9 @@ from app.models.policy_type import PolicyType
 from app.repositories.policy_repository import PolicyRepository
 from app.repositories.quote_repository import QuoteRepository
 from app.repositories.endorsement_repository import EndorsementRepository
+from app.repositories.endorsement_repository import EndorsementRepository
 from app.repositories.pos_inventory_repository import POSInventoryRepository
+from app.services.reinsurance_service import ReinsuranceService
 
 class PolicyService:
     """Service for policy-related business logic."""
@@ -30,6 +32,7 @@ class PolicyService:
         self.quote_repo = quote_repo
         self.endorsement_repo = endorsement_repo
         self.pos_inventory_repo = pos_inventory_repo
+        self.reinsurance_service = ReinsuranceService(policy_repo.db)
     
     def generate_policy_number(self, company_id: UUID, policy_type_code: str) -> str:
         """Generate unique policy number."""
@@ -87,7 +90,12 @@ class PolicyService:
             created_by=created_by
         )
         
-        return self.policy_repo.create(policy)
+        policy = self.policy_repo.create(policy)
+        
+        # Trigger Reinsurance Cession
+        self.reinsurance_service.process_policy_cessions(policy)
+        
+        return policy
     
     def create_policy(
         self,
@@ -126,6 +134,9 @@ class PolicyService:
         )
         
         created_policy = self.policy_repo.create(policy)
+        
+        # Trigger Reinsurance Cession
+        self.reinsurance_service.process_policy_cessions(created_policy)
         
         # Handle Inventory Deduction
         if self.pos_inventory_repo and pos_location_id and inventory_deductions:

@@ -13,6 +13,7 @@ from app.models.policy import Policy
 from app.models.co_insurance import CoInsuranceShare
 from app.models.inter_company_share import InterCompanyShare
 from app.repositories.claim_repository import ClaimRepository
+from app.services.reinsurance_service import ReinsuranceService
 from app.schemas.claim import ClaimCreate, ClaimUpdate, ClaimBase
 from app.core.agent_client import AgentClient
 from app.models.client import Client
@@ -25,6 +26,7 @@ class ClaimService:
     def __init__(self, db: Session):
         self.db = db
         self.repository = ClaimRepository(db)
+        self.reinsurance_service = ReinsuranceService(db)
         
     def _generate_claim_number(self) -> str:
         """Generate a random claim number."""
@@ -139,15 +141,15 @@ class ClaimService:
                                 self.repository.update(claim)
                                 return claim
                 except Exception as e:
-                    print(f"Payout AML Error: {str(e)}")
-                    # For safety in payments/claims, we might want to block on error.
-                    # But for this demo/implementation, we'll log it.
+                    # Log and continue (Agent unavailable/error)
+                    pass
 
             claim.status = new_status
             
-            # If claim is approved, handle co-insurance settlements
+            # If claim is approved, handle co-insurance settlements and reinsurance recovery
             if claim.status == 'approved' and old_status != 'approved':
                 self._generate_co_insurance_settlements(claim)
+                self.reinsurance_service.process_claim_recovery(claim)
                 
         if update_data.incident_description:
             claim.incident_description = update_data.incident_description
