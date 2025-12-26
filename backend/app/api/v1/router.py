@@ -45,7 +45,8 @@ from app.api.v1.endpoints import (
     premium_policies,
     reinsurance,
     regulatory,
-    underwriting
+    underwriting,
+    recovery
 )
 
 api_router = APIRouter()
@@ -96,3 +97,4 @@ api_router.include_router(premium_policies.router, prefix="/premium-policies", t
 api_router.include_router(reinsurance.router, prefix="/reinsurance", tags=["Reinsurance Management"])
 api_router.include_router(regulatory.router, prefix="/regulatory", tags=["Regulatory & Compliance"])
 api_router.include_router(underwriting.router, prefix="/underwriting", tags=["Underwriting Management"])
+api_router.include_router(recovery.router, prefix="/recovery", tags=["Claims Recovery"])
