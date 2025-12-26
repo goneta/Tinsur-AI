@@ -44,7 +44,8 @@ from app.api.v1.endpoints import (
     kyc,
     premium_policies,
     reinsurance,
-    regulatory
+    regulatory,
+    underwriting
 )
 
 api_router = APIRouter()
@@ -94,3 +95,4 @@ api_router.include_router(kyc.router, prefix="/kyc", tags=["KYC & Digital Identi
 api_router.include_router(premium_policies.router, prefix="/premium-policies", tags=["Premium Policies"])
 api_router.include_router(reinsurance.router, prefix="/reinsurance", tags=["Reinsurance Management"])
 api_router.include_router(regulatory.router, prefix="/regulatory", tags=["Regulatory & Compliance"])
+api_router.include_router(underwriting.router, prefix="/underwriting", tags=["Underwriting Management"])

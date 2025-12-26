@@ -12,6 +12,7 @@ from app.models.client import Client
 from app.models.policy_type import PolicyType
 from app.models.premium_policy import PremiumPolicyType, PremiumPolicyCriteria
 from app.repositories.quote_repository import QuoteRepository
+from app.services.underwriting_service import UnderwritingService
 
 
 class QuoteService:
@@ -19,6 +20,7 @@ class QuoteService:
     
     def __init__(self, quote_repo: QuoteRepository):
         self.quote_repo = quote_repo
+        self.underwriting_service = UnderwritingService(quote_repo.db)
     
     def generate_quote_number(self, company_id: UUID, policy_type_code: str) -> str:
         """Generate unique quote number."""
@@ -200,7 +202,20 @@ class QuoteService:
             pos_location_id=pos_location_id
         )
         
-        return self.quote_repo.create(quote)
+        quote = self.quote_repo.create(quote)
+        
+        # Check Underwriting Authority
+        if created_by:
+            within_authority = self.underwriting_service.is_within_authority(created_by, coverage_amount)
+            if not within_authority:
+                self.underwriting_service.create_referral(
+                    quote_id=quote.id,
+                    referred_by_id=created_by,
+                    reason=f"Coverage amount ({coverage_amount}) exceeds underwriting limit."
+                )
+                # Quote status is updated to 'referred' inside create_referral
+        
+        return quote
     
     def mark_as_sent(self, quote_id: UUID) -> Quote:
         """Mark quote as sent to client and trigger notification."""
