@@ -79,3 +79,12 @@ def amortize_csm(
     service = RegulatoryService(db)
     released = service.amortize_csm(group_id)
     return {"status": "success", "released_amount": float(released or 0)}
+
+@router.get("/ifrs17/projections")
+def get_csm_projections(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["super_admin", "company_admin", "manager", "accountant"]))
+):
+    """Get projected profit releases for the next 12 months (IFRS 17)."""
+    service = RegulatoryService(db)
+    return service.get_csm_projections(current_user.company_id)

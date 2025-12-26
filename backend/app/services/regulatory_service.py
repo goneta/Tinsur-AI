@@ -111,3 +111,33 @@ class RegulatoryService:
         
         self.db.commit()
         return release_amount
+
+    def get_csm_projections(self, company_id: UUID) -> List[Dict[str, Any]]:
+        """
+        Calculates projected CSM revenue release for the next 12 months.
+        Aggregates projections from all active IFRS 17 groups.
+        """
+        groups = self.db.query(IFRS17Group).filter(
+            IFRS17Group.company_id == company_id,
+            IFRS17Group.status == 'active'
+        ).all()
+        
+        projections = []
+        # Current month index (0 to 11 for the next year)
+        for i in range(12):
+            month_release = Decimal("0.0")
+            for group in groups:
+                # Basic projection based on straight-line release
+                # release = initial_csm / 12
+                # We check if remaining CSM is enough for this month's release
+                # Simple model: if (i * single_release) < remaining_csm
+                single_release = group.initial_csm / Decimal("12.0")
+                if (i * single_release) < group.remaining_csm:
+                    month_release += single_release
+            
+            projections.append({
+                "month_index": i,
+                "projected_release": float(month_release)
+            })
+            
+        return projections
