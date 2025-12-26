@@ -73,7 +73,7 @@ def seed_admin(db: Session, company: Company) -> User:
         user = User(
             company_id=company.id,
             email=ADMIN_EMAIL,
-            password_hash=get_password_hash("Admin123!"),
+            password_hash=get_password_hash(PASSWORD),
             first_name="Super",
             last_name="Admin",
             role="super_admin",
