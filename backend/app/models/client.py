@@ -2,9 +2,10 @@
 Client model for insurance clients.
 """
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Date, Text, Numeric, JSON
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Date, Text, Numeric, JSON
 from sqlalchemy.orm import relationship
 import uuid
+from app.core.guid import GUID
 from datetime import datetime
 
 from app.core.database import Base
@@ -14,9 +15,9 @@ class Client(Base):
     """Client model."""
     __tablename__ = "clients"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
+    user_id = Column(GUID(), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     client_type = Column(String(50), nullable=False)  # 'individual', 'corporate'
     first_name = Column(String(100))
     last_name = Column(String(100))
@@ -60,7 +61,7 @@ class Client(Base):
     is_high_risk = Column(Boolean, default=False)
     compliance_notes = Column(Text, nullable=True)
     status = Column(String(50), default='active')  # 'active', 'inactive', 'suspended'
-    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    created_by = Column(GUID(), ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

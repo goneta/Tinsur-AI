@@ -21,6 +21,11 @@ from app.models.company import Company
 from app.models.user import User
 from app.models.client import Client
 from app.models.policy_type import PolicyType
+from app.models.policy_service import PolicyService
+from app.models.pos_location import POSLocation
+from app.models.regulatory import IFRS17Group
+from app.models.endorsement import Endorsement
+from app.models.co_insurance import CoInsuranceShare
 from app.models.quote import Quote
 from app.models.policy import Policy
 from app.models.claim import Claim
@@ -50,7 +55,6 @@ def seed_company(db: Session) -> Company:
             email=ADMIN_EMAIL,
             phone=fake.phone_number(),
             address=fake.address(),
-            city=fake.city(),
             country="Côte d'Ivoire",
             currency="XOF"
         )
@@ -180,6 +184,67 @@ def seed_policy_types(db: Session, company: Company) -> List[PolicyType]:
             db.commit()
             db.refresh(pt)
         results.append(pt)
+    return results
+
+def seed_policy_services(db: Session, company: Company) -> List[PolicyService]:
+    print("Seeding Policy Services...")
+    services_data = [
+        {
+            "name_en": "Courtesy Car",
+            "name_fr": "Véhicule de remplacement",
+            "default_price": 50.00,
+            "description": "Provision of a courtesy car while yours is being repaired."
+        },
+        {
+            "name_en": "Windscreen Cover",
+            "name_fr": "Couverture pare-brise",
+            "default_price": 25.00,
+            "description": "Coverage for windscreen repair or replacement."
+        },
+        {
+            "name_en": "Personal Accident Cover",
+            "name_fr": "Couverture accident personnel",
+            "default_price": 15.00,
+            "description": "Personal accident cover up to £5,000."
+        },
+        {
+            "name_en": "No Claims Discount Protection",
+            "name_fr": "Protection du bonus sans sinistre",
+            "default_price": 30.00,
+            "description": "Protect your No Claims Discount even if you make a claim."
+        },
+        {
+            "name_en": "Breakdown Cover",
+            "name_fr": "Assistance routière",
+            "default_price": 40.00,
+            "description": "Roadside assistance."
+        },
+        {
+            "name_en": "Legal Cover",
+            "name_fr": "Protection juridique",
+            "default_price": 20.00,
+            "description": "Coverage for legal expenses."
+        }
+    ]
+
+    results = []
+    for data in services_data:
+        service = db.query(PolicyService).filter(PolicyService.company_id == company.id, PolicyService.name_en == data['name_en']).first()
+        if not service:
+            service = PolicyService(
+                company_id=company.id,
+                name_en=data['name_en'],
+                name_fr=data['name_fr'],
+                default_price=Decimal(data['default_price']),
+                description=data['description'],
+                is_active=True
+            )
+            db.add(service)
+            db.commit()
+            db.refresh(service)
+        results.append(service)
+    
+    print(f"Seeded {len(results)} Policy Services")
     return results
 
 def seed_quotes(db: Session, company: Company, clients: List[Client], policy_types: List[PolicyType], users: List[User]):
@@ -328,6 +393,7 @@ def main():
         users = seed_users(db, company)
         clients = seed_clients(db, company, users)
         p_types = seed_policy_types(db, company)
+        services = seed_policy_services(db, company)
         
         seed_quotes(db, company, clients, p_types, users)
         policies = seed_policies(db, company, clients, p_types, users)

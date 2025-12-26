@@ -2,8 +2,9 @@
 Policy model for insurance policies.
 """
 from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Enum, Boolean, Integer, JSON, Numeric, Date, Text
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+import uuid
+from app.core.guid import GUID
 import uuid
 from datetime import datetime
 
@@ -14,13 +15,13 @@ class Policy(Base):
     """Policy model for active insurance policies."""
     __tablename__ = "policies"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), index=True)
-    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"), index=True)
-    policy_type_id = Column(UUID(as_uuid=True), ForeignKey("policy_types.id"))
-    quote_id = Column(UUID(as_uuid=True), ForeignKey("quotes.id"), nullable=True)
-    pos_location_id = Column(UUID(as_uuid=True), ForeignKey("pos_locations.id"), nullable=True)
-    ifrs17_group_id = Column(UUID(as_uuid=True), ForeignKey("ifrs17_groups.id"), nullable=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), index=True)
+    client_id = Column(GUID(), ForeignKey("clients.id", ondelete="CASCADE"), index=True)
+    policy_type_id = Column(GUID(), ForeignKey("policy_types.id"))
+    quote_id = Column(GUID(), ForeignKey("quotes.id"), nullable=True)
+    pos_location_id = Column(GUID(), ForeignKey("pos_locations.id"), nullable=True)
+    ifrs17_group_id = Column(GUID(), ForeignKey("ifrs17_groups.id"), nullable=True)
     
     policy_number = Column(String(50), unique=True, nullable=False, index=True)
     sale_channel = Column(String(50), default='online')  # 'online', 'pos', 'agent', 'broker'
@@ -47,8 +48,8 @@ class Policy(Base):
     notes = Column(Text)
     
     # Audit
-    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
-    sales_agent_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    created_by = Column(GUID(), ForeignKey("users.id"))
+    sales_agent_id = Column(GUID(), ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

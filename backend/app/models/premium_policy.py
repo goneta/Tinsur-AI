@@ -2,8 +2,9 @@
 Premium Policy models for complex eligibility rules and pricing.
 """
 from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey, Numeric, Table
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+import uuid
+from app.core.guid import GUID
 import uuid
 from datetime import datetime
 
@@ -13,24 +14,24 @@ from app.core.database import Base
 premium_policy_type_criteria = Table(
     "premium_policy_type_criteria",
     Base.metadata,
-    Column("policy_type_id", UUID(as_uuid=True), ForeignKey("premium_policy_types.id", ondelete="CASCADE"), primary_key=True),
-    Column("criteria_id", UUID(as_uuid=True), ForeignKey("premium_policy_criteria.id", ondelete="CASCADE"), primary_key=True),
+    Column("policy_type_id", GUID(), ForeignKey("premium_policy_types.id", ondelete="CASCADE"), primary_key=True),
+    Column("criteria_id", GUID(), ForeignKey("premium_policy_criteria.id", ondelete="CASCADE"), primary_key=True),
 )
 
 # Association table for PremiumPolicyType and PolicyService
 premium_policy_service_association = Table(
     "premium_policy_service_association",
     Base.metadata,
-    Column("policy_type_id", UUID(as_uuid=True), ForeignKey("premium_policy_types.id", ondelete="CASCADE"), primary_key=True),
-    Column("service_id", UUID(as_uuid=True), ForeignKey("policy_services.id", ondelete="CASCADE"), primary_key=True),
+    Column("policy_type_id", GUID(), ForeignKey("premium_policy_types.id", ondelete="CASCADE"), primary_key=True),
+    Column("service_id", GUID(), ForeignKey("policy_services.id", ondelete="CASCADE"), primary_key=True),
 )
 
 class PremiumPolicyCriteria(Base):
     """Criteria for premium policy eligibility."""
     __tablename__ = "premium_policy_criteria"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
     name = Column(String(255), nullable=False)
     description = Column(Text)
     field_name = Column(String(100), nullable=False)  # e.g., 'car_age', 'accidents_not_fault'
@@ -47,8 +48,8 @@ class PremiumPolicyType(Base):
     """Premium Policy Type with pricing and eligibility rules."""
     __tablename__ = "premium_policy_types"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
     name = Column(String(100), nullable=False)
     description = Column(Text)
     price = Column(Numeric(15, 2), nullable=False)

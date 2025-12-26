@@ -2,9 +2,10 @@
 Endorsement model for policy modifications.
 """
 from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Enum, JSON, Date, Numeric, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Enum, JSON, Date, Numeric, Text
 from sqlalchemy.orm import relationship
 import uuid
+from app.core.guid import GUID
 from datetime import datetime
 
 from app.core.database import Base
@@ -14,9 +15,9 @@ class Endorsement(Base):
     """Endorsement model for mid-term policy adjustments."""
     __tablename__ = "endorsements"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
-    policy_id = Column(UUID(as_uuid=True), ForeignKey("policies.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
+    policy_id = Column(GUID(), ForeignKey("policies.id", ondelete="CASCADE"))
     
     # Endorsement details
     endorsement_number = Column(String(50), unique=True, nullable=False)
@@ -41,12 +42,12 @@ class Endorsement(Base):
     document_url = Column(String(500))
     
     # Approval
-    approved_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    approved_by = Column(GUID(), ForeignKey("users.id"), nullable=True)
     approved_at = Column(DateTime)
     rejection_reason = Column(Text)
     
     # Audit
-    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_by = Column(GUID(), ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

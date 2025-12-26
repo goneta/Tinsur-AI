@@ -2,9 +2,10 @@
 Quote model for insurance quotes.
 """
 from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Enum, JSON, Numeric, Date, Text, Integer
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Enum, JSON, Numeric, Date, Text, Integer
 from sqlalchemy.orm import relationship
 import uuid
+from app.core.guid import GUID
 from datetime import datetime, timedelta
 
 from app.core.database import Base
@@ -14,11 +15,11 @@ class Quote(Base):
     """Quote model for insurance quotes."""
     __tablename__ = "quotes"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
-    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"))
-    policy_type_id = Column(UUID(as_uuid=True), ForeignKey("policy_types.id"))
-    pos_location_id = Column(UUID(as_uuid=True), ForeignKey("pos_locations.id"), nullable=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
+    client_id = Column(GUID(), ForeignKey("clients.id", ondelete="CASCADE"))
+    policy_type_id = Column(GUID(), ForeignKey("policy_types.id"))
+    pos_location_id = Column(GUID(), ForeignKey("pos_locations.id"), nullable=True)
     quote_number = Column(String(50), unique=True, nullable=False)
     sale_channel = Column(String(50), default='online')  # 'online', 'pos', 'agent', 'broker'
     
@@ -42,7 +43,7 @@ class Quote(Base):
     notes = Column(Text)
     
     # Audit
-    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_by = Column(GUID(), ForeignKey("users.id"))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

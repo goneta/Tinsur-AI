@@ -2,9 +2,10 @@
 User model for authentication and authorization.
 """
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text, Numeric
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text, Numeric
 from sqlalchemy.orm import relationship
 import uuid
+from app.core.guid import GUID
 from datetime import datetime
 
 from app.core.database import Base
@@ -14,15 +15,15 @@ class User(Base):
     """User model."""
     __tablename__ = "users"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), index=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), index=True)
     email = Column(String(255), nullable=False, unique=True, index=True)
     password_hash = Column(String(255), nullable=False)
     first_name = Column(String(100))
     last_name = Column(String(100))
     phone = Column(String(50))
     role = Column(String(50), nullable=False)  # 'super_admin', 'company_admin', 'manager', 'agent', 'client'
-    pos_location_id = Column(UUID(as_uuid=True), ForeignKey("pos_locations.id"), nullable=True)
+    pos_location_id = Column(GUID(), ForeignKey("pos_locations.id"), nullable=True)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
     mfa_enabled = Column(Boolean, default=False)
@@ -33,7 +34,7 @@ class User(Base):
     compliance_notes = Column(Text, nullable=True)
     underwriting_limit = Column(Numeric(15, 2), default=0.00)
     last_login = Column(DateTime)
-    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    created_by = Column(GUID(), ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

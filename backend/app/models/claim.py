@@ -2,9 +2,10 @@
 Claim model for insurance claims.
 """
 from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Enum, JSON, Date, Numeric, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Enum, JSON, Date, Numeric, Text
 from sqlalchemy.orm import relationship
 import uuid
+from app.core.guid import GUID
 from datetime import datetime
 
 from app.core.database import Base
@@ -14,14 +15,14 @@ class Claim(Base):
     """Claim model for insurance claims."""
     __tablename__ = "claims"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     claim_number = Column(String(50), unique=True, nullable=False)
     
     # Relationships
-    policy_id = Column(UUID(as_uuid=True), ForeignKey("policies.id", ondelete="CASCADE"), nullable=False)
-    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"), nullable=False)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
-    adjuster_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    policy_id = Column(GUID(), ForeignKey("policies.id", ondelete="CASCADE"), nullable=False)
+    client_id = Column(GUID(), ForeignKey("clients.id", ondelete="CASCADE"), nullable=False)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    adjuster_id = Column(GUID(), ForeignKey("users.id"), nullable=True)
     
     # Incident Details
     incident_date = Column(Date, nullable=False)
@@ -45,7 +46,7 @@ class Claim(Base):
     evidence_hashes = Column(JSON, default=[]) # List of image fingerprints/hashes
     
     # Audit
-    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    created_by = Column(GUID(), ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

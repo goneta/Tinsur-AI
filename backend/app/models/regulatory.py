@@ -2,9 +2,10 @@
 Regulatory models for IFRS 17 and Solvency II.
 """
 from sqlalchemy import Column, String, DateTime, ForeignKey, Numeric, JSON, Date
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, DateTime, ForeignKey, Numeric, JSON, Date
 from sqlalchemy.orm import relationship
 import uuid
+from app.core.guid import GUID
 from datetime import datetime
 
 from app.core.database import Base
@@ -16,8 +17,8 @@ class IFRS17Group(Base):
     """
     __tablename__ = "ifrs17_groups"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     name = Column(String(255), nullable=False) # e.g., "Motor 2025 Q1 - Onerous"
     
     # Financials
@@ -42,8 +43,8 @@ class RegulatoryMetricSnapshot(Base):
     """
     __tablename__ = "regulatory_metrics"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     
     snapshot_date = Column(Date, default=datetime.utcnow().date)
     

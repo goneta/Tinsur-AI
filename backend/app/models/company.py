@@ -2,8 +2,9 @@
 Company model for multi-tenant architecture.
 """
 from sqlalchemy import Column, String, Boolean, DateTime, Text, Float, ForeignKey, JSON
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+import uuid
+from app.core.guid import GUID
 import uuid
 from datetime import datetime
 
@@ -14,7 +15,7 @@ class Company(Base):
     """Company model for multi-tenancy."""
     __tablename__ = "companies"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
     subdomain = Column(String(100), unique=True, nullable=False)
     email = Column(String(255), nullable=False)

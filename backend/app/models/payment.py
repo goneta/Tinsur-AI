@@ -2,9 +2,10 @@
 Payment and PaymentTransaction models for payment processing.
 """
 from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Enum, JSON, Text, Numeric
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Enum, JSON, Text, Numeric
 from sqlalchemy.orm import relationship
 import uuid
+from app.core.guid import GUID
 from datetime import datetime
 
 from app.core.database import Base
@@ -14,10 +15,10 @@ class Payment(Base):
     """Payment model for tracking policy payments."""
     __tablename__ = "payments"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
-    policy_id = Column(UUID(as_uuid=True), ForeignKey("policies.id", ondelete="CASCADE"))
-    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
+    policy_id = Column(GUID(), ForeignKey("policies.id", ondelete="CASCADE"))
+    client_id = Column(GUID(), ForeignKey("clients.id", ondelete="CASCADE"))
     
     # Payment details
     payment_number = Column(String(50), unique=True, nullable=False)
@@ -39,7 +40,7 @@ class Payment(Base):
     # Timestamps
     paid_at = Column(DateTime)
     refunded_at = Column(DateTime)
-    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_by = Column(GUID(), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -78,8 +79,8 @@ class PaymentTransaction(Base):
     """Payment Transaction model for detailed transaction logs."""
     __tablename__ = "payment_transactions"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    payment_id = Column(UUID(as_uuid=True), ForeignKey("payments.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    payment_id = Column(GUID(), ForeignKey("payments.id", ondelete="CASCADE"))
     
     # Transaction details
     transaction_id = Column(String(200), unique=True)  # Gateway transaction ID

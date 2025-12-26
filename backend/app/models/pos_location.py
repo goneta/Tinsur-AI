@@ -2,9 +2,10 @@
 POS Location model for physical points of sale.
 """
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 import uuid
+from app.core.guid import GUID
 from datetime import datetime
 
 from app.core.database import Base
@@ -14,15 +15,15 @@ class POSLocation(Base):
     """POS Location model."""
     __tablename__ = "pos_locations"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
     
     name = Column(String(255), nullable=False)
     address = Column(String(500))
     city = Column(String(100))
     region = Column(String(100))
     
-    manager_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    manager_id = Column(GUID(), ForeignKey("users.id"), nullable=True)
     is_active = Column(Boolean, default=True)
     
     created_at = Column(DateTime, default=datetime.utcnow)
