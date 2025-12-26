@@ -17,6 +17,7 @@ from app.repositories.endorsement_repository import EndorsementRepository
 from app.repositories.endorsement_repository import EndorsementRepository
 from app.repositories.pos_inventory_repository import POSInventoryRepository
 from app.services.reinsurance_service import ReinsuranceService
+from app.services.archive_service import ArchiveService
 
 class PolicyService:
     """Service for policy-related business logic."""
@@ -33,6 +34,7 @@ class PolicyService:
         self.endorsement_repo = endorsement_repo
         self.pos_inventory_repo = pos_inventory_repo
         self.reinsurance_service = ReinsuranceService(policy_repo.db)
+        self.archive_service = ArchiveService(policy_repo.db)
     
     def generate_policy_number(self, company_id: UUID, policy_type_code: str) -> str:
         """Generate unique policy number."""
@@ -94,6 +96,13 @@ class PolicyService:
         
         # Trigger Reinsurance Cession
         self.reinsurance_service.process_policy_cessions(policy)
+        
+        # Archive Policy Document (Immutable Legal Proof)
+        if policy.policy_document_url:
+            # In a real system, we'd fetch the file bytes from storage here
+            # For now, we simulate with a dummy hash of the policy number
+            dummy_content = f"Policy Contract: {policy.policy_number}".encode()
+            self.archive_service.archive_policy_document(policy.id, policy.policy_document_url, dummy_content)
         
         return policy
     
