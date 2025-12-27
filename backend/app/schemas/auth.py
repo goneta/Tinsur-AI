@@ -12,6 +12,16 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
+    @classmethod
+    def sanitize_email(cls, v: str) -> str:
+        return v.lower().strip() if v else v
+
+    from pydantic import field_validator
+    @field_validator("email", mode="before")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        return cls.sanitize_email(v)
+
 
 class Token(BaseModel):
     """Token response schema."""

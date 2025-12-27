@@ -36,7 +36,7 @@ fake = Faker()
 
 # Constants
 ADMIN_EMAIL = "admin@demoinsurance.com"
-PASSWORD = "Password123!"  # Common password for all seeded users
+PASSWORD = "admin123"  # Matches user's current password
 
 def get_db():
     db = SessionLocal()

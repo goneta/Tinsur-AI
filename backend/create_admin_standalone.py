@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Database URL
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost:5432/insurance_saas")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./insurance.db")
 
 # Password hashing
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")

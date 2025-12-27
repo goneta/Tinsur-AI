@@ -11,7 +11,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.core.database import SessionLocal
 from app.models.rbac import Role, Permission
-from app.models.user import User
+from app.models.rbac import Role, Permission
 
 def seed_rbac():
     db = SessionLocal()

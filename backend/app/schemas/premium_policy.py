@@ -44,6 +44,7 @@ class PremiumPolicyTypeBase(BaseModel):
     name: str
     description: Optional[str] = None
     price: Decimal
+    excess: Decimal = Decimal("0.00")
     is_active: bool = True
 
 class PremiumPolicyTypeCreate(PremiumPolicyTypeBase):
@@ -54,6 +55,7 @@ class PremiumPolicyTypeUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     price: Optional[Decimal] = None
+    excess: Optional[Decimal] = None
     is_active: Optional[bool] = None
     criteria_ids: Optional[List[UUID]] = None
     service_ids: Optional[List[UUID]] = None

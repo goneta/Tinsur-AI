@@ -16,9 +16,9 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     
     # Database
-    DATABASE_URL: str
-    MONGODB_URL: str
-    REDIS_URL: str
+    DATABASE_URL: str = "sqlite:///./insurance.db"
+    MONGODB_URL: str = "mongodb://localhost:27017/insurance_saas_logs"
+    REDIS_URL: str = "redis://localhost:6379/0"
     
     # Security
     SECRET_KEY: str

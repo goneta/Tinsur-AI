@@ -53,12 +53,12 @@ class PremiumPolicyType(Base):
     name = Column(String(100), nullable=False)
     description = Column(Text)
     price = Column(Numeric(15, 2), nullable=False)
+    excess = Column(Numeric(15, 2), default=0.00)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    company = relationship("Company")
     company = relationship("Company")
     criteria = relationship("PremiumPolicyCriteria", secondary=premium_policy_type_criteria, back_populates="policy_types")
     services = relationship("PolicyService", secondary=premium_policy_service_association)

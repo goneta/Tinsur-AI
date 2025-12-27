@@ -132,8 +132,8 @@ class AuthService:
             )
         
         # Update last login
-        user.last_login = datetime.utcnow()
-        self.db.commit()
+        # user.last_login = datetime.utcnow()
+        # self.db.commit()
         
         return user
     

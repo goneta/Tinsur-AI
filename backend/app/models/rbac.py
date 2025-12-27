@@ -2,9 +2,10 @@
 RBAC models: Role, Permission, RolePermission.
 """
 from sqlalchemy import Column, String, ForeignKey, Table, Text
-from sqlalchemy.dialects.postgresql import UUID
+# from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
+from app.core.guid import GUID
 
 from app.core.database import Base
 
@@ -12,8 +13,8 @@ from app.core.database import Base
 role_permissions = Table(
     "role_permissions",
     Base.metadata,
-    Column("role_id", UUID(as_uuid=True), ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True),
-    Column("permission_id", UUID(as_uuid=True), ForeignKey("permissions.id", ondelete="CASCADE"), primary_key=True)
+    Column("role_id", GUID(), ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True),
+    Column("permission_id", GUID(), ForeignKey("permissions.id", ondelete="CASCADE"), primary_key=True)
 )
 
 class Permission(Base):
@@ -23,7 +24,7 @@ class Permission(Base):
     """
     __tablename__ = "permissions"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     scope = Column(String(50), nullable=False) # e.g. "policy", "claim"
     action = Column(String(50), nullable=False) # e.g. "read", "write", "create"
     description = Column(String(255))
@@ -42,8 +43,8 @@ class Role(Base):
     """
     __tablename__ = "roles"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     name = Column(String(50), unique=True, nullable=False) # e.g. "admin", "client"
     description = Column(Text)
 
-    permissions = relationship("Permission", secondary="role_permissions", backref="roles")
+    permissions = relationship("Permission", secondary=role_permissions, backref="roles")
