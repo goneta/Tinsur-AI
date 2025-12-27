@@ -91,8 +91,19 @@ class PolicyService:
             premium_frequency=quote.premium_frequency,
             start_date=start_date,
             end_date=end_date,
+
             status='active',
-            details=quote.details,
+            details={
+                **(quote.details or {}),
+                "financial_snapshot": {
+                    "apr_percent": float(quote.apr_percent or 0),
+                    "arrangement_fee": float(quote.arrangement_fee or 0),
+                    "extra_fee": float(quote.extra_fee or 0),
+                    "total_financed_amount": float(quote.total_financed_amount or 0),
+                    "monthly_installment": float(quote.monthly_installment or 0),
+                    "total_installment_price": float(quote.total_installment_price or 0)
+                }
+            },
             created_by=created_by
         )
         

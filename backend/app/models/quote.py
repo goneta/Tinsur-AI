@@ -28,6 +28,14 @@ class Quote(Base):
     premium_amount = Column(Numeric(15, 2), nullable=False)
     discount_percent = Column(Numeric(5, 2), default=0)
     final_premium = Column(Numeric(15, 2), nullable=False)
+
+    # Financial Snapshot (Calculated at creation)
+    apr_percent = Column(Float, default=0.0)
+    arrangement_fee = Column(Numeric(15, 2), default=0.0)
+    extra_fee = Column(Numeric(15, 2), default=0.0)
+    total_financed_amount = Column(Numeric(15, 2), default=0.0)
+    monthly_installment = Column(Numeric(15, 2), default=0.0)
+    total_installment_price = Column(Numeric(15, 2), default=0.0)
     
     # Configuration
     premium_frequency = Column(String(50), default='annual')  # 'monthly', 'quarterly', 'annual'

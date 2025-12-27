@@ -1,11 +1,10 @@
 """
 Company model for multi-tenant architecture.
 """
-from sqlalchemy import Column, String, Boolean, DateTime, Text, Float, ForeignKey, JSON
+from sqlalchemy import Column, String, Boolean, DateTime, Text, Float, ForeignKey, JSON, Numeric
 from sqlalchemy.orm import relationship
 import uuid
 from app.core.guid import GUID
-import uuid
 from datetime import datetime
 
 from app.core.database import Base
@@ -28,6 +27,11 @@ class Company(Base):
     # Financial information
     bank_details = Column(JSON, default=[])  # List of bank accounts
     mobile_money_accounts = Column(JSON, default=[])  # List of mobile money accounts
+
+    # Financial Configuration
+    apr_percent = Column(Float, default=0.0)
+    arrangement_fee = Column(Numeric(15, 2), default=0.0)
+    extra_fee = Column(Numeric(15, 2), default=0.0)
     
     # Regional settings
     currency = Column(String(10), default="USD")

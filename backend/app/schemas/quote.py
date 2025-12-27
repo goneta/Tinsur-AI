@@ -62,6 +62,12 @@ class QuoteResponse(QuoteBase):
     quote_number: str
     premium_amount: Decimal
     final_premium: Decimal
+    apr_percent: Optional[float] = 0.0
+    arrangement_fee: Optional[Decimal] = 0.0
+    extra_fee: Optional[Decimal] = 0.0
+    total_financed_amount: Optional[Decimal] = 0.0
+    monthly_installment: Optional[Decimal] = 0.0
+    total_installment_price: Optional[Decimal] = 0.0
     risk_score: Optional[Decimal]
     status: str
     valid_until: date
@@ -86,10 +92,14 @@ class QuoteListResponse(BaseModel):
 
 class QuoteCalculationResponse(BaseModel):
     """Schema for quote calculation response."""
-    base_premium: Decimal
-    risk_adjustment: Decimal
-    discount_amount: Decimal
     final_premium: Decimal
+    base_premium: Decimal
+    apr_percent: float
+    arrangement_fee: Decimal
+    extra_fee: Decimal
+    total_financed_amount: Decimal
+    monthly_installment: Decimal
+    total_installment_price: Decimal
     risk_score: Decimal
     risk_factors_analysis: Dict[str, Any]
     recommendations: Optional[List[str]] = []

@@ -39,6 +39,9 @@ class CompanyResponse(BaseModel):
     secondary_color: Optional[str] = None
     bank_details: List[BankDetails] = []
     mobile_money_accounts: List[MobileMoneyAccount] = []
+    apr_percent: Optional[float] = 0.0
+    arrangement_fee: Optional[float] = 0.0
+    extra_fee: Optional[float] = 0.0
     currency: str = "USD"
     country: Optional[str] = None
     timezone: str = "UTC"
@@ -62,6 +65,9 @@ class CompanyUpdate(BaseModel):
     timezone: Optional[str] = Field(None, max_length=50)
     bank_details: Optional[List[BankDetails]] = None
     mobile_money_accounts: Optional[List[MobileMoneyAccount]] = None
+    apr_percent: Optional[float] = None
+    arrangement_fee: Optional[float] = None
+    extra_fee: Optional[float] = None
     primary_color: Optional[str] = Field(None, max_length=10)
     secondary_color: Optional[str] = Field(None, max_length=10)
 
