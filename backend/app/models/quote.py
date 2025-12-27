@@ -37,6 +37,10 @@ class Quote(Base):
     monthly_installment = Column(Numeric(15, 2), default=0.0)
     total_installment_price = Column(Numeric(15, 2), default=0.0)
     
+    # Premium Policy Snapshot
+    excess = Column(Numeric(15, 2), default=0.0)
+    included_services = Column(JSON, default=[])
+    
     # Configuration
     premium_frequency = Column(String(50), default='annual')  # 'monthly', 'quarterly', 'annual'
     duration_months = Column(Integer, default=12)

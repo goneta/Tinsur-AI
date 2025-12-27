@@ -68,6 +68,8 @@ class QuoteResponse(QuoteBase):
     total_financed_amount: Optional[Decimal] = 0.0
     monthly_installment: Optional[Decimal] = 0.0
     total_installment_price: Optional[Decimal] = 0.0
+    excess: Optional[Decimal] = 0.0
+    included_services: Optional[List[str]] = []
     risk_score: Optional[Decimal]
     status: str
     valid_until: date
@@ -100,6 +102,8 @@ class QuoteCalculationResponse(BaseModel):
     total_financed_amount: Decimal
     monthly_installment: Decimal
     total_installment_price: Decimal
+    excess: Decimal
+    included_services: List[str]
     risk_score: Decimal
     risk_factors_analysis: Dict[str, Any]
     recommendations: Optional[List[str]] = []

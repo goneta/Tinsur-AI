@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     @classmethod
     def parse_cors_origins(cls, v: Any) -> List[str]:
         """Parse CORS origins from various formats."""
-        return ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8000", "http://127.0.0.1:8000"]
+        return ["*"]
     
     # File Storage
     UPLOAD_DIR: str = "uploads"

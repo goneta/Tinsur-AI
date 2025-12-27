@@ -143,8 +143,18 @@ class QuoteService:
             'extra_fee': extra_fee,
             'total_financed_amount': total_financed_amount,
             'monthly_installment': monthly_installment,
-            'total_installment_price': total_installment_price
+            'monthly_installment': monthly_installment,
+            'total_installment_price': total_installment_price,
+            'excess': Decimal('0'),
+            'included_services': []
         }
+        
+        # Populate excess and services if premium evaluation exists
+        if result['premium_evaluation']:
+            result['excess'] = result['premium_evaluation'].get('excess', Decimal('0'))
+            result['included_services'] = result['premium_evaluation'].get('included_services', [])
+            
+        return result
     
     def _calculate_risk_score(self, risk_factors: Dict[str, Any]) -> Decimal:
         """Calculate risk score from risk factors (0-100)."""
@@ -268,7 +278,10 @@ class QuoteService:
             extra_fee=calculation['extra_fee'],
             total_financed_amount=calculation['total_financed_amount'],
             monthly_installment=calculation['monthly_installment'],
-            total_installment_price=calculation['total_installment_price']
+            total_installment_price=calculation['total_installment_price'],
+            # Premium Policy Snapshot
+            excess=calculation.get('premium_evaluation', {}).get('excess', Decimal('0')),
+            included_services=calculation.get('premium_evaluation', {}).get('included_services', [])
         )
         
         quote = self.quote_repo.create(quote)
@@ -368,7 +381,11 @@ class QuoteService:
                 best_match = {
                     "id": ptype.id,
                     "name": ptype.name,
-                    "price": ptype.price
+                    "id": ptype.id,
+                    "name": ptype.name,
+                    "price": ptype.price,
+                    "excess": ptype.excess,
+                    "included_services": [s.name_en for s in ptype.services]
                 }
                 break
                 
