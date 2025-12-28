@@ -11,7 +11,18 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app.core.database import SessionLocal
 from app.models.rbac import Role, Permission
-from app.models.rbac import Role, Permission
+from app.models.company import Company
+from app.models.user import User
+from app.models.client import Client
+from app.models.policy_type import PolicyType
+from app.models.quote import Quote
+from app.models.premium_policy import PremiumPolicyType, PremiumPolicyCriteria
+from app.models.policy_service import PolicyService
+from app.models.regulatory import IFRS17Group
+from app.models.pos_location import POSLocation
+from app.models.endorsement import Endorsement
+from app.models.claim import Claim
+from app.models.co_insurance import CoInsuranceShare
 
 def seed_rbac():
     db = SessionLocal()

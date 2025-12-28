@@ -103,3 +103,7 @@ if __name__ == "__main__":
         port=8000,
         reload=settings.DEBUG
     )
+    # Reload trigger
+    # Reload trigger 2
+    # Reload trigger 3
+    # Reload trigger 4

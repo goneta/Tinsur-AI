@@ -356,31 +356,52 @@ class QuoteService:
         """
         Evaluate client data against configured premium policy types.
         Returns the best matching premium policy type and its price.
+        Raises exceptions for missing data or no configuration.
         """
+        from fastapi import HTTPException, status
+        
         db = self.quote_repo.db
         premium_types = db.query(PremiumPolicyType).filter(
             PremiumPolicyType.company_id == company_id,
             PremiumPolicyType.is_active == True
         ).all()
 
+        if not premium_types:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "code": "NO_PREMIUM_POLICIES",
+                    "message": "There is no premium policy available. You must create a policy first before creating a quote."
+                }
+            )
+
         best_match = None
+        missing_fields = set()
         
         for ptype in premium_types:
             all_criteria_met = True
             if not ptype.criteria:
+                # If no criteria, it's a match/fallback? Assuming yes for now, or continue?
+                # Usually policies without criteria might be defaults.
+                # User request implies we must compare details.
                 continue
                 
             for criterion in ptype.criteria:
+                # Check directly if value is missing before evaluating
+                if client_data.get(criterion.field_name) is None:
+                    missing_fields.add(criterion.field_name)
+                    all_criteria_met = False
+                    # Don't break immediately if we want to catch ALL missing fields for this policy
+                    # But we can probably continue to next criterion
+                    continue
+
                 if not self._evaluate_criterion(criterion, client_data):
                     all_criteria_met = False
+                    # Criteria mismatch (data present but wrong value) -> just this policy doesn't match
                     break
             
-            if all_criteria_met:
-                # In this logic, we might want the most expensive match or first match. 
-                # The requirements imply specific tiers. We'll take the first match for now.
+            if all_criteria_met and not missing_fields:
                 best_match = {
-                    "id": ptype.id,
-                    "name": ptype.name,
                     "id": ptype.id,
                     "name": ptype.name,
                     "price": ptype.price,
@@ -388,14 +409,31 @@ class QuoteService:
                     "included_services": [s.name_en for s in ptype.services]
                 }
                 break
-                
-        return best_match
+        
+        # Priority:
+        # 1. Successful match found -> Return it
+        # 2. No match found, but fields were missing -> Raise "Missing Info"
+        # 3. No match found, all data present -> Return None (standard "no match" logic, maybe fall back to base calc)
+        
+        if best_match:
+            return best_match
+            
+        if missing_fields:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "code": "MISSING_CLIENT_INFO",
+                    "message": "Client information missing for eligibility check.",
+                    "missing_fields": list(missing_fields)
+                }
+            )
+            
+        return None
 
     def _evaluate_criterion(self, criterion: PremiumPolicyCriteria, client_data: Dict[str, Any]) -> bool:
-        """Evaluate a single criterion against client data."""
+        """Evaluate a single criterion against client data. Assumes data exists."""
         val = client_data.get(criterion.field_name)
-        if val is None:
-            return False
+        # val check handled by caller now
             
         op = criterion.operator
         target = criterion.value

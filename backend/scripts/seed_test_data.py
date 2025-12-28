@@ -10,6 +10,7 @@ from decimal import Decimal
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.database import SessionLocal, engine, Base
+from app.core.security import get_password_hash
 
 from app.models.company import Company
 from app.models.user import User
@@ -60,7 +61,7 @@ def seed_test_data():
                 email="admin@demoinsurance.com",
                 first_name="Admin",
                 last_name="User",
-                password_hash="dummy_hash_for_test", # In real app use a proper hash
+                password_hash=get_password_hash("admin"), # Password is 'admin'
                 role="admin",
                 is_active=True
             )

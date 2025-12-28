@@ -180,6 +180,11 @@ class ClientBase(BaseModel):
     employment_status: Optional[str] = None
     annual_income: Optional[Decimal] = None
     
+    # Eligibility Fields
+    accident_count: Optional[int] = 0
+    no_claims_years: Optional[int] = 0
+    driving_license_years: Optional[int] = 0
+
     kyc_status: str = 'pending'
     pep_status: bool = False
     consent_accepted: bool = False
@@ -221,6 +226,10 @@ class ClientUpdate(BaseModel):
     employment_status: Optional[str] = None
     annual_income: Optional[Decimal] = None
     
+    accident_count: Optional[int] = None
+    no_claims_years: Optional[int] = None
+    driving_license_years: Optional[int] = None
+
     kyc_status: Optional[str] = None
     pep_status: bool = False
     consent_accepted: bool = False

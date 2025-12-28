@@ -1,6 +1,6 @@
 import sys
 import os
-sys.path.append(os.getcwd())
+sys.path.append(os.path.join(os.getcwd(), 'backend'))
 
 from sqlalchemy import create_engine, text
 from app.core.config import settings

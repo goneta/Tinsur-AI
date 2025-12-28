@@ -3,9 +3,16 @@ import os
 import uuid
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from app.core.database import SessionLocal
+from app.core.database import SessionLocal, Base, engine
 from app.models.premium_policy import PremiumPolicyType, PremiumPolicyCriteria, premium_policy_type_criteria
 from app.models.company import Company
+# Import other models to ensure mappers are initialized
+from app.models.policy_service import PolicyService
+from app.models.user import User
+from app.models.client import Client
+from app.models.policy import Policy
+from app.models.endorsement import Endorsement
+from app.models.regulatory import IFRS17Group
 
 def seed_premium_policies():
     db = SessionLocal()

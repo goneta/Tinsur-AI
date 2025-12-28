@@ -1,8 +1,7 @@
 """
 Client model for insurance clients.
 """
-from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Date, Text, Numeric, JSON
-from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Date, Text, Numeric, JSON
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Date, Text, Numeric, JSON, Integer
 from sqlalchemy.orm import relationship
 import uuid
 from app.core.guid import GUID
@@ -53,6 +52,11 @@ class Client(Base):
     consent_accepted = Column(Boolean, default=False)
     
     driving_licence_number = Column(String(100))
+    # Eligibility Fields
+    accident_count = Column(Integer, default=0)
+    no_claims_years = Column(Integer, default=0)
+    driving_license_years = Column(Integer, default=0)
+    
     id_card_url = Column(String(500), nullable=True)
     driving_license_url = Column(String(500), nullable=True)
     tax_id = Column(String(100))
