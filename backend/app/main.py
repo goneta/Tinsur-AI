@@ -107,3 +107,7 @@ if __name__ == "__main__":
     # Reload trigger 2
     # Reload trigger 3
     # Reload trigger 4
+    # Reload trigger 5
+    # Reload trigger 6
+    # Reload trigger 7
+    # Reload trigger 8

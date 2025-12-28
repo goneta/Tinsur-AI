@@ -69,7 +69,7 @@ def create_quote(
             duration_months=quote_data.duration_months,
             discount_percent=quote_data.discount_percent,
             created_by=quote_data.created_by or current_user.id,
-            pos_location_id=quote_data.pos_location_id or current_user.pos_location_id
+            pos_location_id=quote_data.pos_location_id or getattr(current_user, 'pos_location_id', None)
         )
         return quote
     except Exception as e:
@@ -176,6 +176,123 @@ def send_quote(
     # Mark as sent (in production, this would trigger email/SMS)
     updated_quote = quote_service.mark_as_sent(quote_id)
     
+    return updated_quote
+
+
+@router.post("/{quote_id}/approve", response_model=dict)
+def approve_quote(
+    quote_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Approve a quote and automatically convert it to a policy."""
+    quote_repo = QuoteRepository(db)
+    policy_repo = PolicyRepository(db)
+    endorsement_repo = EndorsementRepository(db)
+    quote_service = QuoteService(quote_repo)
+    policy_service = PolicyService(policy_repo, quote_repo, endorsement_repo)
+    
+    quote = quote_repo.get_by_id(quote_id)
+    if not quote:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Quote not found"
+        )
+        
+    # Permission check: Creator, Assigned Agent, or Admin
+    # For now, simplistic check: if company matches
+    if quote.company_id != current_user.company_id:
+         raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Quote not found"
+        )
+
+    # State check
+    if quote.status not in ['draft', 'sent']:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot approve quote in '{quote.status}' status"
+        )
+
+    # 1. Accept Quote
+    quote_service.accept_quote(quote_id)
+    
+    # 2. Convert to Policy (Auto-create)
+    # Default start_date to today if not specified (implicit in one-click approval)
+    from datetime import date
+    start_date = date.today()
+    
+    policy = policy_service.create_from_quote(
+        quote_id=quote_id,
+        start_date=start_date,
+        created_by=current_user.id
+    )
+    
+    if not policy:
+        # Rollback quote status?
+        # quote.status = 'sent' ...
+        # raise Error
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create policy from accepted quote"
+        )
+        
+    return {
+        "message": "Quote approved and policy created successfully",
+        "quote_status": "accepted",
+        "policy_id": str(policy.id),
+        "policy_number": policy.policy_number
+    }
+
+
+@router.post("/{quote_id}/reject", response_model=QuoteResponse)
+def reject_quote(
+    quote_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Reject a quote."""
+    quote_repo = QuoteRepository(db)
+    quote_service = QuoteService(quote_repo)
+    
+    quote = quote_repo.get_by_id(quote_id)
+    if not quote or quote.company_id != current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Quote not found"
+        )
+        
+    updated_quote = quote_service.reject_quote(quote_id)
+    return updated_quote
+
+
+@router.post("/{quote_id}/archive", response_model=QuoteResponse)
+def archive_quote(
+    quote_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Archive a quote."""
+    quote_repo = QuoteRepository(db)
+    quote_service = QuoteService(quote_repo)
+    
+    quote = quote_repo.get_by_id(quote_id)
+    if not quote or quote.company_id != current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Quote not found"
+        )
+    
+    # Only accepted quotes can be archived? Or any?
+    # User Reqt: "Archive icon -> available for Approved / Accepted quotes (approved quotes cannot be deleted)"
+    # Implies Archive is FOR accepted quotes.
+    if quote.status != 'accepted':
+         raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only accepted quotes can be archived"
+        )
+        
+    updated_quote = quote_service.archive_quote(quote_id)
     return updated_quote
 
 

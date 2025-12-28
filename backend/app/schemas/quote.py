@@ -39,6 +39,7 @@ class QuoteCreate(QuoteBase):
     """Schema for creating a quote."""
     # Backend calculates premiums and validity
     created_by: Optional[UUID] = None
+    pos_location_id: Optional[UUID] = None
 
 
 class QuoteUpdate(BaseModel):

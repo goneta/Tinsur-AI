@@ -341,6 +341,14 @@ class QuoteService:
             quote.status = 'rejected'
             return self.quote_repo.update(quote)
         return None
+
+    def archive_quote(self, quote_id: UUID) -> Quote:
+        """Mark quote as archived."""
+        quote = self.quote_repo.get_by_id(quote_id)
+        if quote:
+            quote.status = 'archived'
+            return self.quote_repo.update(quote)
+        return None
     
     def check_and_expire_quotes(self, company_id: UUID) -> int:
         """Check and mark expired quotes. Returns count of expired quotes."""
