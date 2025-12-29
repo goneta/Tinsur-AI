@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 from uuid import UUID
+from datetime import date, datetime
 
 from app.models.premium_policy import PremiumPolicyType, PremiumPolicyCriteria
 from app.models.client import Client
-from app.repositories.base_repository import BaseRepository
 
 class PremiumPolicyService:
     def __init__(self, db: Session):
@@ -48,36 +48,36 @@ class PremiumPolicyService:
         for criteria in all_criteria:
             required_fields.add(criteria.field_name)
 
-        # 4. content Validation
+        # 4. Content Validation
         # Map criteria field names to Client model attributes
         # This mapping needs to be robust. 
         # Standard fields: accident_count, no_claims_years, driving_license_years, employment_status
         
+        # Calculate Age
+        age = None
+        if client.date_of_birth:
+             today = date.today()
+             age = today.year - client.date_of_birth.year - ((today.month, today.day) < (client.date_of_birth.month, client.date_of_birth.day))
+
         client_data = {
             "accident_count": client.accident_count,
             "no_claims_years": client.no_claims_years,
             "driving_license_years": client.driving_license_years,
             "employment_status": client.employment_status,
-            # Add mappings for other potential dynamic criteria here if needed
+            # Expanded fields
+            "age": age,
+            "annual_income": client.annual_income,
+            "occupation": client.occupation,
+            "gender": client.gender,
+            "marital_status": client.marital_status,
+            "risk_profile": client.risk_profile,
+            "residency": client.country,
+            "city": client.city,
+            "client_type": client.client_type,
+            "is_high_risk": client.is_high_risk
         }
         
-        missing_fields = []
-        for field in required_fields:
-            # Check if relevant client attribute is None. 
-            # Note: 0 is a valid value for counts/years, so check specifically for None.
-            val = client_data.get(field)
-            if val is None:
-                # Try to make the field name human readable
-                human_name = field.replace("_", " ").title()
-                missing_fields.append(human_name)
 
-        if missing_fields:
-            return {
-                "status": "missing_info",
-                "message": f"The client is missing the following information: {', '.join(missing_fields)}.",
-                "missing_fields": missing_fields,
-                "data": []
-            }
 
         # 5. Matching Logic
         eligible_policies = []

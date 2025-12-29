@@ -9,6 +9,7 @@ import uuid
 from datetime import datetime
 
 from app.core.database import Base
+from app.models.policy_service import PolicyService
 
 # Association table for PremiumPolicyType and PremiumPolicyCriteria
 premium_policy_type_criteria = Table(
@@ -61,7 +62,7 @@ class PremiumPolicyType(Base):
     # Relationships
     company = relationship("Company")
     criteria = relationship("PremiumPolicyCriteria", secondary=premium_policy_type_criteria, back_populates="policy_types")
-    services = relationship("PolicyService", secondary=premium_policy_service_association)
+    services = relationship(PolicyService, secondary=premium_policy_service_association)
 
     def __repr__(self):
         return f"<PremiumPolicyType {self.name}>"

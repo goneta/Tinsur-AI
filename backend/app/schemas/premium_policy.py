@@ -75,3 +75,11 @@ class PremiumPolicyTypeListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+class PremiumPolicyMatchResponse(BaseModel):
+    status: str
+    message: Optional[str] = None
+    data: List[PremiumPolicyTypeResponse] = []
+    recommended_id: Optional[UUID] = None
+    missing_fields: List[str] = []
+

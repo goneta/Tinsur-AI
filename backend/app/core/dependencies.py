@@ -43,7 +43,8 @@ async def get_current_user(
         company_id=uuid.UUID(payload.get("company_id")) if payload.get("company_id") else None
     )
     
-    user = db.query(User).filter(User.id == token_data.user_id).first()
+    from sqlalchemy.orm import joinedload
+    user = db.query(User).options(joinedload(User.company)).filter(User.id == token_data.user_id).first()
     if user is None:
         raise credentials_exception
     

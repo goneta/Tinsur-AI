@@ -16,7 +16,9 @@ from app.schemas.premium_policy import (
     PremiumPolicyTypeCreate,
     PremiumPolicyTypeUpdate,
     PremiumPolicyTypeResponse,
-    PremiumPolicyTypeListResponse
+    PremiumPolicyTypeResponse,
+    PremiumPolicyTypeListResponse,
+    PremiumPolicyMatchResponse
 )
 from app.services.premium_policy_service import PremiumPolicyService
 
@@ -226,7 +228,7 @@ def delete_premium_policy_type(
     db.commit()
     return None
 
-@router.get("/match", response_model=dict)
+@router.get("/match", response_model=PremiumPolicyMatchResponse)
 def match_policies(
     client_id: Optional[UUID] = None,
     db: Session = Depends(get_db),
