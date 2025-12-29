@@ -18,6 +18,7 @@ from app.schemas.premium_policy import (
     PremiumPolicyTypeResponse,
     PremiumPolicyTypeListResponse
 )
+from app.services.premium_policy_service import PremiumPolicyService
 
 router = APIRouter()
 
@@ -224,3 +225,53 @@ def delete_premium_policy_type(
     db.delete(policy_type)
     db.commit()
     return None
+
+@router.get("/match", response_model=dict)
+def match_policies(
+    client_id: Optional[UUID] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Match eligible policies for a client.
+    If authenticated user is a client, client_id is ignored and current_user is used.
+    If authenticated user is employee/admin, client_id is required.
+    """
+    service = PremiumPolicyService(db)
+    
+    # Determine target client_id
+    target_client_id = client_id
+    
+    # If user is a client, override target_client_id with their own client profile id
+    if current_user.role == 'client':
+        # Find the client profile associated with this user
+        from app.models.client import Client
+        client_profile = db.query(Client).filter(Client.user_id == current_user.id).first()
+        if not client_profile:
+             raise HTTPException(status_code=404, detail="Client profile not found for this user")
+        target_client_id = client_profile.id
+    
+    if not target_client_id:
+        raise HTTPException(status_code=400, detail="Client ID is required")
+        
+    result = service.match_eligible_policies(current_user.company_id, target_client_id)
+    
+    # Map status to HTTP exceptions or return specific structure
+    if result["status"] == "no_policies":
+        raise HTTPException(
+            status_code=404, 
+            detail={"code": "NO_PREMIUM_POLICIES", "message": result["message"]}
+        )
+    elif result["status"] == "missing_info":
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "MISSING_CLIENT_INFO", 
+                "message": result["message"], 
+                "missing_fields": result["missing_fields"]
+            }
+        )
+    elif result["status"] == "error":
+        raise HTTPException(status_code=400, detail=result["message"])
+        
+    return result
