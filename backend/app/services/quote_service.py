@@ -34,7 +34,8 @@ class QuoteService:
         risk_factors: Dict[str, Any],
         duration_months: int = 12,
         policy_id: Optional[UUID] = None,
-        company_id: Optional[UUID] = None
+        company_id: Optional[UUID] = None,
+        financial_overrides: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Calculate premium based on policy type and risk factors.
@@ -68,7 +69,12 @@ class QuoteService:
         
         # Let's fix the SyntaxError first.
         
-        base_rate = base_rates.get('VEHICLE', Decimal('0.04'))
+        # Handle overrides
+        if financial_overrides and 'base_rate' in financial_overrides:
+            # Assuming base_rate is passed as percentage (e.g. 5.0)
+            base_rate = Decimal(str(financial_overrides['base_rate'])) / Decimal('100')
+        else:
+            base_rate = base_rates.get('VEHICLE', Decimal('0.04'))
         # base_premium = coverage_amount * base_rate 
         # I will assume coverage_amount needs to be 0 or I'll break it more.
         # Replacing with usage of risk_factors.get('coverage_amount') maybe?
@@ -79,11 +85,25 @@ class QuoteService:
         
         # Calculate risk adjustments
         risk_score = self._calculate_risk_score(risk_factors)
-        risk_adjustment = base_premium * (risk_score / 100)
+        
+        # Apply explicit risk multipliers if present
+        multiplier_factor = Decimal('1.0')
+        if financial_overrides and 'risk_multiplier' in financial_overrides:
+             # handle list or single value
+             multipliers = financial_overrides['risk_multiplier']
+             if isinstance(multipliers, list):
+                 for m in multipliers:
+                     multiplier_factor *= Decimal(str(m))
+             else:
+                 multiplier_factor = Decimal(str(multipliers))
+
+        # Base calculation
+        adjusted_base = base_premium * multiplier_factor
+        risk_adjustment = adjusted_base * (risk_score / 100)
         
         # Adjust for duration
         duration_factor = Decimal(duration_months) / Decimal(12)
-        adjusted_premium = (base_premium + risk_adjustment) * duration_factor
+        adjusted_premium = (adjusted_base + risk_adjustment) * duration_factor
         
         # UBI Adjustment (Phase 7)
         ubi_adjustment_amount = Decimal('0')
@@ -115,6 +135,15 @@ class QuoteService:
                 arrangement_fee = Decimal(str(company.arrangement_fee or 0))
                 extra_fee = Decimal(str(company.extra_fee or 0))
 
+                # Apply Fixed Fee Overrides
+                if financial_overrides and 'fixed_fee' in financial_overrides:
+                    fees = financial_overrides['fixed_fee']
+                    if isinstance(fees, list):
+                        for f in fees:
+                            extra_fee += Decimal(str(f))
+                    else:
+                        extra_fee += Decimal(str(fees))
+
                 # Logic: Total Financed = Premium + Fees
                 # Interest = Total Financed * (APR / 100)
                 # Total Price = Total Financed + Interest
@@ -126,6 +155,33 @@ class QuoteService:
                 if duration_months > 0:
                     monthly_installment = total_installment_price / Decimal(duration_months)
 
+        # Recalculate Final Premium with Tax & Discounts (for Preview)
+        # 1. Discount
+        discount_percent = Decimal('0')
+        if financial_overrides and 'company_discount' in financial_overrides:
+            discounts = financial_overrides['company_discount']
+            if isinstance(discounts, list):
+                 for d in discounts:
+                     discount_percent += Decimal(str(d))
+            else:
+                 discount_percent = Decimal(str(discounts))
+        
+        discount_amount = final_premium * (discount_percent / Decimal(100))
+        net_premium = final_premium - discount_amount
+
+        # 2. Tax
+        tax_percent = Decimal('0')
+        if financial_overrides and 'government_tax' in financial_overrides:
+            taxes = financial_overrides['government_tax']
+            if isinstance(taxes, list):
+                for t in taxes:
+                    tax_percent += Decimal(str(t))
+            else:
+                 tax_percent = Decimal(str(taxes))
+        
+        tax_amount = net_premium * (tax_percent / Decimal(100))
+        final_premium = net_premium + tax_amount
+
         
         return {
             'base_premium': base_premium,
@@ -134,7 +190,8 @@ class QuoteService:
             'risk_score': risk_score,
             'final_premium': final_premium,
             'premium_evaluation': self.evaluate_premium_policy(company_id, risk_factors) if company_id else None,
-            'discount_amount': Decimal('0'),
+            'discount_amount': discount_amount if 'discount_amount' in locals() else Decimal('0'),
+            'tax_amount': tax_amount if 'tax_amount' in locals() else Decimal('0'),
             'risk_factors_analysis': self._analyze_risk_factors(risk_factors),
             'recommendations': self._generate_recommendations(risk_score, risk_factors),
             # Financials
@@ -229,14 +286,26 @@ class QuoteService:
         duration_months: int = 12,
         discount_percent: Decimal = Decimal('0'),
         created_by: UUID = None,
-        pos_location_id: UUID = None
+        pos_location_id: UUID = None,
+        financial_overrides: Dict[str, Any] = None
     ) -> Quote:
         """Create a new quote with calculated premium."""
         calculation = self.calculate_premium(
-            risk_factors=risk_factors,
             duration_months=duration_months,
-            company_id=company_id
+            company_id=company_id,
+            financial_overrides=financial_overrides
         )
+        
+        # Override discount_percent if company_discount is selected
+        if financial_overrides and 'company_discount' in financial_overrides:
+            discounts = financial_overrides['company_discount']
+            # Check if list or single
+            if isinstance(discounts, list):
+                 # Taking valid max discount or summing? Usually just one. Summing for now.
+                 for d in discounts:
+                     discount_percent += Decimal(str(d))
+            else:
+                 discount_percent = Decimal(str(discounts))
         
         # Override premium_amount if a premium policy match was found
         if calculation.get('premium_evaluation'):
@@ -249,7 +318,21 @@ class QuoteService:
         
         # Calculate final premium with discount
         discount_amount = premium_amount * (discount_percent / Decimal(100))
-        final_premium = premium_amount - discount_amount
+        net_premium = premium_amount - discount_amount
+
+        # Calculate Tax
+        tax_percent = Decimal('0')
+        if financial_overrides and 'government_tax' in financial_overrides:
+            taxes = financial_overrides['government_tax']
+            # Sum up tax rates if multiple are selected (unlikely but safe)
+            if isinstance(taxes, list):
+                for t in taxes:
+                    tax_percent += Decimal(str(t))
+            else:
+                 tax_percent = Decimal(str(taxes))
+        
+        tax_amount = net_premium * (tax_percent / Decimal(100))
+        final_premium = net_premium + tax_amount
         
         # Set validity (30 days from now)
         valid_until = date.today() + timedelta(days=30)
@@ -262,14 +345,17 @@ class QuoteService:
             quote_number=quote_number,
             coverage_amount=coverage_amount,
             premium_amount=premium_amount,
+            premium_amount=premium_amount,
             discount_percent=discount_percent,
+            tax_percent=tax_percent,
+            tax_amount=tax_amount,
             final_premium=final_premium,
             premium_frequency=premium_frequency,
             duration_months=duration_months,
             risk_score=calculation['risk_score'],
             status='draft',
             valid_until=valid_until,
-            details=risk_factors,
+            details={**risk_factors, **(financial_overrides or {})},
             created_by=created_by,
             pos_location_id=pos_location_id,
             # Snapshot Financials

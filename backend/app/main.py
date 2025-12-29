@@ -55,6 +55,7 @@ async def startup_event():
     Base.metadata.create_all(bind=engine)
     
     logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
+    print(f"DEBUG_CHECK: DATABASE_URL={settings.DATABASE_URL}")
     logger.info(f"Environment: {settings.ENVIRONMENT}")
     logger.info("Application started successfully")
 

@@ -14,6 +14,7 @@ class QuoteBase(BaseModel):
     policy_type_id: UUID
     coverage_amount: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
     discount_percent: Decimal = Field(default=0, ge=0, le=100, decimal_places=2)
+    tax_percent: Decimal = Field(default=0, ge=0, le=100, decimal_places=2)
     premium_frequency: str = Field(default='annual', pattern='^(monthly|quarterly|semi-annual|annual)$')
     duration_months: int = Field(default=12, ge=1, le=120)
     details: Optional[Dict[str, Any]] = {}
@@ -32,7 +33,8 @@ class QuoteCalculationRequest(BaseModel):
     risk_factors: Dict[str, Any] = Field(default_factory=dict)
     # Example for vehicle: {'vehicle_age': 3, 'driver_age': 35, 'accidents': 0, 'vehicle_value': 20000000}
     # Example for property: {'property_value': 50000000, 'location': 'Abidjan', 'construction_type': 'concrete', 'age': 10}
-    # Example for life: {'age': 35, 'smoking': False, 'occupation': 'office_worker', 'health_conditions': []}
+    financial_overrides: Optional[Dict[str, Any]] = Field(default=None)
+    # Overrides for base rate, fees, etc.
 
 
 class QuoteCreate(QuoteBase):
@@ -40,6 +42,7 @@ class QuoteCreate(QuoteBase):
     # Backend calculates premiums and validity
     created_by: Optional[UUID] = None
     pos_location_id: Optional[UUID] = None
+    financial_overrides: Optional[Dict[str, Any]] = None
 
 
 class QuoteUpdate(BaseModel):
@@ -62,6 +65,8 @@ class QuoteResponse(QuoteBase):
     company_id: UUID
     quote_number: str
     premium_amount: Decimal
+    tax_percent: Optional[Decimal] = 0
+    tax_amount: Optional[Decimal] = 0
     final_premium: Decimal
     apr_percent: Optional[float] = 0.0
     arrangement_fee: Optional[Decimal] = 0.0
@@ -96,6 +101,8 @@ class QuoteListResponse(BaseModel):
 class QuoteCalculationResponse(BaseModel):
     """Schema for quote calculation response."""
     final_premium: Decimal
+    discount_amount: Decimal
+    tax_amount: Decimal
     base_premium: Decimal
     apr_percent: float
     arrangement_fee: Decimal

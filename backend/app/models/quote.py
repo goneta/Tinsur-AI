@@ -27,6 +27,8 @@ class Quote(Base):
     coverage_amount = Column(Numeric(15, 2))
     premium_amount = Column(Numeric(15, 2), nullable=False)
     discount_percent = Column(Numeric(5, 2), default=0)
+    tax_percent = Column(Numeric(5, 2), default=0)
+    tax_amount = Column(Numeric(15, 2), default=0)
     final_premium = Column(Numeric(15, 2), nullable=False)
 
     # Financial Snapshot (Calculated at creation)

@@ -42,7 +42,8 @@ def calculate_quote(
         coverage_amount=calculation_request.coverage_amount,
         risk_factors=calculation_request.risk_factors,
         duration_months=calculation_request.duration_months,
-        company_id=current_user.company_id
+        company_id=current_user.company_id,
+        financial_overrides=calculation_request.financial_overrides
     )
     
     return result
@@ -69,7 +70,8 @@ def create_quote(
             duration_months=quote_data.duration_months,
             discount_percent=quote_data.discount_percent,
             created_by=quote_data.created_by or current_user.id,
-            pos_location_id=quote_data.pos_location_id or getattr(current_user, 'pos_location_id', None)
+            pos_location_id=quote_data.pos_location_id or getattr(current_user, 'pos_location_id', None),
+            financial_overrides=quote_data.financial_overrides
         )
         return quote
     except Exception as e:

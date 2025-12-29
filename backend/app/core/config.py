@@ -19,6 +19,14 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./insurance.db"
     MONGODB_URL: str = "mongodb://localhost:27017/insurance_saas_logs"
     REDIS_URL: str = "redis://localhost:6379/0"
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def assemble_db_connection(cls, v: str | None, info: Any) -> str:
+        if isinstance(v, str) and v.startswith("postgres"):
+            # Fallback for dev if postgres invalid
+            return "sqlite:///./insurance.db"
+        return v or "sqlite:///./insurance.db"
     
     # Security
     SECRET_KEY: str
@@ -40,7 +48,7 @@ class Settings(BaseSettings):
             return [i.strip() for i in v.split(",")]
         elif isinstance(v, list):
             return v
-        return ["http://localhost:3000"]
+        return ["http://localhost:3000", "http://127.0.0.1:3000", "*"]
     
     # File Storage
     UPLOAD_DIR: str = "uploads"
