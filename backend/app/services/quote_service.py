@@ -35,7 +35,10 @@ class QuoteService:
         duration_months: int = 12,
         policy_id: Optional[UUID] = None,
         company_id: Optional[UUID] = None,
-        financial_overrides: Optional[Dict[str, Any]] = None
+        financial_overrides: Optional[Dict[str, Any]] = None,
+        # Added missing args expected by endpoint
+        policy_type_id: Optional[UUID] = None,
+        coverage_amount: Optional[Decimal] = None
     ) -> Dict[str, Any]:
         """
         Calculate premium based on policy type and risk factors.
@@ -70,7 +73,7 @@ class QuoteService:
         # Let's fix the SyntaxError first.
         
         # Handle overrides
-        if financial_overrides and 'base_rate' in financial_overrides:
+        if financial_overrides and financial_overrides.get('base_rate') is not None:
             # Assuming base_rate is passed as percentage (e.g. 5.0)
             base_rate = Decimal(str(financial_overrides['base_rate'])) / Decimal('100')
         else:
@@ -79,84 +82,47 @@ class QuoteService:
         # I will assume coverage_amount needs to be 0 or I'll break it more.
         # Replacing with usage of risk_factors.get('coverage_amount') maybe?
         
-        coverage_amount = Decimal(str(risk_factors.get('coverage_amount', '10000')))
+        if coverage_amount is not None:
+             coverage_amount = Decimal(str(coverage_amount))
+        else:
+             coverage_amount = Decimal(str(risk_factors.get('coverage_amount', '10000')))
+
+        # Define duration_factor BEFORE usage
+        duration_factor = Decimal(duration_months) / Decimal(12)
+        
+        # Initialize apr_percent safely
+        apr_percent = 0.0
 
         base_premium = coverage_amount * base_rate
-        
-        # Calculate risk adjustments
+        base_premium = base_premium * duration_factor # Prorate base premium for duration immediately for easier calculation
+
+        # Calculate risk adjustments (User Requirement: Additive Percentage Increases on Base)
         risk_score = self._calculate_risk_score(risk_factors)
         
-        # Apply explicit risk multipliers if present
-        multiplier_factor = Decimal('1.0')
+        # Risk Score Cost (0-100 scale, treated as percentage add-on)
+        # Assuming risk_score 50 is neutral? Or is it 0-100% add on? 
+        # Previous logic: score_cost = adjusted_base * (score/100). 
+        # We will treat score as a direct percentage add-on to Base.
+        score_cost = base_premium * (risk_score / Decimal('100'))
+
+        # Risk Multipliers (Explicit Financial Overrides)
+        multiplier_cost = Decimal('0')
         if financial_overrides and 'risk_multiplier' in financial_overrides:
-             # handle list or single value
              multipliers = financial_overrides['risk_multiplier']
              if isinstance(multipliers, list):
                  for m in multipliers:
-                     multiplier_factor *= Decimal(str(m))
+                     # Additive: (Multiplier - 1) * Base
+                     # e.g. 1.25 -> 0.25 * Base
+                     factor = Decimal(str(m)) - Decimal('1')
+                     multiplier_cost += base_premium * factor
              else:
-                 multiplier_factor = Decimal(str(multipliers))
+                 factor = Decimal(str(multipliers)) - Decimal('1')
+                 multiplier_cost += base_premium * factor
 
-        # Base calculation
-        adjusted_base = base_premium * multiplier_factor
-        risk_adjustment = adjusted_base * (risk_score / 100)
-        
-        # Adjust for duration
-        duration_factor = Decimal(duration_months) / Decimal(12)
-        adjusted_premium = (adjusted_base + risk_adjustment) * duration_factor
-        
-        # UBI Adjustment (Phase 7)
-        ubi_adjustment_amount = Decimal('0')
-        if policy_id:
-            from app.services.telematics_service import TelematicsService
-            from app.core.database import SessionLocal # A bit hacky to import here but for simplicity in this service
-            db = SessionLocal()
-            try:
-                telematics_service = TelematicsService(db)
-                ubi_factor = telematics_service.get_ubi_adjustment(policy_id)
-                ubi_adjustment_amount = adjusted_premium * ubi_factor
-            finally:
-                db.close()
-        
-        final_premium = adjusted_premium + ubi_adjustment_amount
+        # Total Risk Adjustment
+        total_risk_adjustment = multiplier_cost + score_cost
 
-        # Financial Calculations
-        apr_percent = 0.0
-        arrangement_fee = Decimal('0')
-        extra_fee = Decimal('0')
-        total_financed_amount = Decimal('0')
-        monthly_installment = Decimal('0')
-        total_installment_price = Decimal('0')
-
-        if company_id:
-            company = self.quote_repo.db.query(Company).filter(Company.id == company_id).first()
-            if company:
-                apr_percent = company.apr_percent or 0.0
-                arrangement_fee = Decimal(str(company.arrangement_fee or 0))
-                extra_fee = Decimal(str(company.extra_fee or 0))
-
-                # Apply Fixed Fee Overrides
-                if financial_overrides and 'fixed_fee' in financial_overrides:
-                    fees = financial_overrides['fixed_fee']
-                    if isinstance(fees, list):
-                        for f in fees:
-                            extra_fee += Decimal(str(f))
-                    else:
-                        extra_fee += Decimal(str(fees))
-
-                # Logic: Total Financed = Premium + Fees
-                # Interest = Total Financed * (APR / 100)
-                # Total Price = Total Financed + Interest
-                
-                total_financed_amount = final_premium + arrangement_fee + extra_fee
-                interest_amount = total_financed_amount * (Decimal(str(apr_percent)) / Decimal('100'))
-                total_installment_price = total_financed_amount + interest_amount
-                
-                if duration_months > 0:
-                    monthly_installment = total_installment_price / Decimal(duration_months)
-
-        # Recalculate Final Premium with Tax & Discounts (for Preview)
-        # 1. Discount
+        # Discounts (User Requirement: Calculated on Base Premium)
         discount_percent = Decimal('0')
         if financial_overrides and 'company_discount' in financial_overrides:
             discounts = financial_overrides['company_discount']
@@ -166,10 +132,38 @@ class QuoteService:
             else:
                  discount_percent = Decimal(str(discounts))
         
-        discount_amount = final_premium * (discount_percent / Decimal(100))
-        net_premium = final_premium - discount_amount
+        discount_amount = base_premium * (discount_percent / Decimal('100'))
 
-        # 2. Tax
+        # UBI Adjustment (Placeholder for Phase 7)
+        ubi_adjustment_amount = Decimal('0')
+
+        # Fees (Fixed amounts)
+        arrangement_fee = Decimal('0')
+        extra_fee = Decimal('0')
+        
+        if company_id:
+            company = self.quote_repo.db.query(Company).filter(Company.id == company_id).first()
+            if company:
+                apr_percent = company.apr_percent or 0.0
+                arrangement_fee = Decimal(str(company.arrangement_fee or 0))
+                extra_fee = Decimal(str(company.extra_fee or 0))
+
+        if financial_overrides and 'fixed_fee' in financial_overrides:
+            fees = financial_overrides['fixed_fee']
+            if isinstance(fees, list):
+                for f in fees:
+                    extra_fee += Decimal(str(f))
+            else:
+                extra_fee += Decimal(str(fees))
+
+        # Subtotal (Base - Discount + Risk + Fees)
+        # User Formula: Subtotal = Base Premium - Total Discount + Total Risk Adjustment
+        # (We append Fees to this as they are pre-tax generally, or we can make them post-tax.
+        # User didn't specify Fees location, but usually fees are taxable or exempt. 
+        # We will include them in Subtotal for Tax calculation unless specified otherwise)
+        subtotal = base_premium - discount_amount + total_risk_adjustment + extra_fee
+
+        # Tax (User Requirement: Subtotal * Tax Rate)
         tax_percent = Decimal('0')
         if financial_overrides and 'government_tax' in financial_overrides:
             taxes = financial_overrides['government_tax']
@@ -179,13 +173,24 @@ class QuoteService:
             else:
                  tax_percent = Decimal(str(taxes))
         
-        tax_amount = net_premium * (tax_percent / Decimal(100))
-        final_premium = net_premium + tax_amount
+        tax_amount = subtotal * (tax_percent / Decimal('100'))
 
+        # Final Premium
+        final_premium = subtotal + tax_amount
+
+        # Total Financed
+        total_financed_amount = final_premium + arrangement_fee
         
+        interest_amount = total_financed_amount * (Decimal(str(apr_percent)) / Decimal('100'))
+        total_installment_price = total_financed_amount + interest_amount
+        
+        monthly_installment = Decimal('0')
+        if duration_months > 0:
+            monthly_installment = total_installment_price / Decimal(duration_months)
+
         return {
             'base_premium': base_premium,
-            'risk_adjustment': risk_adjustment,
+            'risk_adjustment': total_risk_adjustment,
             'ubi_adjustment': ubi_adjustment_amount,
             'risk_score': risk_score,
             'final_premium': final_premium,
@@ -199,7 +204,6 @@ class QuoteService:
             'arrangement_fee': arrangement_fee,
             'extra_fee': extra_fee,
             'total_financed_amount': total_financed_amount,
-            'monthly_installment': monthly_installment,
             'monthly_installment': monthly_installment,
             'total_installment_price': total_installment_price,
             'excess': Decimal('0'),
@@ -291,17 +295,18 @@ class QuoteService:
     ) -> Quote:
         """Create a new quote with calculated premium."""
         calculation = self.calculate_premium(
+            risk_factors=risk_factors,
             duration_months=duration_months,
             company_id=company_id,
-            financial_overrides=financial_overrides
+            financial_overrides=financial_overrides,
+            policy_type_id=policy_type_id,
+            coverage_amount=coverage_amount
         )
         
-        # Override discount_percent if company_discount is selected
+        # Override discount_percent if company_discount is selected (for storage)
         if financial_overrides and 'company_discount' in financial_overrides:
             discounts = financial_overrides['company_discount']
-            # Check if list or single
             if isinstance(discounts, list):
-                 # Taking valid max discount or summing? Usually just one. Summing for now.
                  for d in discounts:
                      discount_percent += Decimal(str(d))
             else:
@@ -310,30 +315,32 @@ class QuoteService:
         # Override premium_amount if a premium policy match was found
         if calculation.get('premium_evaluation'):
             premium_amount = Decimal(str(calculation['premium_evaluation']['price']))
+            # If using fixed price policy, we might need to adjust final premium?
+            # Current logic in calculate_premium doesn't seem to switch to fixed price.
+            # It just returns 'premium_evaluation'.
+            # If we strictly want to use the Calculated Final Premium:
+            final_premium = calculation['final_premium']
         else:
-            premium_amount = calculation['final_premium']
-        
+            premium_amount = calculation['base_premium'] # Store base premium
+            final_premium = calculation['final_premium']
+
         # Generate quote number
         quote_number = self.generate_quote_number(company_id, "AUTO")  # TODO: Get policy type code
         
-        # Calculate final premium with discount
-        discount_amount = premium_amount * (discount_percent / Decimal(100))
-        net_premium = premium_amount - discount_amount
-
-        # Calculate Tax
+        # Retrieve calculated values
+        tax_amount = calculation['tax_amount']
+        discount_amount = calculation['discount_amount']
+        
+        # Determine tax_percent (for storage)
         tax_percent = Decimal('0')
         if financial_overrides and 'government_tax' in financial_overrides:
-            taxes = financial_overrides['government_tax']
-            # Sum up tax rates if multiple are selected (unlikely but safe)
-            if isinstance(taxes, list):
-                for t in taxes:
-                    tax_percent += Decimal(str(t))
-            else:
-                 tax_percent = Decimal(str(taxes))
-        
-        tax_amount = net_premium * (tax_percent / Decimal(100))
-        final_premium = net_premium + tax_amount
-        
+             taxes = financial_overrides['government_tax']
+             if isinstance(taxes, list):
+                 for t in taxes:
+                     tax_percent += Decimal(str(t))
+             else:
+                  tax_percent = Decimal(str(taxes))
+
         # Set validity (30 days from now)
         valid_until = date.today() + timedelta(days=30)
         
@@ -344,7 +351,6 @@ class QuoteService:
             policy_type_id=policy_type_id,
             quote_number=quote_number,
             coverage_amount=coverage_amount,
-            premium_amount=premium_amount,
             premium_amount=premium_amount,
             discount_percent=discount_percent,
             tax_percent=tax_percent,

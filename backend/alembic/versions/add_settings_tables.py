@@ -7,7 +7,7 @@ Create Date: 2025-12-14
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
 # revision identifiers, used by Alembic.
@@ -20,8 +20,8 @@ depends_on = None
 def upgrade():
     # Add new columns to companies table
     op.add_column('companies', sa.Column('registration_number', sa.String(100), nullable=True))
-    op.add_column('companies', sa.Column('bank_details', JSONB, default=[], nullable=True))
-    op.add_column('companies', sa.Column('mobile_money_accounts', JSONB, default=[], nullable=True))
+    op.add_column('companies', sa.Column('bank_details', sa.JSON, default=[], nullable=True))
+    op.add_column('companies', sa.Column('mobile_money_accounts', sa.JSON, default=[], nullable=True))
     op.add_column('companies', sa.Column('currency', sa.String(10), default='USD', nullable=True))
     op.add_column('companies', sa.Column('country', sa.String(100), nullable=True))
     op.add_column('companies', sa.Column('timezone', sa.String(50), default='UTC', nullable=True))
@@ -43,8 +43,8 @@ def upgrade():
     # Set default values for existing companies
     op.execute("""
         UPDATE companies 
-        SET bank_details = '[]'::jsonb, 
-            mobile_money_accounts = '[]'::jsonb,
+        SET bank_details = '[]', 
+            mobile_money_accounts = '[]',
             currency = 'USD',
             timezone = 'UTC'
         WHERE bank_details IS NULL

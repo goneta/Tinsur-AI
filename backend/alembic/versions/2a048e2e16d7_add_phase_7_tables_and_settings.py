@@ -77,7 +77,7 @@ def upgrade() -> None:
         sa.Column('status', sa.String(length=50), server_default='submitted', nullable=True),
         sa.Column('claim_amount', sa.Numeric(precision=15, scale=2), nullable=False),
         sa.Column('approved_amount', sa.Numeric(precision=15, scale=2), nullable=True),
-        sa.Column('evidence_files', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column('evidence_files', sa.JSON(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(['adjuster_id'], ['users.id'], ),

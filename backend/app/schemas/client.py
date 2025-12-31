@@ -161,7 +161,7 @@ class ClientBase(BaseModel):
     last_name: Optional[str] = None
     business_name: Optional[str] = None
     email: EmailStr
-    phone: str
+    phone: Optional[str] = None
     date_of_birth: Optional[date] = None
     gender: Optional[str] = None
     address: Optional[str] = None

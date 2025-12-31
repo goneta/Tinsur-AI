@@ -117,13 +117,23 @@ class AuthService:
     
     def authenticate_user(self, request: LoginRequest) -> Optional[User]:
         """Authenticate user with email and password."""
+        print(f"DEBUG: Login attempt for {request.email}")
         user = self.db.query(User).filter(User.email == request.email).first()
         
         if not user:
-            return None
+            print("DEBUG: User not found")
+            from fastapi import HTTPException
+            raise HTTPException(401, detail=f"DEBUG: User {request.email} NOT found in DB")
+            # return None
+            
+        print(f"DEBUG: User found {user.id}, verifying password...")
+        is_valid = verify_password(request.password, user.password_hash)
+        print(f"DEBUG: Password valid? {is_valid}")
         
-        if not verify_password(request.password, user.password_hash):
-            return None
+        if not is_valid:
+            from fastapi import HTTPException
+            raise HTTPException(401, detail=f"DEBUG: Password mismatch for {request.email}. Hash starts: {user.password_hash[:10]}")
+            # return None
         
         if not user.is_active:
             raise HTTPException(
@@ -157,25 +167,29 @@ class AuthService:
     
     def login(self, request: LoginRequest) -> dict:
         """Login and return tokens with user info."""
-        user = self.authenticate_user(request)
-        
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        
-        tokens = self.create_tokens(user)
-        
-        return {
-            **tokens.dict(),
-            "user": {
-                "id": str(user.id),
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "role": user.role,
-                "company_id": str(user.company_id)
+        try:
+            # DEBUG WRAPPER
+            print(f"DEBUG: Processing login for {request.email}")
+            user = self.authenticate_user(request)
+            
+            if not user:
+                # If authenticate_user returned None (it shouldn't, due to raises), but if it did:
+                return {"debug_error": "authenticate_user returned None"}
+            
+            tokens = self.create_tokens(user)
+            
+            return {
+                **tokens.dict(),
+                "user": {
+                    "id": str(user.id),
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "role": user.role,
+                    "company_id": str(user.company_id)
+                }
             }
-        }
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return {"status": "error", "message": str(e), "trace": traceback.format_exc()}

@@ -7,7 +7,7 @@ Create Date: 2025-12-12 22:50:00.000000
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID
 
 # revision identifiers, used by Alembic.
 revision = '002'
@@ -47,7 +47,7 @@ def upgrade() -> None:
         sa.Column('risk_score', sa.Numeric(5, 2)),
         sa.Column('status', sa.String(50), default='draft'),
         sa.Column('valid_until', sa.Date()),
-        sa.Column('details', JSONB, default={}),
+        sa.Column('details', sa.JSON, default={}),
         sa.Column('notes', sa.Text()),
         sa.Column('created_by', UUID(as_uuid=True), sa.ForeignKey('users.id')),
         sa.Column('created_at', sa.DateTime(), nullable=False),
@@ -72,7 +72,7 @@ def upgrade() -> None:
         sa.Column('cancellation_reason', sa.Text()),
         sa.Column('policy_document_url', sa.String(500)),
         sa.Column('qr_code_data', sa.Text()),
-        sa.Column('details', JSONB, default={}),
+        sa.Column('details', sa.JSON, default={}),
         sa.Column('notes', sa.Text()),
         sa.Column('created_by', UUID(as_uuid=True), sa.ForeignKey('users.id')),
         sa.Column('created_at', sa.DateTime(), nullable=False),

@@ -5,6 +5,7 @@ from typing import List, Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+import logging
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -37,16 +38,27 @@ def calculate_quote(
     quote_repo = QuoteRepository(db)
     quote_service = QuoteService(quote_repo)
     
-    result = quote_service.calculate_premium(
-        policy_type_id=calculation_request.policy_type_id,
-        coverage_amount=calculation_request.coverage_amount,
-        risk_factors=calculation_request.risk_factors,
-        duration_months=calculation_request.duration_months,
-        company_id=current_user.company_id,
-        financial_overrides=calculation_request.financial_overrides
-    )
-    
-    return result
+    try:
+        logger = logging.getLogger("api.quotes")
+        logger.info(f"Calculating premium for client {calculation_request.client_id} with policy {calculation_request.policy_type_id} coverage {calculation_request.coverage_amount}")
+        
+        result = quote_service.calculate_premium(
+            policy_type_id=calculation_request.policy_type_id,
+            coverage_amount=calculation_request.coverage_amount,
+            risk_factors=calculation_request.risk_factors,
+            duration_months=calculation_request.duration_months,
+            company_id=current_user.company_id,
+            financial_overrides=calculation_request.financial_overrides
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error calculating premium: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Calculation failed: {str(e)}"
+        )
 
 
 @router.post("/", response_model=QuoteResponse, status_code=status.HTTP_201_CREATED)

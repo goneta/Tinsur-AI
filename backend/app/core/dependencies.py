@@ -25,23 +25,24 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
     token = credentials.credentials
-    payload = decode_token(token)
-    
-    if payload is None:
+    try:
+        payload = decode_token(token)
+        if payload is None:
+            raise credentials_exception
+        
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+        
+        token_data = TokenData(
+            user_id=uuid.UUID(user_id),
+            email=payload.get("email"),
+            role=payload.get("role"),
+            company_id=uuid.UUID(payload.get("company_id")) if payload.get("company_id") else None
+        )
+    except (JWTError, ValidationError, ValueError):
         raise credentials_exception
-    
-    user_id: str = payload.get("sub")
-    if user_id is None:
-        raise credentials_exception
-    
-    token_data = TokenData(
-        user_id=uuid.UUID(user_id),
-        email=payload.get("email"),
-        role=payload.get("role"),
-        company_id=uuid.UUID(payload.get("company_id")) if payload.get("company_id") else None
-    )
     
     from sqlalchemy.orm import joinedload
     user = db.query(User).options(joinedload(User.company)).filter(User.id == token_data.user_id).first()
