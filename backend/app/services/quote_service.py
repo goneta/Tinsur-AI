@@ -93,8 +93,22 @@ class QuoteService:
         # Initialize apr_percent safely
         apr_percent = 0.0
 
-        base_premium = coverage_amount * base_rate
-        base_premium = base_premium * duration_factor # Prorate base premium for duration immediately for easier calculation
+        # Determine Base Premium
+        base_premium = Decimal('0')
+        
+        # 1. Try to get price from Selected Policy
+        if policy_type_id:
+             policy = self.quote_repo.db.query(PremiumPolicyType).filter(PremiumPolicyType.id == policy_type_id).first()
+             if policy and policy.price:
+                 # Use Policy Fixed Price as Base
+                 base_premium = Decimal(str(policy.price))
+                 # Adjust for duration? Assuming policy price is Annual.
+                 base_premium = base_premium * duration_factor
+        
+        # 2. Fallback to Coverage * Rate if no policy price or 0
+        if base_premium == 0:
+            base_premium = coverage_amount * base_rate
+            base_premium = base_premium * duration_factor
 
         # Calculate risk adjustments (User Requirement: Additive Percentage Increases on Base)
         risk_score = self._calculate_risk_score(risk_factors)
