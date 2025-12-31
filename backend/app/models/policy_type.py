@@ -26,8 +26,10 @@ class PolicyType(Base):
     
     # Relationships
     company = relationship("Company")
-    quotes = relationship("Quote", back_populates="policy_type", cascade="all, delete-orphan")
-    policies = relationship("Policy", back_populates="policy_type", cascade="all, delete-orphan")
+    # Relationships
+    company = relationship("Company")
+    # quotes = relationship("Quote", back_populates="policy_type", cascade="all, delete-orphan")
+    # policies = relationship("Policy", back_populates="policy_type", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<PolicyType {self.name}>"

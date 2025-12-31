@@ -20,7 +20,7 @@ class Policy(Base):
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), index=True)
     client_id = Column(GUID(), ForeignKey("clients.id", ondelete="CASCADE"), index=True)
-    policy_type_id = Column(GUID(), ForeignKey("policy_types.id"))
+    policy_type_id = Column(GUID(), ForeignKey("premium_policy_types.id"))
     quote_id = Column(GUID(), ForeignKey("quotes.id"), nullable=True)
     pos_location_id = Column(GUID(), ForeignKey("pos_locations.id"), nullable=True)
     ifrs17_group_id = Column(GUID(), ForeignKey("ifrs17_groups.id"), nullable=True)
@@ -58,7 +58,7 @@ class Policy(Base):
     # Relationships
     company = relationship("Company")
     client = relationship("Client")
-    policy_type = relationship("PolicyType", back_populates="policies")
+    policy_type = relationship("PremiumPolicyType")
     quote = relationship("Quote", back_populates="policy")
     pos_location = relationship("POSLocation", back_populates="policies")
     ifrs17_group = relationship("IFRS17Group")

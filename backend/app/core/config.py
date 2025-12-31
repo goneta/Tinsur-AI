@@ -40,7 +40,7 @@ class Settings(BaseSettings):
             return [i.strip() for i in v.split(",")]
         elif isinstance(v, list):
             return v
-        return ["http://localhost:3000", "http://127.0.0.1:3000", "*"]
+        return ["*"]
     
     # File Storage
     UPLOAD_DIR: str = "uploads"

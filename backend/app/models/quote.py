@@ -18,7 +18,7 @@ class Quote(Base):
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
     client_id = Column(GUID(), ForeignKey("clients.id", ondelete="CASCADE"))
-    policy_type_id = Column(GUID(), ForeignKey("policy_types.id"))
+    policy_type_id = Column(GUID(), ForeignKey("premium_policy_types.id"))
     pos_location_id = Column(GUID(), ForeignKey("pos_locations.id"), nullable=True)
     quote_number = Column(String(50), unique=True, nullable=False)
     sale_channel = Column(String(50), default='online')  # 'online', 'pos', 'agent', 'broker'
@@ -64,7 +64,7 @@ class Quote(Base):
     # Relationships
     company = relationship("Company")
     client = relationship("Client")
-    policy_type = relationship("PolicyType", back_populates="quotes")
+    policy_type = relationship("PremiumPolicyType", foreign_keys=[policy_type_id])
     creator = relationship("User", foreign_keys=[created_by])
     pos_location = relationship("POSLocation")
     policy = relationship("Policy", back_populates="quote", uselist=False)

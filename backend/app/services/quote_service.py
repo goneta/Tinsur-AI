@@ -43,6 +43,10 @@ class QuoteService:
         """
         Calculate premium based on policy type and risk factors.
         """
+        # Initialize variables safely
+        if coverage_amount is None:
+            coverage_amount = Decimal('0')
+
         # Base premium rate (percentage of coverage)
         base_rates = {
             'VEHICLE': Decimal('0.05'),
@@ -308,8 +312,19 @@ class QuoteService:
         financial_overrides: Dict[str, Any] = None
     ) -> Quote:
         """Create a new quote with calculated premium."""
+        # Fetch client data to ensure eligibility checks can run
+        client = self.quote_repo.db.query(Client).filter(Client.id == client_id).first()
+        client_data = {}
+        if client:
+             # Convert client model to dict safely
+             client_data = {c.name: getattr(client, c.name) for c in client.__table__.columns}
+        
+        # Merge risk_factors with client data for eligibility checks
+        # risk_factors take precedence if same key exists (though unlikely for base fields)
+        full_risk_factors = {**client_data, **risk_factors}
+
         calculation = self.calculate_premium(
-            risk_factors=risk_factors,
+            risk_factors=full_risk_factors,
             duration_months=duration_months,
             company_id=company_id,
             financial_overrides=financial_overrides,
