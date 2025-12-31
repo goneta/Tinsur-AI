@@ -27,6 +27,10 @@ class PolicyRepository:
         """Get policy by ID."""
         return self.db.query(Policy).filter(Policy.id == policy_id).options(joinedload(Policy.client), joinedload(Policy.creator)).first()
     
+    def get_by_quote_id(self, quote_id: UUID) -> Optional[Policy]:
+        """Get policy by Quote ID."""
+        return self.db.query(Policy).filter(Policy.quote_id == quote_id).first()
+    
     def get_by_number(self, policy_number: str) -> Optional[Policy]:
         """Get policy by policy number."""
         return self.db.query(Policy).filter(Policy.policy_number == policy_number).first()

@@ -14,6 +14,7 @@ from app.models.premium_policy import PremiumPolicyType, PremiumPolicyCriteria
 from app.repositories.quote_repository import QuoteRepository
 from app.services.underwriting_service import UnderwritingService
 from app.models.company import Company
+from app.models.user import User
 
 
 class QuoteService:
@@ -323,6 +324,13 @@ class QuoteService:
         # risk_factors take precedence if same key exists (though unlikely for base fields)
         full_risk_factors = {**client_data, **risk_factors}
 
+        # Determine initial status
+        initial_status = 'draft'
+        if created_by:
+            creator = self.quote_repo.db.query(User).filter(User.id == created_by).first()
+            if creator and creator.role == 'client':
+                initial_status = 'draft_from_client'
+        
         calculation = self.calculate_premium(
             risk_factors=full_risk_factors,
             duration_months=duration_months,
@@ -388,7 +396,7 @@ class QuoteService:
             premium_frequency=premium_frequency,
             duration_months=duration_months,
             risk_score=calculation['risk_score'],
-            status='draft',
+            status=initial_status,
             valid_until=valid_until,
             details={**risk_factors, **(financial_overrides or {})},
             created_by=created_by,
@@ -451,7 +459,7 @@ class QuoteService:
         """Mark quote as accepted."""
         quote = self.quote_repo.get_by_id(quote_id)
         if quote and not quote.is_expired:
-            quote.status = 'accepted'
+            quote.status = 'policy_created'
             return self.quote_repo.update(quote)
         return None
     

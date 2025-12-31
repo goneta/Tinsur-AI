@@ -213,26 +213,37 @@ def approve_quote(
             detail="Quote not found"
         )
         
-    # Permission check: Creator, Assigned Agent, or Admin
-    # For now, simplistic check: if company matches
+    #Permission check: Creator, Assigned Agent, or Admin
     if quote.company_id != current_user.company_id:
          raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Quote not found"
         )
 
+    # Idempotency Check: If already policy_created or accepted
+    if quote.status in ['policy_created', 'accepted']:
+        # Find existing policy
+        policy = policy_repo.get_by_quote_id(quote_id)
+        if policy:
+             return {
+                "message": "Quote already approved",
+                "quote_status": quote.status,
+                "policy_id": str(policy.id),
+                "policy_number": policy.policy_number
+            }
+
     # State check
-    if quote.status not in ['draft', 'sent']:
+    # Allow 'draft', 'sent', 'draft_from_client'
+    if quote.status not in ['draft', 'sent', 'draft_from_client']:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot approve quote in '{quote.status}' status"
         )
 
-    # 1. Accept Quote
+    # 1. Accept Quote (Transitions to 'policy_created' in service)
     quote_service.accept_quote(quote_id)
     
-    # 2. Convert to Policy (Auto-create)
-    # Default start_date to today if not specified (implicit in one-click approval)
+    # 2. Convert to Policy
     from datetime import date
     start_date = date.today()
     
@@ -243,9 +254,6 @@ def approve_quote(
     )
     
     if not policy:
-        # Rollback quote status?
-        # quote.status = 'sent' ...
-        # raise Error
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create policy from accepted quote"
@@ -253,7 +261,7 @@ def approve_quote(
         
     return {
         "message": "Quote approved and policy created successfully",
-        "quote_status": "accepted",
+        "quote_status": "policy_created",
         "policy_id": str(policy.id),
         "policy_number": policy.policy_number
     }
