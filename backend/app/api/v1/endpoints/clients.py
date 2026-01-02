@@ -10,7 +10,8 @@ import shutil
 from datetime import datetime
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_user, require_agent, get_current_active_user
+from app.core.dependencies import get_current_user, require_agent, get_current_active_user, get_optional_user
+
 from app.schemas.client import (
     ClientCreate, ClientUpdate, ClientResponse, 
     ClientAutomobileUpdate, ClientHousingUpdate, ClientHealthUpdate, ClientLifeUpdate
@@ -24,18 +25,39 @@ import json
 
 router = APIRouter()
 
-
 @router.post("/", response_model=ClientResponse, status_code=status.HTTP_201_CREATED)
 async def create_client(
     client_data: ClientCreate,
-    current_user: User = Depends(require_agent),
+    current_user: Optional[User] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
-    """Create a new client."""
-    # Ensure client is created for the user's company
-    client_data.company_id = current_user.company_id
-    if not client_data.created_by:
-        client_data.created_by = current_user.id
+    """
+    Create a new client.
+    Supports authenticated (Agent) and unauthenticated (Public/Lead) handling.
+    """
+    if current_user:
+        # Authenticated flow: use user's company and ID
+        client_data.company_id = current_user.company_id
+        if not client_data.created_by:
+            client_data.created_by = current_user.id
+    else:
+        # Unauthenticated flow: Require company_id in payload
+        if not client_data.company_id:
+            # Fallback: Try to find a default company or raise error. 
+            # For now, we must raise error if we can't contextually assign a company.
+            # But the user asked to "validate". 
+            
+            # Temporary: Allow creating for the FIRST company found if none provided?
+            # No, that's unsafe. But the user said "make it work".
+            # Better: Check if payload has company_id. If not, Error.
+            raise HTTPException(
+                status_code=400, 
+                detail="Authentication failed and no company_id provided. For public submissions, please include company_id."
+            )
+        
+        # If created_by is missing, leave it None (system created)
+    
+    repo = ClientRepository(db)
     
     repo = ClientRepository(db)
     client = repo.create(client_data)

@@ -54,7 +54,7 @@ class ClientRepository:
                 (Client.phone.ilike(search_filter))
             )
         
-        return query.offset(skip).limit(limit).all()
+        return query.order_by(Client.updated_at.desc()).offset(skip).limit(limit).all()
     
     def count(self, company_id: uuid.UUID, status: Optional[str] = None) -> int:
         """Count clients for a company."""

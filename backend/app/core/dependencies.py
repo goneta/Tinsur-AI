@@ -6,6 +6,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional
 import uuid
+from jose import JWTError
+from pydantic import ValidationError
 
 from app.core.database import get_db
 from app.core.security import decode_token
@@ -13,6 +15,7 @@ from app.models.user import User
 from app.schemas.auth import TokenData
 
 security = HTTPBearer()
+security_optional = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
@@ -56,6 +59,46 @@ async def get_current_user(
         )
     
     return user
+
+
+async def get_optional_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_optional),
+    db: Session = Depends(get_db)
+) -> Optional[User]:
+    """
+    Get current user if token is valid, otherwise return None.
+    Does NOT raise 401.
+    """
+    if not credentials:
+        return None
+
+    token = credentials.credentials
+    try:
+        payload = decode_token(token)
+        if payload is None:
+            return None
+        
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            return None
+        
+        token_data = TokenData(
+            user_id=uuid.UUID(user_id),
+            email=payload.get("email"),
+            role=payload.get("role"),
+            company_id=uuid.UUID(payload.get("company_id")) if payload.get("company_id") else None
+        )
+    except (JWTError, ValidationError, ValueError):
+        return None
+    
+    from sqlalchemy.orm import joinedload
+    user = db.query(User).options(joinedload(User.company)).filter(User.id == token_data.user_id).first()
+    
+    if user and user.is_active:
+        return user
+    
+    return None
+
 
 
 async def get_current_active_user(

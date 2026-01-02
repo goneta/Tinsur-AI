@@ -23,14 +23,14 @@ class Settings(BaseSettings):
     # Security
     SECRET_KEY: str = "dev_secret_key_123456789" # Default set to bypass .env requirement
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     A2A_INTERNAL_API_KEY: str = "super-secret-a2a-key"
     GOOGLE_API_KEY: str = ""
 
     
     # CORS
-    ALLOWED_ORIGINS: Any = "http://localhost:3000"
+    ALLOWED_ORIGINS: Any = "http://localhost:3000,http://127.0.0.1:3000"
     
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod

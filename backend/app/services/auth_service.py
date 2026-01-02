@@ -167,29 +167,24 @@ class AuthService:
     
     def login(self, request: LoginRequest) -> dict:
         """Login and return tokens with user info."""
-        try:
-            # DEBUG WRAPPER
-            print(f"DEBUG: Processing login for {request.email}")
-            user = self.authenticate_user(request)
-            
-            if not user:
-                # If authenticate_user returned None (it shouldn't, due to raises), but if it did:
-                return {"debug_error": "authenticate_user returned None"}
-            
-            tokens = self.create_tokens(user)
-            
-            return {
-                **tokens.dict(),
-                "user": {
-                    "id": str(user.id),
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "role": user.role,
-                    "company_id": str(user.company_id)
-                }
+        # DEBUG WRAPPER
+        print(f"DEBUG: Processing login for {request.email}")
+        user = self.authenticate_user(request)
+        
+        if not user:
+             # Should be caught by authenticate_user raising exception, but just in case
+             raise HTTPException(status_code=401, detail="Authentication failed")
+        
+        tokens = self.create_tokens(user)
+        
+        return {
+            **tokens.dict(),
+            "user": {
+                "id": str(user.id),
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "role": user.role,
+                "company_id": str(user.company_id)
             }
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return {"status": "error", "message": str(e), "trace": traceback.format_exc()}
+        }

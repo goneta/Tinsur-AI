@@ -17,6 +17,7 @@ from app.models.user import User
 from app.models.client import Client
 from app.models.premium_policy import PremiumPolicyType, PremiumPolicyCriteria
 from app.models.quote_element import QuoteElement
+from app.models.quote import Quote
 
 def seed_full_wizard_data():
     db = SessionLocal()
@@ -213,7 +214,38 @@ def seed_full_wizard_data():
                 count += 1
         
         db.commit()
+        db.commit()
         print(f"Seeded {count} new Quote Elements.")
+
+        # 5. Sample Quotes
+        print("Seeding Sample Quotes...")
+        gold_policy = db.query(PremiumPolicyType).filter(PremiumPolicyType.name == "Gold Driver").first()
+        gold_client = db.query(Client).filter(Client.email == "gold.driver@example.com").first()
+        
+        if gold_policy and gold_client:
+            quote_exists = db.query(Quote).filter(Quote.quote_number == "Q-SAMPLE-001").first()
+            if not quote_exists:
+                quote = Quote(
+                    company_id=company.id,
+                    client_id=gold_client.id,
+                    policy_type_id=gold_policy.id,
+                    quote_number="Q-SAMPLE-001",
+                    coverage_amount=5000000,
+                    premium_amount=60000,
+                    final_premium=60000,
+                    status="draft",
+                    created_by=user.id # using the last user loop var (client) or logic should query admin
+                )
+                # Better to set creator as admin if possible, but client self-quote is also valid
+                # Let's find admin user
+                admin_user = db.query(User).filter(User.email == "admin@demoinsurance.com").first()
+                if admin_user:
+                    quote.created_by = admin_user.id
+                
+                db.add(quote)
+                print("Created Sample Quote: Q-SAMPLE-001")
+        
+        db.commit()
 
         print("\nSeeding Complete! Database ready for Quote Wizard.")
 
