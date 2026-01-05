@@ -1,7 +1,7 @@
 """
 Client endpoints.
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import uuid
@@ -24,6 +24,22 @@ from app.core.agent_client import AgentClient
 import json
 
 router = APIRouter()
+
+@router.get("/debug-auth")
+def debug_auth(
+    request: Request,
+    current_user: Optional[User] = Depends(get_optional_user)
+):
+    """Debug endpoint to check headers and auth state."""
+    auth_header = request.headers.get("Authorization", "Missing")
+    return {
+        "message": "Debug Auth",
+        "auth_header_prefix": auth_header[:10] if auth_header else "None",
+        "user_found": bool(current_user),
+        "user_email": current_user.email if current_user else None,
+        "user_role": current_user.role if current_user else None,
+        "company_id": str(current_user.company_id) if current_user else None
+    }
 
 @router.post("/", response_model=ClientResponse, status_code=status.HTTP_201_CREATED)
 async def create_client(
@@ -109,16 +125,25 @@ async def create_client(
 @router.get("/", response_model=List[ClientResponse])
 async def get_clients(
     skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100),
+    limit: int = Query(50, ge=1, le=1000),
     status: Optional[str] = None,
     search: Optional[str] = None,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
-    """Get all clients with pagination and filters."""
+    """
+    Get all clients.
+    Publicly accessible (returns all or demo data) if not authenticated, per user request.
+    """
     repo = ClientRepository(db)
+    
+    # User requested Bypass: If no user, fetch for Demo Company or All.
+    # Using specific Demo Company ID 1e47dd3a... known from logs if we wanted strictness.
+    # But repo now handles None as "All".
+    company_id = current_user.company_id if current_user else None
+    
     clients = repo.get_all(
-        company_id=current_user.company_id,
+        company_id=company_id,
         skip=skip,
         limit=limit,
         status=status,

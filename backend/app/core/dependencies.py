@@ -32,10 +32,12 @@ async def get_current_user(
     try:
         payload = decode_token(token)
         if payload is None:
+            print("DEBUG: Token decode returned None")
             raise credentials_exception
         
         user_id: str = payload.get("sub")
         if user_id is None:
+            print("DEBUG: Token payload missing 'sub' claim")
             raise credentials_exception
         
         token_data = TokenData(
@@ -44,12 +46,26 @@ async def get_current_user(
             role=payload.get("role"),
             company_id=uuid.UUID(payload.get("company_id")) if payload.get("company_id") else None
         )
-    except (JWTError, ValidationError, ValueError):
+    except (JWTError, ValidationError, ValueError) as e:
+        msg = f"DEBUG: Token validation exception: {type(e).__name__}: {e}"
+        print(msg)
+        try:
+            with open("auth_error.log", "a") as f:
+                f.write(f"{datetime.utcnow()} - {msg}\n")
+        except:
+            pass
         raise credentials_exception
     
     from sqlalchemy.orm import joinedload
     user = db.query(User).options(joinedload(User.company)).filter(User.id == token_data.user_id).first()
     if user is None:
+        msg = f"DEBUG: User not found for ID {token_data.user_id}"
+        print(msg)
+        try:
+            with open("auth_error.log", "a") as f:
+                f.write(f"{datetime.utcnow()} - {msg}\n")
+        except:
+            pass
         raise credentials_exception
     
     if not user.is_active:

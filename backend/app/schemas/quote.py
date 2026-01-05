@@ -79,7 +79,7 @@ class QuoteResponse(QuoteBase):
     risk_score: Optional[Decimal]
     status: str
     valid_until: date
-    created_by: UUID
+    created_by: Optional[UUID] = None
     created_at: datetime
     updated_at: datetime
     is_expired: bool

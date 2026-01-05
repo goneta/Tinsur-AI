@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 import logging
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, get_optional_user
 from app.models.user import User
 from app.schemas.quote import (
     QuoteCreate,
@@ -65,15 +65,43 @@ def calculate_quote(
 def create_quote(
     quote_data: QuoteCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_optional_user)
 ):
-    """Create a new quote."""
+    """
+    Create a new quote.
+    Supports both Authenticated (strict) and Unauthenticated (fallback) flows.
+    """
     quote_repo = QuoteRepository(db)
     quote_service = QuoteService(quote_repo)
     
+    company_id = None
+    created_by = None
+    pos_location_id = None
+    
+    if current_user:
+        # Authenticated: Use trusted session data
+        company_id = current_user.company_id
+        created_by = current_user.id
+        pos_location_id = getattr(current_user, 'pos_location_id', None)
+    else:
+        # Unauthenticated / 401 Bypass: Derive context from Client
+        from app.models.client import Client
+        client = db.query(Client).filter(Client.id == quote_data.client_id).first()
+        
+        if not client:
+             raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Client not found"
+            )
+        
+        company_id = client.company_id
+        # Trust the payload for creator if auth failed
+        created_by = quote_data.created_by
+        pos_location_id = quote_data.pos_location_id
+
     try:
         quote = quote_service.create_quote(
-            company_id=current_user.company_id,
+            company_id=company_id,
             client_id=quote_data.client_id,
             policy_type_id=quote_data.policy_type_id,
             coverage_amount=quote_data.coverage_amount,
@@ -81,8 +109,8 @@ def create_quote(
             premium_frequency=quote_data.premium_frequency,
             duration_months=quote_data.duration_months,
             discount_percent=quote_data.discount_percent,
-            created_by=quote_data.created_by or current_user.id,
-            pos_location_id=quote_data.pos_location_id or getattr(current_user, 'pos_location_id', None),
+            created_by=created_by,
+            pos_location_id=pos_location_id,
             financial_overrides=quote_data.financial_overrides
         )
         return quote

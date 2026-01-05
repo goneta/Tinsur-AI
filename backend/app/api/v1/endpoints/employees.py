@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select
 import uuid
 
-from app.api.v1.endpoints.auth import get_current_user
+from app.core.dependencies import get_current_user
 from app.core.database import get_db
 from app.core.security import get_password_hash
 from app.models.user import User
@@ -15,8 +15,12 @@ from app.models.rbac import Role
 
 router = APIRouter()
 
+@router.get("/test")
+def test():
+    return {"message": "ok employees"}
+
 @router.get("/", response_model=List[EmployeeResponse])
-def get_employees(
+async def get_employees(
     skip: int = 0,
     limit: int = 100,
     current_user: User = Depends(get_current_user),
@@ -25,10 +29,7 @@ def get_employees(
     """
     List employees.
     """
-    # Filter users who have roles that are considered "employees" or belong to the company
-    # For now, we list all users in the company except potentially 'client' role if needed
-    # Adjust logic based on requirements. The prompt says "Employee tab to manage employees".
-    # We can filter out 'client' role.
+    print(f"DEBUG: get_employees called by {current_user.email} (role: {current_user.role}, company: {current_user.company_id})")
     
     query = select(User).options(
         joinedload(User.employee_profile), 

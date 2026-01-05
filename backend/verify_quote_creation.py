@@ -8,6 +8,8 @@ sys.path.append(os.getcwd())
 
 from app.core.database import SessionLocal
 from app.models.user import User
+from app.models.client import Client
+from app.models.premium_policy import PremiumPolicyType
 from app.core.security import create_access_token
 
 BASE_URL = "http://localhost:8000/api/v1"
@@ -32,12 +34,33 @@ def get_test_token():
     finally:
         db.close()
 
-def test_create_client():
+def get_test_data():
+    db = SessionLocal()
+    try:
+        client = db.query(Client).first()
+        policy = db.query(PremiumPolicyType).first()
+        
+        if not client or not policy:
+            print("Missing client or policy data!")
+            return None, None
+            
+        return str(client.id), str(policy.id)
+    finally:
+        db.close()
+
+def test_create_quote():
     token = get_test_token()
     if not token:
         return
 
-    print(f"Testing Create Client with Auth at {BASE_URL}/clients/ ...")
+    client_id, policy_id = get_test_data()
+    if not client_id or not policy_id:
+        print("Cannot proceed without test data.")
+        return
+
+    print(f"Testing Create Quote with Auth at {BASE_URL}/quotes/ ...")
+    print(f"Client ID: {client_id}")
+    print(f"Policy ID: {policy_id}")
     
     headers = {
         "Authorization": f"Bearer {token}",
@@ -46,50 +69,24 @@ def test_create_client():
     }
 
     payload = {
-        "client_type": "individual",
-        "first_name": "Test",
-        "last_name": "Verif",
-        "email": "test.verif@example.com",
-        "phone": "+2250102030405",
-        "country": "Côte d'Ivoire",
-         "risk_profile": "medium",
-         "kyc_status": "pending"
+        "client_id": client_id,
+        "policy_type_id": policy_id,
+        "coverage_amount": 1000000,
+        "premium_frequency": "annual",
+        "duration_months": 12,
+        "discount_percent": 0,
+        "details": {
+            "risk_factors": {"age": 30}
+        }
     }
     
     try:
-        response = requests.post(f"{BASE_URL}/clients/", json=payload, headers=headers)
+        response = requests.post(f"{BASE_URL}/quotes/", json=payload, headers=headers)
         print(f"Status Code: {response.status_code}")
         print(f"Response: {response.text}")
         
     except Exception as e:
         print(f"Connection failed: {e}")
 
-def test_get_clients():
-    token = get_test_token()
-    if not token:
-        return
-
-    print(f"\nTesting Get Clients with Auth at {BASE_URL}/clients/ ...")
-    
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-        "Origin": "http://localhost:3000"
-    }
-
-    try:
-        response = requests.get(f"{BASE_URL}/clients/", headers=headers)
-        print(f"Status Code: {response.status_code}")
-        # print(f"Response: {response.text[:200]}...") # Truncate
-        
-        if response.status_code == 200:
-            print(f"Success! Client count: {len(response.json())}")
-        else:
-            print(f"Failed! {response.text}")
-            
-    except Exception as e:
-        print(f"Connection failed: {e}")
-
 if __name__ == "__main__":
-    test_create_client()
-    test_get_clients()
+    test_create_quote()

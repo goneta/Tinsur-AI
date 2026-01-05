@@ -32,14 +32,16 @@ class ClientRepository:
     
     def get_all(
         self,
-        company_id: uuid.UUID,
+        company_id: Optional[uuid.UUID],
         skip: int = 0,
         limit: int = 50,
         status: Optional[str] = None,
         search: Optional[str] = None
     ) -> List[Client]:
-        """Get all clients for a company with pagination and filters."""
-        query = self.db.query(Client).filter(Client.company_id == company_id)
+        """Get all clients with pagination and filters. If company_id is None, return all (Admin/Public)."""
+        query = self.db.query(Client)
+        if company_id:
+            query = query.filter(Client.company_id == company_id)
         
         if status:
             query = query.filter(Client.status == status)

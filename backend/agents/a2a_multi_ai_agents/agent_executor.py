@@ -150,6 +150,54 @@ class MultiAiAgentsExecutor(AgentExecutor):
                             response_text += f"\n[System]: Connected to {agent_to_call}, but received no text response."
                     except Exception as e:
                         response_text += f"\n[Error]: Failed to reach {agent_to_call}. Details: {str(e)}"
+            
+            # 3. Post-Processing for Structured Actions
+            # If the response implies a structured action but lacks the JSON, generate it.
+            if "```json" not in response_text:
+                needs_structure = False
+                action_type = ""
+                # Heuristic detection of successful actions users want to see
+                if "Quote Reference" in response_text or "Quote Number" in response_text:
+                    needs_structure = True
+                    action_type = "quote"
+                elif ("Document" in response_text or "Policy" in response_text) and "http" in response_text:
+                     # Only show document preview if we actually have a link
+                    needs_structure = True
+                    action_type = "document"
+
+                if needs_structure:
+                    try:
+                        structure_instruction = f"""
+                        The user needs a structured UI update for a {action_type}.
+                        Based on the text below, generate a JSON block for the frontend.
+                        
+                        Schema for quote:
+                        {{
+                            "type": "quote",
+                            "data": {{ 
+                                "quote_number": "extracted or null", 
+                                "premium_amount": 0.0, 
+                                "policy_type": "string",
+                                "status": "draft" 
+                            }}
+                        }}
+                        
+                        Schema for document:
+                        {{
+                            "type": "document",
+                            "data": {{ "name": "Document Name", "url": "extracted_url" }}
+                        }}
+                        
+                        Text to process:
+                        {response_text}
+                        
+                        Return ONLY the JSON block wrapped in ```json ... ```.
+                        """
+                        # Use the manager agent to format the output
+                        json_block = await self.agent.run(structure_instruction, google_api_key=google_api_key)
+                        response_text += f"\n\n{json_block}"
+                    except Exception as e:
+                        print(f"Failed to generate structured output: {e}")
             else:
                 # If no agent, let the LLM handle a direct reply
                 response_text = await self.agent.run(user_input, google_api_key=google_api_key)

@@ -28,6 +28,14 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+# Request logging middleware
+@app.middleware("http")
+async def log_requests(request, call_next):
+    logger.error(f"DEBUG_REQ: {request.method} {request.url}")
+    response = await call_next(request)
+    logger.error(f"DEBUG_RES: {request.method} {request.url} - {response.status_code}")
+    return response
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
@@ -82,6 +90,10 @@ async def root():
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
+
+@app.get("/test_main")
+def test_main():
+    return {"message": "ok main"}
 
 
 # Include API routers
