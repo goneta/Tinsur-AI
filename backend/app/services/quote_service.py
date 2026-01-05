@@ -97,6 +97,7 @@ class QuoteService:
         
         # Initialize apr_percent safely
         apr_percent = 0.0
+        included_services = [] 
 
         # Determine Base Premium
         base_premium = Decimal('0')
@@ -104,11 +105,16 @@ class QuoteService:
         # 1. Try to get price from Selected Policy
         if policy_type_id:
              policy = self.quote_repo.db.query(PremiumPolicyType).filter(PremiumPolicyType.id == policy_type_id).first()
-             if policy and policy.price:
-                 # Use Policy Fixed Price as Base
-                 base_premium = Decimal(str(policy.price))
-                 # Adjust for duration? Assuming policy price is Annual.
-                 base_premium = base_premium * duration_factor
+             if policy:
+                 if policy.price:
+                     # Use Policy Fixed Price as Base
+                     base_premium = Decimal(str(policy.price))
+                     # Adjust for duration? Assuming policy price is Annual.
+                     base_premium = base_premium * duration_factor
+                 
+                 # Populate included services and excess
+                 included_services = [s.name_en for s in policy.services]
+                 excess = Decimal(str(policy.excess or 0))
         
         # 2. Fallback to Coverage * Rate if no policy price or 0
         if base_premium == 0:
@@ -144,6 +150,7 @@ class QuoteService:
         # Discounts (User Requirement: Calculated on Base Premium)
         discount_percent = Decimal('0')
         if financial_overrides and 'company_discount' in financial_overrides:
+            discount_percent = Decimal('0') # Reset to avoid double counting if logic loops
             discounts = financial_overrides['company_discount']
             if isinstance(discounts, list):
                  for d in discounts:
@@ -213,9 +220,10 @@ class QuoteService:
             'ubi_adjustment': ubi_adjustment_amount,
             'risk_score': risk_score,
             'final_premium': final_premium,
-            'premium_evaluation': self.evaluate_premium_policy(company_id, risk_factors) if company_id else None,
-            'discount_amount': discount_amount if 'discount_amount' in locals() else Decimal('0'),
-            'tax_amount': tax_amount if 'tax_amount' in locals() else Decimal('0'),
+            # Only run auto-evaluation if NO policy was explicitly selected
+            'premium_evaluation': self.evaluate_premium_policy(company_id, risk_factors) if (company_id and not policy_type_id) else None,
+            'discount_amount': discount_amount,
+            'tax_amount': tax_amount,
             'risk_factors_analysis': self._analyze_risk_factors(risk_factors),
             'recommendations': self._generate_recommendations(risk_score, risk_factors),
             # Financials
@@ -225,16 +233,9 @@ class QuoteService:
             'total_financed_amount': total_financed_amount,
             'monthly_installment': monthly_installment,
             'total_installment_price': total_installment_price,
-            'excess': Decimal('0'),
-            'included_services': []
+            'excess': excess,
+            'included_services': included_services
         }
-        
-        # Populate excess and services if premium evaluation exists
-        if result['premium_evaluation']:
-            result['excess'] = result['premium_evaluation'].get('excess', Decimal('0'))
-            result['included_services'] = result['premium_evaluation'].get('included_services', [])
-            
-        return result
     
     def _calculate_risk_score(self, risk_factors: Dict[str, Any]) -> Decimal:
         """Calculate risk score from risk factors (0-100)."""
@@ -409,8 +410,8 @@ class QuoteService:
             monthly_installment=calculation['monthly_installment'],
             total_installment_price=calculation['total_installment_price'],
             # Premium Policy Snapshot
-            excess=calculation.get('premium_evaluation', {}).get('excess', Decimal('0')),
-            included_services=calculation.get('premium_evaluation', {}).get('included_services', [])
+            excess=calculation.get('excess', Decimal('0')),
+            included_services=calculation.get('included_services', [])
         )
         
         quote = self.quote_repo.create(quote)

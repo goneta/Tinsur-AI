@@ -85,6 +85,7 @@ class QuoteResponse(QuoteBase):
     is_expired: bool
     client_name: str
     created_by_name: str
+    policy_type_name: str
     
     class Config:
         from_attributes = True

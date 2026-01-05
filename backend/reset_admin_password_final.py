@@ -1,36 +1,52 @@
-import sys
+"""
+Reset admin password to 'Password123!'
+Standalone script.
+"""
+from sqlalchemy import create_engine, Column, String, Boolean, DateTime, ForeignKey, text
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from passlib.context import CryptContext
+import uuid
 import os
-from sqlalchemy import text
+from dotenv import load_dotenv
 
-# Add parent dir to path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+load_dotenv()
 
-from app.core.database import SessionLocal
-from app.core.security import get_password_hash
-from app.models.user import User
+# Database URL
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./insurance.db")
 
-def reset_admin_password():
-    db = SessionLocal()
-    try:
-        user = db.query(User).filter(User.email == "admin@demoinsurance.com").first()
-        if not user:
-            print("User not found!")
-            return
+# Password hashing
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
-        new_hash = get_password_hash("password123")
-        print(f"Old Hash Start: {user.password_hash[:20]}...")
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
+
+try:
+    print("Connecting to database...")
+    engine = create_engine(DATABASE_URL)
+    
+    admin_email = "admin@demoinsurance.com"
+    new_password = "Password123!"
+    password_hash = get_password_hash(new_password)
+    
+    print(f"Updating user {admin_email}...")
+    
+    # Use direct SQL update to avoid ORM StaleDataError or session issues
+    with engine.connect() as connection:
+        result = connection.execute(
+            text("UPDATE users SET password_hash = :pwd WHERE email = :email"),
+            {"pwd": password_hash, "email": admin_email}
+        )
+        connection.commit()
+        print(f"Rows updated: {result.rowcount}")
         
-        user.password_hash = new_hash
-        db.commit()
-        
-        print(f"New Hash Start: {new_hash[:20]}...")
-        print("Password reset successfully for admin@demoinsurance.com to 'password123'")
-        
-    except Exception as e:
-        print(f"Error: {e}")
-        db.rollback()
-    finally:
-        db.close()
+    if result.rowcount > 0:
+        print(f"✓ Password successfully reset to '{new_password}'")
+    else:
+        print(f"✗ User {admin_email} not found or no change needed!")
 
-if __name__ == "__main__":
-    reset_admin_password()
+except Exception as e:
+    print(f"\n✗ Error: {e}")
+    import traceback
+    traceback.print_exc()

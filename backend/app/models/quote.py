@@ -90,3 +90,8 @@ class Quote(Base):
         if self.creator and self.creator.role == 'client':
             return "Online"
         return self.creator.full_name if self.creator else "Unknown"
+
+    @property
+    def policy_type_name(self):
+        """Get policy type name."""
+        return self.policy_type.name if self.policy_type else "Unknown Policy"
