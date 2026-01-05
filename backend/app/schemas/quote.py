@@ -78,7 +78,7 @@ class QuoteResponse(QuoteBase):
     included_services: Optional[List[str]] = []
     risk_score: Optional[Decimal]
     status: str
-    valid_until: date
+    valid_until: Optional[date] = None
     created_by: Optional[UUID] = None
     created_at: datetime
     updated_at: datetime
