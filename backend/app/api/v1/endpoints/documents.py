@@ -78,7 +78,17 @@ async def upload_document(
         db.commit()
         db.refresh(new_doc)
         
-        return {"status": "success", "document_id": new_doc.id}
+        
+        # Calculate relative URL for frontend access
+        # Filename was generated above: f"{datetime.now().timestamp()}_{file.filename}" which is what we saved
+        # But we didn't store that variable separately. Let's fix that.
+        
+        return {
+            "status": "success", 
+            "document_id": new_doc.id,
+            "url": f"/uploads/{os.path.basename(file_path)}",
+            "name": new_doc.name
+        }
     except Exception as e:
         import traceback
         traceback.print_exc() # Print full stack trace to console

@@ -63,7 +63,9 @@ class MultiAiAgentsExecutor(AgentExecutor):
                 - tickets_agent: For support ticket management.
                 - referrals_agent: For referral programs and tracking.
                 - loyalty_agent: For loyalty points and rewards.
-                - telematics_agent: For driving data and car tracking.
+                - loyalty_agent: For loyalty points and rewards.
+                - telematics_agent: For driving data, safety scores, braking events, and trip analysis.
+                - ml_agent: For machine learning model management.
                 - ml_agent: For machine learning model management.
                 - document_agent: For secure document sharing and collaboration.
                 - ocr_agent: For scanning documents or images.
@@ -111,6 +113,7 @@ class MultiAiAgentsExecutor(AgentExecutor):
                 # Hard fallback to previous keyword logic for reliability
                 if "quote" in user_input.lower(): agent_to_call = "quote_agent"
                 elif "claim" in user_input.lower(): agent_to_call = "claims_agent"
+                elif any(word in user_input.lower() for word in ["driving", "safety", "brake", "braking", "acceleration", "score"]): agent_to_call = "telematics_agent"
 
             # 2. Specialist Communication
             if agent_to_call:
