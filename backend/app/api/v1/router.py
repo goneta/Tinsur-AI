@@ -49,7 +49,9 @@ from app.api.v1.endpoints import (
     recovery,
     archive,
     policy_services,
-    quote_elements
+    policy_services,
+    quote_elements,
+    translations
 )
 
 api_router = APIRouter()
@@ -104,4 +106,5 @@ api_router.include_router(recovery.router, prefix="/recovery", tags=["Claims Rec
 api_router.include_router(archive.router, prefix="/archive", tags=["Immutable Archive (Legal Proof)"])
 api_router.include_router(policy_services.router, prefix="/policy-services", tags=["Policy Services"])
 api_router.include_router(quote_elements.router, prefix="/quote-elements", tags=["Quote Elements"])
+api_router.include_router(translations.router, prefix="/translations", tags=["Translations"])
 
