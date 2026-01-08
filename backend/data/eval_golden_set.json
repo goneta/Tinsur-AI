@@ -1,0 +1,32 @@
+[
+    {
+        "id": "q1",
+        "category": "RAG",
+        "question": "What is the deductible for the Bronze Plan?",
+        "expected": "The deductible for the Bronze Plan is $1,000 per claim."
+    },
+    {
+        "id": "q2",
+        "category": "RAG",
+        "question": "Does the Gold Plan cover dental?",
+        "expected": "Yes, the Gold Plan includes full dental coverage, including orthodontics up to $2,000/year."
+    },
+    {
+        "id": "q3",
+        "category": "Escalation",
+        "question": "I need to talk to a manager about a very specific legal issue with my policy.",
+        "expected": "The agent should identify this as a complex/human-needed request and call the support ticket tool."
+    },
+    {
+        "id": "q4",
+        "category": "PDF_RAG",
+        "question": "What are the rules for vintage car engine modifications?",
+        "expected": "All engine modifications must be reported to Tinsur.AI for vehicles older than 25 years."
+    },
+    {
+        "id": "q5",
+        "category": "General",
+        "question": "What is Tinsur.AI?",
+        "expected": "Tinsur.AI is an AI-powered insurance platform providing coverage for specialized assets like vintage cars."
+    }
+]

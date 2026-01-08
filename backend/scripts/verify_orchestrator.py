@@ -68,6 +68,15 @@ async def verify_routing():
     else:
         print(f"❌ FAILED: Response was: {response}")
 
+    # Test Case 7: RAG Knowledge Retrieval
+    print("\n[TEST 7] Testing RAG Knowledge Retrieval...")
+    response = await run_agent(executor, "Does the Silver Plan cover windshield replacement?")
+    # We expect the agent to find the $50 deductible info from policy_faq.md
+    if "windshield" in response.lower() and "50" in response:
+        print("✅ PASSED: RAG Retrieval Successful (Found specific policy details)")
+    else:
+        print(f"❌ FAILED: RAG Response was: {response}")
+
 async def run_agent(executor, message):
     queue = EventQueue()
     events = [AgentMessage(type="user_text_message", text=message)]

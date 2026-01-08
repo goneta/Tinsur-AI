@@ -49,11 +49,11 @@ class MultiAgentExecutor(AgentExecutor):
             Your job is to route user requests to the appropriate specialist agent.
             
             - If the user wants to check a claim status, file a claim, or asks about fraud, delegate to the 'claims_agent'.
-            - If the user wants to create a policy, manage policies, or ask about coverage details, delegate to the 'policy_agent'.
+            - If the user wants to create or manage their specific policies, delegate to the 'policy_agent'.
             - If the user wants to get a quote, check prices, or create a new quote, delegate to the 'quote_agent'.
             - If the user asks about driving behavior, UBI scores, safety tips, or trips, delegate to the 'telematics_agent'.
             - If the user asks about financial reports, P&L, balance sheets, or accounting, delegate to the 'finance_agent'.
-            - If the user needs help, support, or has general questions about the platform, delegate to the 'support_agent'.
+            - If the user has questions about policy terms, coverage details from the knowledge base, deductibles, or general help, delegate to the 'support_agent'.
             - If the user wants to generate, share, or revoke documents (agreements, slips), delegate to the 'document_agent'.
             
             If the request is general (e.g., 'Hello'), you can answer directly.
