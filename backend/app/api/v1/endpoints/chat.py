@@ -98,7 +98,13 @@ async def chat(
         # queue.events is a list of events added during execution
         # We iterate to find the answer
         for event in reversed(queue.events):
-            if event.type == "agent_text_message":
+            # Handle Dict (from utils.py)
+            if isinstance(event, dict):
+                if event.get("type") == "agent_text_message":
+                    response_text = event.get("text") or event.get("content") or response_text
+                    break
+            # Handle Object
+            elif getattr(event, "type", "") == "agent_text_message":
                  # Check 'text' or 'content' attribute depending on Event object structure
                  # A2A Event usually has .text for text messages
                  if hasattr(event, "text"):
