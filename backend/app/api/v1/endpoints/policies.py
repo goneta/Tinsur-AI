@@ -171,6 +171,64 @@ def get_policy_payment_schedule(
     }
 
 
+@router.post("/{policy_id}/generate-schedule", status_code=status.HTTP_201_CREATED)
+def generate_payment_schedule_document(
+    policy_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Generate the 'Informations Précontractuelles' document."""
+    from agents.a2a_document_agent.tools import generate_payment_schedule_html, generate_payment_schedule_pdf
+    print(f"Generating payment schedule for policy {policy_id}")
+    
+    # Verify policy access
+    repo = PolicyRepository(db)
+    policy = repo.get_by_id(policy_id)
+    if not policy or policy.company_id != current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Policy not found"
+        )
+        
+    try:
+        # Generate the PDF document
+        document = generate_payment_schedule_pdf(db, str(policy_id), str(current_user.id))
+        return document
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        print(f"Error generating payment schedule: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate payment schedule")
+
+
+@router.post("/{policy_id}/generate-agreement", status_code=status.HTTP_201_CREATED)
+def generate_policy_agreement_document(
+    policy_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Generate the 'Policy Agreement' document."""
+    from agents.a2a_document_agent.tools import generate_policy_agreement_pdf
+    
+    # Verify policy access
+    repo = PolicyRepository(db)
+    policy = repo.get_by_id(policy_id)
+    if not policy or policy.company_id != current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Policy not found"
+        )
+        
+    try:
+        document = generate_policy_agreement_pdf(db, str(policy_id), str(current_user.id))
+        return document
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        print(f"Error generating policy agreement: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate policy agreement")
+
+
 @router.put("/{policy_id}", response_model=PolicyResponse)
 def update_policy(
     policy_id: UUID,

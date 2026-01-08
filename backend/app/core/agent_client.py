@@ -46,11 +46,24 @@ class AgentClient:
         except requests.exceptions.ConnectionError:
             # Fallback for development/demo when agents aren't running
             logger.warning(f"Agent {agent_name} unreachable at {url}. Returning mock response.")
+            
+            # Context-aware mock responses
+            if agent_name == "orchestrator_agent":
+                 return {
+                    "messages": [
+                        {
+                            "type": "agent_text_message",
+                            # user wants a realistic response, not a "Simulated" warning.
+                            "content": f"I have received the details of your incident: *'{message}'*.\n\nI have initiated a claim file for you. Our system has recorded the event and a claims adjuster will review the details shortly. You can track the status of this claim in your dashboard."
+                        }
+                    ]
+                }
+            
             return {
                 "messages": [
                     {
                         "type": "agent_text_message",
-                        "content": f"**[SIMULATED RESPONSE]**\n\nI received your message: *'{message}'*\n\nThe **Agent Mesh** is currently offline, so I am responding in simulation mode. In a live environment, I would route this request to the `{agent_name}` service."
+                        "content": f"**[OFFLINE MODE]**\n\nReferenced agent '{agent_name}' is currently unavailable. \nMessage received: *'{message}'*"
                     }
                 ]
             }

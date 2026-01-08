@@ -3,7 +3,7 @@ from a2a.server.agent_execution.context import RequestContext
 from a2a.server.events.event_queue import EventQueue
 from a2a.utils import new_agent_text_message
 from google.adk.agents import Agent
-from models import QuoteRequest, QuoteResponse
+from .models import QuoteRequest, QuoteResponse
 from app.core.database import SessionLocal
 from app.models.client import Client
 from app.services.premium_policy_service import PremiumPolicyService

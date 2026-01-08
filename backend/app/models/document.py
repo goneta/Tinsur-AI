@@ -21,6 +21,7 @@ class DocumentLabel(str, enum.Enum):
     DRIVING_LICENCE = 'Driving Licence'
     CAR_PAPERS = 'Car Papers'
     PHOTO = 'Photo'
+    AGREEMENT = 'Agreement'
 
 class Document(Base):
     """Model for storing document metadata."""

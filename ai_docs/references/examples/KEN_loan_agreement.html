@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrat de Prêt à Somme Fixe</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #003da5;
+        }
+        h2 {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #003da5;
+        }
+        .subtitle {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+        }
+        td:first-child {
+            font-weight: bold;
+            width: 35%;
+            background: #f9f9f9;
+        }
+        .address-box {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #003da5;
+        }
+        .section {
+            margin: 20px 0;
+            font-size: 12px;
+        }
+        .important {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .buttons {
+            margin: 30px 0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #003da5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #002d7a;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 11px;
+            color: #666;
+            border-top: 2px solid #003da5;
+            padding-top: 15px;
+        }
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            .buttons {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Contrat de Prêt à Somme Fixe réglementé par le</h1>
+        <h1><la loi de réglementation des assurances></h1>
+        
+        <h2>Entre qui est conclu ce contrat ?</h2>
+        <p class="section">
+            Il s'agit d'un contrat entre nous, <Nom de compagnie dassurance> (adresse : <Adresse de la compagnie dassurance>) et vous :
+        </p>
+        
+        <div class="address-box">
+            <Nom du client><br>
+            <Adresse du client>
+        </div>
+        
+        <p class="section">
+            Ce contrat définit les termes et conditions du prêt fourni en relation avec votre police dassurance.
+        </p>
+        
+        <table>
+            <tr>
+                <td>Description des biens financés par le contrat</td>
+                <td>Votre prêt est fourni pour financer l'achat de votre Assurance Automobile.</td>
+            </tr>
+            <tr>
+                <td>Le prix au comptant payé pour votre police (incluant la taxe sur les primes dassurance (IPT) le cas échéant)</td>
+                <td>20000,00 FCFA</td>
+            </tr>
+            <tr>
+                <td>Acompte (paiement anticipé)</td>
+                <td>0,00 FCFA (A)</td>
+            </tr>
+            <tr>
+                <td>Le montant du crédit emprunté</td>
+                <td><premium policy amount> FCFA (B)</td>
+            </tr>
+            <tr>
+                <td>Coût du crédit (il s'agit des intérêts) facturé à un taux fixe simple sur le montant du crédit emprunté.</td>
+                <td>9000,00 FCFA (C). Il s'agit du coût total du crédit. Les intérêts sont calculés en appliquant un taux simple fixe de 9,9% à l'avance sur le montant total du crédit et en l'ajoutant immédiatement au solde dû. Le montant des intérêts ainsi calculé et appliqué sera payable dans chaque mensualité.</td>
+            </tr>
+            <tr>
+                <td>Vous acceptez de payer un total de</td>
+                <td><Prime finale> FCFA (A+B+C)<br>Il s'agit du montant total de votre acompte, du montant que vous avez emprunté et des intérêts et autres frais. Ceci est également appelé le Montant Total à Payer.</td>
+            </tr>
+            <tr>
+                <td>Durée du contrat</td>
+                <td>11 mois</td>
+            </tr>
+            <tr>
+                <td>Nombre de paiements mensuels</td>
+                <td>11 remboursements mensuels</td>
+            </tr>
+            <tr>
+                <td>Montant des paiements mensuels</td>
+                <td><frequence de paiement> FCFA</td>
+            </tr>
+            <tr>
+                <td>TAEG</td>
+                <td>21.1%</td>
+            </tr>
+            <tr>
+                <td>Dates de remboursement</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>À quoi sert le crédit ?</td>
+                <td>La prime dassurance (incluant l'IPT le cas échéant) relative à votre police dassurance Automobile <Nom de la compagnie dassurance>.</td>
+            </tr>
+            <tr>
+                <td>Comment et quand le crédit sera-t-il fourni ?</td>
+                <td>Le crédit est fourni en vous permettant de payer votre prime dassurance annuelle par paiements différés sur une période de 11 mois. Ce crédit est fourni au moment où votre police dassurance prend effet.</td>
+            </tr>
+        </table>
+        
+        <p class="section">
+            <strong>Garantie :</strong> Vous nous cédez votre police dassurance Automobile <Nom de la compagnie dassurance> et vos droits en vertu de la police. Voir la section « Conditions Générales » ci-dessous pour plus de détails.
+        </p>
+        
+        <h2>Y a-t-il des frais que je pourrais devoir payer ?</h2>
+        <p class="section">
+            Il n'y a pas d'autres frais payables en vertu de votre contrat. Nous ne facturons aucuns frais si vous êtes en retard pour effectuer un remboursement. Si vous n'effectuez pas un remboursement à temps, nous pouvons demander à votre assureur d'annuler votre couverture. Veuillez consulter vos Conditions Générales pour plus de détails.
+        </p>
+        
+        <h2>Puis-je annuler le prêt si je change d'avis au début ?</h2>
+        <p class="section">
+            Oui - et vous n'avez pas à nous dire pourquoi vous souhaitez annuler.
+        </p>
+        <p class="section">
+            Votre droit d'annulation commence :<br>
+            aujourd'hui si vous avez signé ce contrat en ligne et se termine après une période de 14 jours à partir de demain ; ou<br>
+            à la date à laquelle vous avez reçu votre copie de ce contrat si vous ne l'avez pas signé en ligne, et se termine après une période de 14 jours commençant le jour suivant la date à laquelle vous avez reçu votre copie de ce contrat.
+        </p>
+        <p class="section">
+            Pour annuler votre prêt sans payer d'intérêts, vous devez :<br>
+            Nous informer que vous souhaitez annuler dans les 14 jours. Pour ce faire, appelez le <Numéro téléphone de la compagnie dassurance> ou écrivez à <Adresse de la compagnie dassurance><br>
+            Rembourser le prêt dans les 30 jours suivant votre demande d'annulation. Pour ce faire, appelez le <Numéro téléphone de la compagnie dassurance> pour payer par carte de débit.<br>
+            * Ce numéro peut être inclus dans les minutes d'appel inclusives fournies par votre opérateur téléphonique.
+        </p>
+        
+        <h2>Puis-je rembourser mon prêt par anticipation après les 14 jours initiaux ?</h2>
+        <p class="section">
+            Oui. Vous avez le droit à tout moment de rembourser le crédit en cours en vertu de ce contrat en totalité ou en partie en nous contactant au <Numéro téléphone de la compagnie dassurance> ou en nous écrivant à l'adresse indiquée ci-dessus.
+        </p>
+        
+        <h2>Quand mon prêt prendra-t-il fin ?</h2>
+        <p class="section">
+            Vous pouvez rembourser votre prêt à tout moment - veuillez consulter la section « Puis-je rembourser mon prêt par anticipation après les 14 jours initiaux ? ». Sinon, votre prêt prendra fin lorsque vous aurez tout remboursé.
+        </p>
+        
+        <h2>Pouvez-vous me demander de rembourser le prêt par anticipation ?</h2>
+        <p class="section">
+            Oui. Par exemple, cela pourrait se produire si vous êtes déclaré en faillite, si vous faites l'objet d'un Arrangement Volontaire Individuel, si vous manquez un paiement ou si vous violez gravement le contrat de prêt.
+        </p>
+        <p class="section">
+            Si vous faites une réclamation en vertu de votre police et qu'elle est par la suite annulée ou annulée (a) la prime complète de votre police sera payable et (b) ce contrat sera résilié et toutes les sommes dues en vertu de celui-ci deviendront payables dans les 14 jours suivant l'annulation de votre police.
+        </p>
+        <p class="section">
+            Si votre véhicule est déclaré perte totale : (a) la prime complète de votre police sera payable et (b) ce contrat sera résilié et toutes les sommes dues en vertu de celui-ci deviendront payables dans les 14 jours suivant le règlement de votre réclamation.
+        </p>
+        
+        <h2>Conditions Générales</h2>
+        <p class="section">
+            En vertu de l'article 77B du Consumer Credit Act 1974, vous pouvez obtenir gratuitement un relevé de votre compte (Tableau d'Amortissement) à tout moment en nous demandant de vous en envoyer un. Celui-ci vous indiquera les détails de chaque versement dû en vertu de votre contrat, y compris le nombre de remboursements qu'il vous reste à effectuer, la date de chaque remboursement qu'il vous reste à effectuer et quelle partie de chaque remboursement correspond aux intérêts et au capital du prêt.
+        </p>
+        <p class="section">
+            Si vous avez manqué un paiement, nous vous enverrons une lettre vous donnant la possibilité de vous rattraper. Nous pouvons également vous contacter pour discuter de votre situation et essayer d'organiser un paiement. Si un montant reste impayé après 14 jours, nous demanderons généralement à votre assureur d'annuler votre police. Nous enverrons tous les avis que nous devons envoyer par la loi. Si nécessaire, nous pouvons référer tout montant que vous devez à une agence tierce pour recouvrement et/ou vous poursuivre en justice pour recouvrer la dette impayée.
+        </p>
+        <p class="section">
+            Nous pouvons transférer nos droits et obligations en vertu de notre accord avec vous à un autre prêteur ou société à l'avenir (ceci est parfois appelé une cession). Nous ne le ferons que si nous croyons raisonnablement qu'ils vous traiteront au moins de la même manière que nous.
+        </p>
+        <p class="section">
+            Si votre adresse est en Écosse, la loi écossaise s'appliquera à votre contrat et les litiges seront renvoyés aux tribunaux écossais. Si votre adresse est en Irlande du Nord, la loi nord-irlandaise s'appliquera et votre contrat et les litiges seront renvoyés aux tribunaux nord-irlandais. Si vous vivez ailleurs, la loi anglaise s'appliquera à votre contrat et les litiges seront renvoyés aux tribunaux d'Angleterre et du Pays de Galles.
+        </p>
+        <p class="section">
+            Nous communiquerons avec vous en anglais et vous pouvez demander une copie de ces termes et conditions à tout moment gratuitement. Notre numéro de téléphone est le <Numéro téléphone de la compagnie dassurance>.
+        </p>
+        <p class="section">
+            Pour calculer le TAEG, nous avons supposé que (i) ce contrat durera la durée indiquée ci-dessus (ii) vous et nous remplirons nos obligations en vertu de ce contrat et (iii) vous effectuerez votre premier paiement à la date la plus proche que nous autorisons.
+        </p>
+        <p class="section">
+            À la résiliation de ce contrat, que ce soit par vous ou par nous, vous devez immédiatement rembourser le solde du Montant Total à Payer (moins toute remise applicable des frais d'intérêts), ainsi que nos frais, coûts et dépenses raisonnables engagés en vertu de ce Contrat. Pour éviter toute ambiguïté, vous restez responsable envers nous du paiement de ce montant, que nous récupérions ou non un montant auprès de l'assureur. Si nous résilions ce contrat, nous pouvons notifier l'assureur de votre manquement (le cas échéant) et, en votre nom, demander à l'assureur d'annuler la police et de nous payer les sommes mentionnées dans le point suivant.
+        </p>
+        <p class="section">
+            Vous nous cédez, à titre de garantie, la police dassurance Automobile <Nom de la compagnie dassurance> mentionnée ci-dessus et toutes les sommes qui peuvent à tout moment devenir payables en votre faveur en vertu de la police, que ce soit par remboursement de prime ou par produit de réclamations. Si vous vivez en Angleterre ou au Pays de Galles, vous donnez cette cession avec garantie de titre complet. Nous pouvons affecter ces sommes à l'acquittement de toute somme que vous nous devez en vertu de ce contrat. Lors de l'acquittement de votre dette en vertu de ce contrat, nous vous recéderons la police. Vous acceptez de conserver la police en sécurité en votre possession.
+        </p>
+        <p class="section">
+            Vous nous autorisez à notifier l'assureur de cette cession et de toutes sommes en vertu de la police qui nous sont devenues payables en vertu du point précédent.
+        </p>
+        <p class="section">
+            Si vous signez ce contrat en ligne, vous acceptez d'y souscrire sous forme électronique.
+        </p>
+        <p class="section">
+            Vous pouvez avoir le droit de poursuivre l'assureur, nous ou les deux si vous recevez des services insatisfaisants en vertu de votre police dassurance payée par crédit fourni en vertu de ce contrat.
+        </p>
+        <p class="section">
+            <Nom de la compagnie dassurance> est un nom commercial de <Nom de la compagnie dassurance>. Notre adresse est <Adresse de la compagnie dassurance>. Notre activité de crédit à la consommation est réglementée par la Financial Conduct Authority, qui peut être contactée à l'adresse suivante : 12 Endeavour Square, Londres, E20 1JN.
+        </p>
+        <p class="section">
+            Si vous déposez une plainte, nous visons à la résoudre aussi rapidement que possible. Si vous n'êtes toujours pas satisfait, vous pouvez renvoyer votre plainte au Service de l'Ombudsman Financier (FOS). Vous pouvez en savoir plus sur le FOS en leur écrivant à Exchange Tower, Londres, E14 9SR ou en téléphonant au <Numéro téléphone de la compagnie dassurance>. Des détails sont également disponibles sur leur site Web, http://www.financial-ombudsman.org.uk.
+        </p>
+        
+        <div class="important">
+            PAIEMENTS MANQUÉS - IMPORTANT !<br><br>
+            N'oubliez pas que si vous manquez un paiement, cela pourrait avoir de graves conséquences. Cela pourrait entraîner des poursuites judiciaires de notre part contre vous, et cela pourrait affecter votre capacité à obtenir du crédit (par exemple, une carte de crédit ou un prêt hypothécaire) à l'avenir. Cela pourrait également augmenter le montant que vous payez pour le crédit.
+        </div>
+        
+        <div class="buttons">
+            <button onclick="downloadHTML()">Télécharger HTML</button>
+            <button onclick="downloadPDF()">Télécharger PDF</button>
+            <button onclick="window.print()">Imprimer</button>
+        </div>
+        
+        <div class="footer">
+            Document généré le : <span id="date"></span>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script>
+        document.getElementById('date').textContent = new Date().toLocaleDateString('fr-FR');
+        
+        function downloadHTML() {
+            const content = document.documentElement.outerHTML;
+            const blob = new Blob([content], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'contrat-pret-somme-fixe.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        async function downloadPDF() {
+            const buttons = document.querySelector('.buttons');
+            buttons.style.display = 'none';
+            
+            const container = document.querySelector('.container');
+            const canvas = await html2canvas(container, {
+                scale: 2,
+                useCORS: true,
+                logging: false
+            });
+            
+            buttons.style.display = 'flex';
+            
+            const { jsPDF } = window.jspdf;
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const imgWidth = canvas.width;
+            const imgHeight = canvas.height;
+            const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+            const imgX = (pdfWidth - imgWidth * ratio) / 2;
+            const imgY = 0;
+            
+            pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+            pdf.save('contrat-pret-somme-fixe.pdf');
+        }
+    </script>
+</body>
+</html>

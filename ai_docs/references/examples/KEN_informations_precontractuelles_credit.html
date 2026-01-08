@@ -1,0 +1,634 @@
+<html lang="fr"><head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.13/html-to-image.min.js" integrity="sha512-iZ2ORl595Wx6miw+GuadDet4WQbdSWS3JLMoNfY8cRGoEFy6oT3G9IbcrBeL6AfkgpA51ETt/faX6yLV+/gFJg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+      (function() {
+        const originalConsole = window.console;
+        window.console = {
+          log: (...args) => {
+            originalConsole.log(...args);
+            window.parent.postMessage({ type: 'console', message: args.join(' ') }, '*');
+          },
+          error: (...args) => {
+            originalConsole.error(...args);
+            window.parent.postMessage({ type: 'console', message: 'Error: ' + args.join(' ') }, '*');
+          },
+          warn: (...args) => {
+            originalConsole.warn(...args);
+            window.parent.postMessage({ type: 'console', message: 'Warning: ' + args.join(' ') }, '*');
+          }
+        };
+
+        let requestId = 0;
+        let callbacksMap = new Map();
+        let streamControllers = new Map();
+        
+        window.claude = {
+          complete: (prompt) => {
+            return new Promise((resolve, reject) => {
+              const id = requestId++;
+              callbacksMap.set(id, { resolve, reject });
+              window.parent.postMessage({ type: 'claudeComplete', id, prompt }, '*');
+            });
+          }
+        };
+
+        window.storage = {
+          get: (key, shared = false) => {
+            return new Promise((resolve, reject) => {
+              const id = requestId++;
+              callbacksMap.set(id, { resolve, reject });
+              window.parent.postMessage({ type: 'storageGet', id, key, shared }, '*');
+            });
+          },
+          set: (key, value, shared = false) => {
+            return new Promise((resolve, reject) => {
+              const id = requestId++;
+              callbacksMap.set(id, { resolve, reject });
+              window.parent.postMessage({ type: 'storageSet', id, key, value, shared }, '*');
+            });
+          },
+          delete: (key, shared = false) => {
+            return new Promise((resolve, reject) => {
+              const id = requestId++;
+              callbacksMap.set(id, { resolve, reject });
+              window.parent.postMessage({ type: 'storageDelete', id, key, shared }, '*');
+            });
+          },
+          list: (prefix, shared = false) => {
+            return new Promise((resolve, reject) => {
+              const id = requestId++;
+              callbacksMap.set(id, { resolve, reject });
+              window.parent.postMessage({ type: 'storageList', id, prefix, shared }, '*');
+            });
+          }
+        };
+
+        let pendingBlobs = new Map();
+        URL.createObjectURL = (blob) => {
+          // Store the blob and create an ID and URL for it
+          const blobId = `blob-${Date.now()}-${Math.random()}`;
+          pendingBlobs.set(blobId, blob);
+          return `blob-request://${blobId}`;
+        };
+
+        URL.revokeObjectURL = (url) => {
+          // Remove the blob from our store
+          const blobId = url.replace("blob-request://", "");
+          pendingBlobs.delete(blobId);
+        };
+
+        const getBlobFromURL = (url) => {
+          const blobId = url.replace("blob-request://", "");
+          return pendingBlobs.get(blobId);
+        };
+
+        // Override global fetch with streaming support
+        window.fetch = (url, init = {}) => {
+          return new Promise((resolve, reject) => {
+            const id = requestId++;
+            const channelId = `fetch-${id}-${Date.now()}`;
+            
+            callbacksMap.set(id, { 
+              resolve: (response) => {
+                // Create a ReadableStream for the response body
+                const stream = new ReadableStream({
+                  start(controller) {
+                    streamControllers.set(channelId, controller);
+                  },
+                  cancel() {
+                    streamControllers.delete(channelId);
+                  }
+                });
+                
+                // Create and return the Response with the stream
+                resolve(new Response(stream, {
+                  status: response.status,
+                  statusText: response.statusText,
+                  headers: response.headers
+                }));
+              },
+              reject,
+              channelId
+            });
+            
+            window.parent.postMessage({
+              type: 'proxyFetch',
+              id,
+              url,
+              init,
+              channelId
+            }, '*');
+          });
+        };
+
+        window.addEventListener('message', async (event) => {
+          if (event.data.type === 'takeScreenshot') {
+            const rootElement = document.getElementById('artifacts-component-root-html');
+            if (!rootElement) {
+              window.parent.postMessage({
+                type: 'screenshotError',
+                error: new Error('Root element not found'),
+              }, '*');
+            }
+            const screenshot = await htmlToImage.toPng(rootElement, {
+              imagePlaceholder:
+                "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAA1JREFUGFdjePDgwX8ACOQDoNsk0PMAAAAASUVORK5CYII=",
+            });
+            window.parent.postMessage({
+              type: 'screenshotData',
+              data: screenshot,
+            }, '*');
+          } else if (event.data.type === 'claudeComplete') {
+            const callback = callbacksMap.get(event.data.id);
+            if (event.data.error) {
+              callback.reject(new Error(event.data.error));
+            } else {
+              callback.resolve(event.data.completion);
+            }
+            callbacksMap.delete(event.data.id);
+          } else if (event.data.type === 'proxyFetchResponse') {
+            const callback = callbacksMap.get(event.data.id);
+            if (event.data.error) {
+              callback.reject(new Error(event.data.error));
+              callbacksMap.delete(event.data.id);
+            } else {
+              // Initial response with headers, status, etc.
+              callback.resolve({
+                status: event.data.status,
+                statusText: event.data.statusText,
+                headers: event.data.headers
+              });
+              // Don't delete the callback yet if streaming
+              if (!event.data.body) {
+                callbacksMap.delete(event.data.id);
+              }
+            }
+          } else if (event.data.type === 'proxyFetchStream') {
+            // Handle streaming data chunks
+            const controller = streamControllers.get(event.data.channelId);
+            if (controller) {
+              if (event.data.error) {
+                controller.error(new Error(event.data.error));
+                streamControllers.delete(event.data.channelId);
+              } else if (event.data.done) {
+                controller.close();
+                streamControllers.delete(event.data.channelId);
+                // Clean up the callback
+                const callback = Array.from(callbacksMap.entries()).find(
+                  ([_, value]) => value.channelId === event.data.channelId
+                );
+                if (callback) {
+                  callbacksMap.delete(callback[0]);
+                }
+              } else if (event.data.chunk) {
+                controller.enqueue(new Uint8Array(event.data.chunk));
+              }
+            }
+          } else if (event.data.type === 'storageGet') {
+            const callback = callbacksMap.get(event.data.id);
+            if (event.data.error) {
+              callback.reject(new Error(event.data.error));
+            } else {
+              callback.resolve(event.data.result);
+            }
+            callbacksMap.delete(event.data.id);
+          } else if (event.data.type === 'storageSet') {
+            const callback = callbacksMap.get(event.data.id);
+            if (event.data.error) {
+              callback.reject(new Error(event.data.error));
+            } else {
+              callback.resolve(event.data.result);
+            }
+            callbacksMap.delete(event.data.id);
+          } else if (event.data.type === 'storageDelete') {
+            const callback = callbacksMap.get(event.data.id);
+            if (event.data.error) {
+              callback.reject(new Error(event.data.error));
+            } else {
+              callback.resolve(event.data.result);
+            }
+            callbacksMap.delete(event.data.id);
+          } else if (event.data.type === 'storageList') {
+            const callback = callbacksMap.get(event.data.id);
+            if (event.data.error) {
+              callback.reject(new Error(event.data.error));
+            } else {
+              callback.resolve(event.data.result);
+            }
+            callbacksMap.delete(event.data.id);
+          }
+        });
+
+        window.addEventListener('click', (event) => {
+          const isEl = event.target instanceof HTMLElement;
+          if (!isEl) return;
+    
+          // find ancestor links
+          const linkEl = event.target.closest("a");
+          if (!linkEl || !linkEl.href) return;
+    
+          event.preventDefault();
+          event.stopImmediatePropagation();
+    
+          if (linkEl.href.startsWith("blob-request:")) {
+            const blob = getBlobFromURL(linkEl.href);
+            if (!blob) return;
+            void blob.arrayBuffer().then((data) => {
+              window.parent.postMessage({
+                type: "downloadFile",
+                filename: linkEl.download,
+                data,
+                mimeType: blob.type || "application/octet-stream",
+              });
+            });
+          } else if (linkEl.href.startsWith("data:")) {
+            const [header, base64Data] = linkEl.href.split(",");
+            const mimeMatch = header.match(/data:([^;]+)/);
+            const mimeType = mimeMatch ? mimeMatch[1] : "application/octet-stream";
+            const binaryString = atob(base64Data);
+            const data = Uint8Array.from(binaryString, (c) =>
+              c.charCodeAt(0),
+            ).buffer;
+            window.parent.postMessage({
+              type: "downloadFile",
+              filename: linkEl.download,
+              data,
+              mimeType,
+            });
+          } else {
+            let linkUrl;
+            try {
+              linkUrl = new URL(linkEl.href);
+            } catch (error) {
+              return;
+            }
+    
+            if (linkUrl.hostname === window.location.hostname) return;
+      
+            window.parent.postMessage({
+              type: 'openExternal',
+              href: linkEl.href,
+            }, '*');
+          }
+      });
+
+        const originalOpen = window.open;
+        window.open = function (url) {
+          window.parent.postMessage({
+            type: "openExternal",
+            href: url,
+          }, "*");
+        };
+
+        window.addEventListener('error', (event) => {
+          window.parent.postMessage({ type: 'console', message: 'Uncaught Error: ' + event.message }, '*');
+        });
+      })();
+    </script>
+  
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informations Précontractuelles sur le Crédit</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: #003da5;
+            border-bottom: 3px solid #003da5;
+            padding-bottom: 10px;
+        }
+        h2 {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            color: #003da5;
+        }
+        .section {
+            margin: 20px 0;
+            font-size: 13px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+        td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+        }
+        td:first-child {
+            font-weight: bold;
+            width: 40%;
+            background: #f9f9f9;
+        }
+        .subsection {
+            font-size: 11px;
+            color: #666;
+            font-style: italic;
+            margin-top: 3px;
+        }
+        .important {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 12px;
+        }
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #003da5;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+        .buttons {
+            margin: 30px 0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #003da5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #002d7a;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 11px;
+            color: #666;
+            border-top: 2px solid #003da5;
+            padding-top: 15px;
+        }
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            .buttons {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body id="artifacts-component-root-html">
+    <div class="container">
+        <h1>Informations Contractuelles sur le Crédit de l'Assurance</h1>
+        
+        <h2>1. Coordonnées</h2>
+        <table>
+            <tbody><tr>
+                <td>Créancier</td>
+                <td><Nom de la compagnie dassurance></td>
+            </tr>
+            <tr>
+                <td>Adresse</td>
+                <td><adresse de la compagnie dassurance></td>
+            </tr>
+            <tr>
+                <td>Assurance Automobile</td>
+                <td><téléphone de la compagnie dassurance></td>
+            </tr>
+            <tr>
+                <td>Adresse Web</td>
+                <td><website de la compagnie dassurance></td>
+            </tr>
+        </tbody></table>
+        
+        <h2>2. Caractéristiques principales du produit de crédit</h2>
+        <table>
+            <tbody><tr>
+                <td>Le type de crédit</td>
+                <td>Prêt à somme fixe</td>
+            </tr>
+            <tr>
+                <td>Le montant total du crédit
+                    <div class="subsection">Cela signifie le montant du crédit à fournir en vertu du contrat de crédit proposé ou la limite de crédit.</div>
+                </td>
+                <td><premium policy amount> FCFA</td>
+            </tr>
+            <tr>
+                <td>Comment et quand le crédit serait fourni</td>
+                <td>Le crédit est fourni en vous permettant de payer votre prime dassurance annuelle par paiements différés sur une période de 11 mois. Ce crédit est fourni au moment où votre police dassurance prend effet.</td>
+            </tr>
+            <tr>
+                <td>La durée du contrat de crédit</td>
+                <td>11 mois</td>
+            </tr>
+            <tr>
+                <td>Remboursements</td>
+                <td>11 remboursements mensuels de <frequence de paiement></td>
+            </tr>
+            <tr>
+                <td>Le montant total que vous devrez payer
+                    <div class="subsection">Cela signifie le montant que vous avez emprunté plus les intérêts et autres coûts.</div>
+                </td>
+                <td><Prime finale> FCFA</td>
+            </tr>
+            <tr>
+                <td>Le crédit proposé sera accordé sous forme de paiement différé pour des biens ou services.</td>
+                <td>Le crédit est accordé sous forme de paiement différé pour votre police dassurance Automobile &lt;<nom de la compagnie dassurance="">&gt;.</nom></td>
+            </tr>
+            <tr>
+                <td>Description des biens/services/terrains (le cas échéant)
+                    <div class="subsection">Votre police dassurance est financée par le crédit qui vous est fourni en vertu de votre contrat.</div>
+                </td>
+                <td>Le prix au comptant de votre police dassurance est de 20000,00 FCFA et le prix total au comptant est de 20000,00 FCFA</td>
+            </tr>
+            <tr>
+                <td>Garantie requise
+                    <div class="subsection">Il s'agit d'une description de la garantie que vous devez fournir en relation avec le contrat de crédit.</div>
+                </td>
+                <td>Vous nous cédez la police dassurance à laquelle le crédit se rapporte, ainsi que vos droits en vertu de la police.</td>
+            </tr>
+        </tbody></table>
+        
+        <h2>3. Coûts du crédit</h2>
+        <table>
+            <tbody><tr>
+                <td>Les taux d'intérêt qui s'appliquent au contrat de crédit</td>
+                <td>Taux d'intérêt simple fixe de <insurance levy>%. Les intérêts sont calculés en appliquant un taux simple fixe de <insurance levy>% à l'avance sur le montant total du crédit et en l'ajoutant immédiatement au solde dû. Le montant des intérêts ainsi calculé et appliqué sera payable dans chaque mensualité.</td>
+            </tr>
+            <tr>
+                <td>Taux Annuel Effectif Global (TAEG)
+                    <div class="subsection">Il s'agit du coût total exprimé en pourcentage annuel du montant total du crédit. Le TAEG vous aide à comparer différentes offres.</div>
+                </td>
+                <td>21,1%</td>
+            </tr>
+        </tbody></table>
+        
+        <h2>Coûts connexes</h2>
+        <table>
+            <tbody><tr>
+                <td>Coûts en cas de retard de paiement</td>
+                <td>Il n'y a pas de frais pour les paiements en retard ou manqués.</td>
+            </tr>
+            <tr>
+                <td>Conséquences des paiements manqués</td>
+                <td>Veuillez noter que les paiements manqués peuvent avoir de graves conséquences et pourraient nous amener à transmettre vos coordonnées à une agence de recouvrement de créances pour récupérer les sommes impayées ou à intenter une action en justice contre vous.
+                    <br><br>
+                    Vous pourriez devoir payer nos frais juridiques si nous le faisons.
+                    <br><br>
+                    Les paiements manqués pourraient également affecter votre capacité à obtenir du crédit (par exemple, une carte de crédit ou un prêt hypothécaire) à l'avenir ou rendre l'obtention de crédit plus coûteuse.
+                    <br><br>
+                    Votre police peut être annulée si vous manquez un paiement.
+                </td>
+            </tr>
+        </tbody></table>
+        
+        <h2>4. Autres aspects juridiques importants</h2>
+        <table>
+            <tbody><tr>
+                <td>Droit de rétractation</td>
+                <td>Votre droit de rétractation commence aujourd'hui et se termine après une période de 14 jours calendaires commençant le lendemain.</td>
+            </tr>
+            <tr>
+                <td>Remboursement anticipé</td>
+                <td>Vous avez le droit de rembourser tout ou partie du crédit par anticipation à tout moment.</td>
+            </tr>
+            <tr>
+                <td>Consultation d'une Agence de Référence de Crédit</td>
+                <td>Si nous décidons de ne pas poursuivre ce contrat de crédit à la consommation réglementé prospectif sur la base des informations que nous obtenons d'une agence de référence de crédit, nous devons vous informer que nous avons pris notre décision sur cette base et vous fournir les détails de l'agence que nous avons consultée.</td>
+            </tr>
+            <tr>
+                <td>Droit à un projet de contrat de crédit</td>
+                <td>Vous avez le droit, sur demande, d'obtenir gratuitement une copie du projet de contrat de crédit, sauf si votre demande a été refusée.</td>
+            </tr>
+            <tr>
+                <td>La période de temps pendant laquelle le créancier est lié par les informations précontractuelles</td>
+                <td>Ce document est valable pendant 30 jours.</td>
+            </tr>
+        </tbody></table>
+        
+        <h2>5. Informations supplémentaires en cas de commercialisation à distance de services financiers</h2>
+        
+        <h2>(a) concernant le créancier</h2>
+        <table>
+            <tbody><tr>
+                <td>Numéro d'enregistrement</td>
+                <td>Numéro du registre des services financiers 186022</td>
+            </tr>
+            <tr>
+                <td>L'autorité de surveillance</td>
+                <td>La Financial Conduct Authority</td>
+            </tr>
+        </tbody></table>
+        
+        <h2>(b) concernant le contrat de crédit</h2>
+        <table>
+            <tbody><tr>
+                <td>La loi prise par le créancier comme base pour l'établissement des relations avec vous avant la conclusion du contrat de crédit</td>
+                <td>Si votre adresse est en Écosse, la loi écossaise s'applique. Si votre adresse est en Irlande du Nord, la loi nord-irlandaise s'applique. Si vous vivez ailleurs, la loi anglaise s'applique.</td>
+            </tr>
+            <tr>
+                <td>La loi applicable au contrat de crédit et/ou le tribunal compétent</td>
+                <td>Si votre adresse est en Écosse, la loi écossaise s'appliquera à votre contrat et les litiges seront renvoyés aux tribunaux écossais. Si votre adresse est en Irlande du Nord, la loi nord-irlandaise s'appliquera et votre contrat et les litiges seront renvoyés aux tribunaux nord-irlandais. Si vous vivez ailleurs, la loi anglaise s'appliquera à votre contrat et les litiges seront renvoyés aux tribunaux d'Angleterre et du Pays de Galles.</td>
+            </tr>
+            <tr>
+                <td>Langue à utiliser en relation avec le contrat de crédit</td>
+                <td>Toutes les communications que nous vous adressons (y compris les documents contenant les termes du contrat entre vous et nous) seront en anglais.</td>
+            </tr>
+        </tbody></table>
+        
+        <h2>(c) concernant les recours</h2>
+        <table>
+            <tbody><tr>
+                <td>Accès à un mécanisme extrajudiciaire de plainte et de recours</td>
+                <td>Si vous déposez une plainte, nous nous efforcerons toujours de la résoudre aussi rapidement que possible. Si vous n'êtes pas satisfait de notre réponse finale ou si nous n'avons pas répondu à votre plainte dans les 8 semaines, vous pouvez adresser votre plainte au Service de l'Ombudsman Financier (FOS) dont l'adresse est Exchange Tower, Londres, E14 9SR ou vous pouvez les appeler au <téléphone de la compagnie dassurance>. Des détails sont également disponibles sur leur site Web : http://www.financial-ombudsman.org.uk.</téléphone></td>
+            </tr>
+        </tbody></table>
+        
+        <div class="buttons">
+            <button onclick="downloadHTML()">Télécharger HTML</button>
+            <button onclick="downloadPDF()">Télécharger PDF</button>
+            <button onclick="window.print()">Imprimer</button>
+        </div>
+        
+        <div class="footer">
+            Document généré le : <span id="date">07/01/2026</span>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script>
+        document.getElementById('date').textContent = new Date().toLocaleDateString('fr-FR');
+        
+        function downloadHTML() {
+            const content = document.documentElement.outerHTML;
+            const blob = new Blob([content], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'informations-precontractuelles-credit.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        async function downloadPDF() {
+            const buttons = document.querySelector('.buttons');
+            buttons.style.display = 'none';
+            
+            const container = document.querySelector('.container');
+            const canvas = await html2canvas(container, {
+                scale: 2,
+                useCORS: true,
+                logging: false
+            });
+            
+            buttons.style.display = 'flex';
+            
+            const { jsPDF } = window.jspdf;
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            const imgWidth = canvas.width;
+            const imgHeight = canvas.height;
+            const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+            const imgX = (pdfWidth - imgWidth * ratio) / 2;
+            const imgY = 0;
+            
+            pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+            pdf.save('informations-precontractuelles-credit.pdf');
+        }
+    </script>
+
+</body></html>

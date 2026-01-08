@@ -4,10 +4,12 @@ Core configuration for the Insurance SaaS Platform.
 from typing import List, Any
 from pydantic_settings import BaseSettings
 from pydantic import field_validator
-
+import os
 
 class Settings(BaseSettings):
     """Application settings."""
+    PROJECT_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
     
     # Application
     APP_NAME: str = "Tinsur.AI"
