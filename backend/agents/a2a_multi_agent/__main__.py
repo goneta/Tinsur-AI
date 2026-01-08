@@ -8,11 +8,11 @@ from agent_executor import MultiAgentExecutor
 
 def main():
     skill = AgentSkill(
-        id="manage_tasks",
-        name="Manage Tasks",
-        description="Delegate writing and reviewing",
-        tags=["manager", "delegation"],
-        examples=["Write a story"],
+        id="insurance_manager",
+        name="Insurance Manager",
+        description="Delegate insurance tasks to specialized agents (Claims, Policy, Quote, Telematics)",
+        tags=["manager", "insurance", "routing"],
+        examples=["File a claim", "Get a quote", "Check driving score", "Create policy"],
     )
 
     agent_card = AgentCard(

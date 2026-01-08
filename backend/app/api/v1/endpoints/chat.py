@@ -56,6 +56,77 @@ async def chat(
             # Return 402 Payment Required for frontend to show modal
             raise HTTPException(status_code=402, detail="Insufficient AI credits. Please purchase more to continue.")
 
+    # Direct execution of Orchestrator Agent (In-Process)
+    # This avoids needing to run a separate process for the agent during development
+    try:
+        from backend.agents.a2a_multi_agent.agent_executor import MultiAgentExecutor
+        from a2a.server.agent_execution.context import RequestContext
+        from a2a.server.events.event_queue import EventQueue
+        from a2a.types import AgentMessage
+        
+        # Initialize Executor
+        executor = MultiAgentExecutor()
+        
+        # Prepare Context
+        # We map the chat request into a user_text_message event
+        events = []
+        events.append(AgentMessage(
+            type="user_text_message",
+            text=request.message
+        ))
+        
+        req_context = RequestContext(
+            events=events,
+            metadata={
+                "user_id": str(current_user.id),
+                "company_id": str(current_user.company_id) if current_user.company_id else None,
+                "policy_id": request.policy_id,
+                "google_api_key": api_key, # Pass the resolved key
+                **context
+            }
+        )
+        
+        queue = EventQueue()
+        
+        # Execute Agent
+        await executor.execute(req_context, queue)
+        
+        # Process Response from Queue
+        # We look for the last 'agent_text_message'
+        response_text = "I'm sorry, I couldn't process your request."
+        
+        # queue.events is a list of events added during execution
+        # We iterate to find the answer
+        for event in reversed(queue.events):
+            if event.type == "agent_text_message":
+                 # Check 'text' or 'content' attribute depending on Event object structure
+                 # A2A Event usually has .text for text messages
+                 if hasattr(event, "text"):
+                     response_text = event.text
+                 elif hasattr(event, "content"):
+                     response_text = event.content
+                 break
+        
+        # Optional: Log usage since we bypassed the client log logic
+        if plan == "CREDIT":
+             ai_service.log_and_consume_usage(
+                str(current_user.company_id), 
+                str(current_user.id), 
+                "orchestrator_agent"
+            )
+
+        return ChatResponse(response=response_text)
+
+    except ImportError as e:
+        # Fallback to HTTP Client if import fails (unlikely given structure)
+        print(f"Direct import failed, falling back to HTTP: {e}")
+        pass
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Orchestrator Error: {str(e)}")
+
+    # Fallback to original HTTP Client logic if direct execution skipped
     client = AgentClient()
     
     # Call the orchestrator agent with the resolved key

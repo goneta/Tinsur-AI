@@ -4,55 +4,88 @@ from a2a.server.events.event_queue import EventQueue
 from a2a.utils import new_agent_text_message
 from google.adk.agents import Agent
 
-# Mock sub-agents for the wrapper if we can't import the exact structure
-# or if we want to contain it all in one file for the A2A wrapper
-writer_agent = Agent(
-    name="writer",
-    model="gemini-2.0-flash",
-    description="Writer agent",
-    instruction="You are a writer. Write short stories.",
-)
-
-reviewer_agent = Agent(
-    name="reviewer",
-    model="gemini-2.0-flash",
-    description="Reviewer agent",
-    instruction="You are a reviewer. Review stories for clarity.",
-)
+# Import real backend agents
+# Adapting imports assuming we are running from backend root or these modules are in python path
+try:
+    from backend.agents.a2a_claims_agent.agent_executor import ClaimsAgentExecutor
+    from backend.agents.a2a_policy_agent.agent_executor import PolicyAgentExecutor
+    from backend.agents.a2a_quote_agent.agent_executor import QuoteAgentExecutor
+    from backend.agents.a2a_telematics_agent.agent_executor import TelematicsAgentExecutor
+except ImportError:
+    # Fallback for different running contexts (e.g. inside agents dir)
+    import sys
+    import os
+    # Add parent dir to path if needed for siblings
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+    from backend.agents.a2a_claims_agent.agent_executor import ClaimsAgentExecutor
+    from backend.agents.a2a_policy_agent.agent_executor import PolicyAgentExecutor
+    from backend.agents.a2a_quote_agent.agent_executor import QuoteAgentExecutor
+    from backend.agents.a2a_telematics_agent.agent_executor import TelematicsAgentExecutor
 
 class MultiAgentExecutor(AgentExecutor):
     def __init__(self):
+        # Initialize sub-agents
+        self.claims = ClaimsAgentExecutor()
+        self.policy = PolicyAgentExecutor()
+        self.quote = QuoteAgentExecutor()
+        self.telematics = TelematicsAgentExecutor()
+        
+        # Create the Manager Agent with sub-agents
         self.agent = Agent(
             name="manager_agent",
             model="gemini-2.0-flash",
-            description="Manager agent that delegates to writer and reviewer",
+            description="Manager agent that routes user requests to specialized insurance agents",
             instruction="""
-            You are a manager.
-            If the user asks to write a story, delegate to the writer.
-            If the user asks to review a story, delegate to the reviewer.
+            You are the Tinsur.AI Manager Agent.
+            Your job is to route user requests to the appropriate specialist agent.
+            
+            - If the user wants to check a claim status, file a claim, or asks about fraud, delegate to the 'claims_agent'.
+            - If the user wants to create a policy, manage policies, or ask about coverage details, delegate to the 'policy_agent'.
+            - If the user wants to get a quote, check prices, or create a new quote, delegate to the 'quote_agent'.
+            - If the user asks about driving behavior, UBI scores, safety tips, or trips, delegate to the 'telematics_agent'.
+            
+            If the request is general (e.g., 'Hello'), you can answer directly.
             """,
-            # sub_agents=[writer_agent, reviewer_agent] # Abstracted for ADK
+            sub_agents=[
+                self.claims.agent, 
+                self.policy.agent, 
+                self.quote.agent, 
+                self.telematics.agent
+            ]
         )
 
     async def execute(self, context: RequestContext, event_queue: EventQueue):
-        user_input = "Write a story"
+        user_input = ""
         if context.events:
              for event in reversed(context.events):
                  if event.type == "user_text_message":
                      user_input = event.text
                      break
         
-        # Mock delegation logic
-        if "write" in user_input.lower():
-            # Real ADK would handle delegation automatically if configured
-            # response = await self.agent.generate_response(user_input)
-            response_text = "I'll ask the writer.\n\nWriter says: Once upon a time..."
-        elif "review" in user_input.lower():
-            response_text = "I'll ask the reviewer.\n\nReviewer says: The story looks good!"
-        else:
-            response_text = "I can manage writing and reviewing stories."
+        if not user_input:
+            return
+
+        try:
+            # Pass metadata (context) down to sub-agents via the prompt or ADK context injection
+            # The ADK Agent.run() handles sub-agent delegation automatically based on instructions.
+            # We just need to ensure the sub-agents have access to tools/context if they rely on it.
+            # In this ADK version, we pass the prompt and let the manager decide.
             
-        event_queue.enqueue_event(new_agent_text_message(response_text))
+            # Note: For real context propagation (user_id, company_id) to sub-agents, 
+            # we rely on the sub-agents' own execution logic if the ADK calls them directly 
+            # or if we were manually routing. 
+            # Since we are using `sub_agents=[]` in ADK, the ADK handles the routing loop.
+            
+            # We pass context.metadata as tool_config or bind it if supported, 
+            # but for now we append context to the prompt if needed, similar to TelematicsAgent.
+            # However, the ADK's multi-agent routing usually handles the conversation flow.
+            
+            response_text = await self.agent.run(user_input, google_api_key=context.metadata.get("google_api_key"))
+            
+            event_queue.enqueue_event(new_agent_text_message(response_text))
+            
+        except Exception as e:
+            event_queue.enqueue_event(new_agent_text_message(f"Orchestrator Error: {str(e)}"))
 
     async def cancel(self, context: RequestContext, event_queue: EventQueue):
         pass

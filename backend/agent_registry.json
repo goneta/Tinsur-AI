@@ -1,8 +1,8 @@
 [
     {
         "name": "orchestrator_agent",
-        "port": 8025,
-        "path": "agents/a2a_multi_ai_agents/__main__.py",
+        "port": 8007,
+        "path": "agents/a2a_multi_agent/__main__.py",
         "type": "business",
         "enabled": true
     },
