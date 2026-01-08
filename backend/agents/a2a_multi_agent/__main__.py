@@ -10,9 +10,9 @@ def main():
     skill = AgentSkill(
         id="insurance_manager",
         name="Insurance Manager",
-        description="Delegate insurance tasks to specialized agents (Claims, Policy, Quote, Telematics)",
-        tags=["manager", "insurance", "routing"],
-        examples=["File a claim", "Get a quote", "Check driving score", "Create policy"],
+        description="Delegate insurance tasks to specialized agents (Claims, Policy, Quote, Telematics, Finance, Support, Documents)",
+        tags=["manager", "insurance", "routing", "finance", "support", "documents"],
+        examples=["File a claim", "Get a quote", "Check driving score", "P&L Report", "Help me", "Share document"],
     )
 
     agent_card = AgentCard(

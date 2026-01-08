@@ -44,6 +44,30 @@ async def verify_routing():
     else:
         print(f"❌ FAILED: Response was: {response}")
 
+    # Test Case 4: Finance Routing
+    print("\n[TEST 4] Testing 'Generate P&L report' routing...")
+    response = await run_agent(executor, "Show me a Profit & Loss report for my company.")
+    if "profit" in response.lower() or "revenue" in response.lower() or "financial" in response.lower():
+        print("✅ PASSED: Routed to Finance Agent (Response relevant)")
+    else:
+        print(f"❌ FAILED: Response was: {response}")
+
+    # Test Case 5: Support Routing
+    print("\n[TEST 5] Testing 'I need help' routing...")
+    response = await run_agent(executor, "I need help understanding my coverage.")
+    if "support" in response.lower() or "assist" in response.lower() or "help" in response.lower():
+        print("✅ PASSED: Routed to Support Agent (Response relevant)")
+    else:
+        print(f"❌ FAILED: Response was: {response}")
+
+    # Test Case 6: Document Routing
+    print("\n[TEST 6] Testing 'Share document' routing...")
+    response = await run_agent(executor, "I want to share a policy document.")
+    if "share" in response.lower() or "document" in response.lower() or "access" in response.lower():
+        print("✅ PASSED: Routed to Document Agent (Response relevant)")
+    else:
+        print(f"❌ FAILED: Response was: {response}")
+
 async def run_agent(executor, message):
     queue = EventQueue()
     events = [AgentMessage(type="user_text_message", text=message)]

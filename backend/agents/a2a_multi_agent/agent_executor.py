@@ -11,6 +11,9 @@ try:
     from backend.agents.a2a_policy_agent.agent_executor import PolicyAgentExecutor
     from backend.agents.a2a_quote_agent.agent_executor import QuoteAgentExecutor
     from backend.agents.a2a_telematics_agent.agent_executor import TelematicsAgentExecutor
+    from backend.agents.a2a_finance_agent.agent_executor import FinanceAgentExecutor
+    from backend.agents.a2a_support_agent.agent_executor import SupportAgentExecutor
+    from backend.agents.a2a_document_agent.agent_executor import DocumentAgentExecutor
 except ImportError:
     # Fallback for different running contexts (e.g. inside agents dir)
     import sys
@@ -21,6 +24,9 @@ except ImportError:
     from backend.agents.a2a_policy_agent.agent_executor import PolicyAgentExecutor
     from backend.agents.a2a_quote_agent.agent_executor import QuoteAgentExecutor
     from backend.agents.a2a_telematics_agent.agent_executor import TelematicsAgentExecutor
+    from backend.agents.a2a_finance_agent.agent_executor import FinanceAgentExecutor
+    from backend.agents.a2a_support_agent.agent_executor import SupportAgentExecutor
+    from backend.agents.a2a_document_agent.agent_executor import DocumentAgentExecutor
 
 class MultiAgentExecutor(AgentExecutor):
     def __init__(self):
@@ -29,6 +35,9 @@ class MultiAgentExecutor(AgentExecutor):
         self.policy = PolicyAgentExecutor()
         self.quote = QuoteAgentExecutor()
         self.telematics = TelematicsAgentExecutor()
+        self.finance = FinanceAgentExecutor()
+        self.support = SupportAgentExecutor()
+        self.document = DocumentAgentExecutor()
         
         # Create the Manager Agent with sub-agents
         self.agent = Agent(
@@ -43,6 +52,9 @@ class MultiAgentExecutor(AgentExecutor):
             - If the user wants to create a policy, manage policies, or ask about coverage details, delegate to the 'policy_agent'.
             - If the user wants to get a quote, check prices, or create a new quote, delegate to the 'quote_agent'.
             - If the user asks about driving behavior, UBI scores, safety tips, or trips, delegate to the 'telematics_agent'.
+            - If the user asks about financial reports, P&L, balance sheets, or accounting, delegate to the 'finance_agent'.
+            - If the user needs help, support, or has general questions about the platform, delegate to the 'support_agent'.
+            - If the user wants to generate, share, or revoke documents (agreements, slips), delegate to the 'document_agent'.
             
             If the request is general (e.g., 'Hello'), you can answer directly.
             """,
@@ -50,7 +62,10 @@ class MultiAgentExecutor(AgentExecutor):
                 self.claims.agent, 
                 self.policy.agent, 
                 self.quote.agent, 
-                self.telematics.agent
+                self.telematics.agent,
+                self.finance.agent,
+                self.support.agent,
+                self.document.agent
             ]
         )
 
