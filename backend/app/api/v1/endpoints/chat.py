@@ -9,6 +9,7 @@ from app.models.user import User
 from app.core.agent_client import AgentClient
 from app.services.security_service import SecurityService
 from app.services.ai_service import AiService
+from app.models.client import Client
 
 class ChatMessage(BaseModel):
     role: str
@@ -17,6 +18,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     policy_id: Optional[str] = None
+    image_path: Optional[str] = None
     
 class ChatResponse(BaseModel):
     response: str
@@ -68,6 +70,13 @@ async def chat(
         executor = MultiAgentExecutor()
         
         # Prepare Context
+        # We find the client_id if this user is a client
+        client_id = None
+        if current_user.role == 'client':
+            client = db.query(Client).filter(Client.user_id == current_user.id).first()
+            if client:
+                client_id = str(client.id)
+
         # We map the chat request into a user_text_message event
         events = []
         events.append(AgentMessage(
@@ -75,10 +84,17 @@ async def chat(
             text=request.message
         ))
         
+        if request.image_path:
+            events.append(AgentMessage(
+                type="user_image_message",
+                path=request.image_path
+            ))
+        
         req_context = RequestContext(
             events=events,
             metadata={
                 "user_id": str(current_user.id),
+                "client_id": client_id,
                 "company_id": str(current_user.company_id) if current_user.company_id else None,
                 "policy_id": request.policy_id,
                 "google_api_key": api_key, # Pass the resolved key
