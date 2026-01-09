@@ -88,29 +88,47 @@ def main():
 
     print(f"🔍 Scanning {kb_dir} for documents...")
     for root, dirs, files in os.walk(kb_dir):
+        # Determine category based on subdirectory
+        rel_dir = os.path.relpath(root, kb_dir)
+        if rel_dir == ".":
+            category = "general"
+        else:
+            # Take the top-most directory as the category
+            category = rel_dir.split(os.sep)[0]
+            
         for file in files:
             file_path = os.path.join(root, file)
             rel_path = os.path.relpath(file_path, kb_dir)
             
             if file.endswith('.md'):
-                print(f"  📄 Processing Markdown: {rel_path}")
+                print(f"  📄 Processing Markdown: {rel_path} [Category: {category}]")
                 with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
                 chunks = chunk_markdown(content)
                 for i, text in enumerate(chunks):
                     all_docs.append(text)
                     all_ids.append(f"doc_{doc_counter}")
-                    all_metadatas.append({"source": rel_path, "type": "markdown", "chunk": i})
+                    all_metadatas.append({
+                        "source": rel_path, 
+                        "type": "markdown", 
+                        "chunk": i,
+                        "category": category
+                    })
                     doc_counter += 1
                     
             elif file.endswith('.pdf'):
-                print(f"  📕 Processing PDF: {rel_path}")
+                print(f"  📕 Processing PDF: {rel_path} [Category: {category}]")
                 try:
                     pages = extract_pdf_text(file_path)
                     for page_data in pages:
                         all_docs.append(page_data["text"])
                         all_ids.append(f"doc_{doc_counter}")
-                        all_metadatas.append({"source": rel_path, "type": "pdf", "page": page_data["page"]})
+                        all_metadatas.append({
+                            "source": rel_path, 
+                            "type": "pdf", 
+                            "page": page_data["page"],
+                            "category": category
+                        })
                         doc_counter += 1
                 except Exception as e:
                     print(f"    ⚠️ Failed to process PDF {file}: {e}")
