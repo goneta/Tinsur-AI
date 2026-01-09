@@ -7,6 +7,15 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 import os
 import logging
+from dotenv import load_dotenv
+
+# Explicitly load .env files from potential locations (Backend root and Project root)
+# Navigate up from app/main.py
+backend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+project_root = os.path.dirname(backend_root)
+
+load_dotenv(os.path.join(backend_root, ".env"))
+load_dotenv(os.path.join(project_root, ".env"))
 
 from app.core.config import settings
 # Force reload trigger - KYC Auth Fix

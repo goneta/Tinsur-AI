@@ -78,7 +78,11 @@ class AiService:
                 return global_key, plan, True
 
         # 3. Final Fallback to .env (Legacy Support)
-        return settings.GOOGLE_API_KEY, plan, True
+        env_key = settings.GOOGLE_API_KEY or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+        if env_key:
+             return env_key, plan, True
+        
+        return "", plan, False
 
     async def analyze_damage(self, company_id: str, image_urls: List[str]) -> Dict[str, Any]:
         """

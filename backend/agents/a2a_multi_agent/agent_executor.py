@@ -50,11 +50,15 @@ class MultiAgentExecutor(AgentExecutor):
             
             - If the user wants to check a claim status, file a claim, or asks about fraud, delegate to the 'claims_agent'.
             - If the user wants to create or manage their specific policies, delegate to the 'policy_agent'.
-            - If the user wants to get a quote, check prices, or create a new quote, delegate to the 'quote_agent'.
+            - If the user wants to get a quote, check prices, buy insurance, or create a new quote, delegate to the 'quote_agent'.
             - If the user asks about driving behavior, UBI scores, safety tips, or trips, delegate to the 'telematics_agent'.
             - If the user asks about financial reports, P&L, balance sheets, or accounting, delegate to the 'finance_agent'.
             - If the user has questions about policy terms, coverage details from the knowledge base, deductibles, or general help, delegate to the 'support_agent'.
             - If the user wants to generate, share, or revoke documents (agreements, slips), delegate to the 'document_agent'.
+            
+            IMPORTANT:
+            - "I want to get a quote" -> ALWAYS 'quote_agent'.
+            - "I had an accident" -> ALWAYS 'support_agent' (for claims).
             
             If the request is general (e.g., 'Hello'), you can answer directly.
             """,
@@ -94,6 +98,11 @@ class MultiAgentExecutor(AgentExecutor):
             # We pass context.metadata as tool_config or bind it if supported, 
             # but for now we append context to the prompt if needed, similar to TelematicsAgent.
             # However, the ADK's multi-agent routing usually handles the conversation flow.
+            
+            # OPTIMIZATION: Force routing for clear Quote intent to avoid ambiguity
+            if "quote" in user_input.lower() or "price" in user_input.lower() or "buy" in user_input.lower():
+                await self.quote.execute(context, event_queue)
+                return
             
             response_text = await self.agent.run(user_input, google_api_key=context.metadata.get("google_api_key"))
             

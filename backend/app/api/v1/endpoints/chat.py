@@ -19,6 +19,7 @@ class ChatRequest(BaseModel):
     message: str
     policy_id: Optional[str] = None
     image_path: Optional[str] = None
+    history: Optional[List[ChatMessage]] = [] # New field
     
 class ChatResponse(BaseModel):
     response: str
@@ -61,7 +62,10 @@ async def chat(
     # Direct execution of Orchestrator Agent (In-Process)
     # This avoids needing to run a separate process for the agent during development
     try:
-        from backend.agents.a2a_multi_agent.agent_executor import MultiAgentExecutor
+        try:
+            from backend.agents.a2a_multi_agent.agent_executor import MultiAgentExecutor
+        except ImportError:
+            from agents.a2a_multi_agent.agent_executor import MultiAgentExecutor
         from a2a.server.agent_execution.context import RequestContext
         from a2a.server.events.event_queue import EventQueue
         from a2a.types import AgentMessage
@@ -97,6 +101,7 @@ async def chat(
                 "client_id": client_id,
                 "company_id": str(current_user.company_id) if current_user.company_id else None,
                 "policy_id": request.policy_id,
+                "history": [h.dict() for h in request.history] if request.history else [], # Pass history
                 "google_api_key": api_key, # Pass the resolved key
                 **context
             }
