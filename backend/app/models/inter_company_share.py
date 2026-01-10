@@ -2,32 +2,27 @@
 Inter-Company Share model for secure collaboration.
 """
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Enum, Numeric
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
-from sqlalchemy.orm import relationship # Verify conflict
+from app.core.guid import GUID
 from app.core.database import Base
 # Client and User imports are usually handled by string reference in relationships to avoid circular imports, 
-# but foreign keys need tablenames. 
-# String references "Client" and "User" work if models are loaded.
-# So no new imports needed as long as they are loaded in models/__init__.py
-
 
 class InterCompanyShare(Base):
     """Model for tracking shared resources between companies."""
     __tablename__ = "inter_company_shares"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    from_company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    from_company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     
     # Target Entities (Polymorphic-style)
-    to_company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=True)
-    to_client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"), nullable=True)
-    to_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    to_company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), nullable=True)
+    to_client_id = Column(GUID(), ForeignKey("clients.id", ondelete="CASCADE"), nullable=True)
+    to_user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     
     resource_type = Column(String(50), nullable=False) # 'document', etc.
-    resource_id = Column(UUID(as_uuid=True), nullable=False)
+    resource_id = Column(GUID(), nullable=False)
     
     # Financial fields for settlements
     amount = Column(Numeric(15, 2), nullable=True)
@@ -39,7 +34,7 @@ class InterCompanyShare(Base):
     # For now, we manually join or use property.
     # To enable back_populates from Document, we need a FK specifically for doc or a polymorphic join.
     # Simpler approach: Add `document_id` nullable for now to support direct relation.
-    document_id = Column(UUID(as_uuid=True), ForeignKey("documents.id", ondelete="CASCADE"), nullable=True)
+    document_id = Column(GUID(), ForeignKey("documents.id", ondelete="CASCADE"), nullable=True)
     document = relationship("Document", back_populates="shares")
 
     # Scope and Permissions

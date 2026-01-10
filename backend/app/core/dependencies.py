@@ -29,11 +29,14 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     token = credentials.credentials
+    print(f"DEBUG_AUTH: Received token starting with {token[:10]}")
     try:
         payload = decode_token(token)
         if payload is None:
             print("DEBUG: Token decode returned None")
             raise credentials_exception
+        
+        print(f"DEBUG_AUTH: Decoded payload for sub {payload.get('sub')}")
         
         user_id: str = payload.get("sub")
         if user_id is None:
@@ -68,7 +71,10 @@ async def get_current_user(
             pass
         raise credentials_exception
     
+    print(f"DEBUG_AUTH: User found: {user.email}, is_active: {user.is_active}")
+    
     if not user.is_active:
+        print(f"DEBUG_AUTH: User {user.email} is INACTIVE")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Inactive user"

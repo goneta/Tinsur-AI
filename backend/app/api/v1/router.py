@@ -51,7 +51,8 @@ from app.api.v1.endpoints import (
     policy_services,
     policy_services,
     quote_elements,
-    translations
+    translations,
+    import_export
 )
 
 api_router = APIRouter()
@@ -107,4 +108,5 @@ api_router.include_router(archive.router, prefix="/archive", tags=["Immutable Ar
 api_router.include_router(policy_services.router, prefix="/policy-services", tags=["Policy Services"])
 api_router.include_router(quote_elements.router, prefix="/quote-elements", tags=["Quote Elements"])
 api_router.include_router(translations.router, prefix="/translations", tags=["Translations"])
+api_router.include_router(import_export.router, prefix="/import-export", tags=["Import / Export Data"])
 

@@ -1,11 +1,13 @@
 
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 from sqlalchemy.orm import Session
 from uuid import UUID
+import uuid
 import os
 import shutil
 from datetime import datetime
+import logging
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -15,6 +17,7 @@ from app.models.inter_company_share import InterCompanyShare
 from app.models.company import Company
 from pydantic import BaseModel
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # Schema Models
@@ -22,7 +25,7 @@ class DocumentResponse(BaseModel):
     id: UUID
     name: str
     label: str
-    file_type: str
+    fileType: str
     size: str
     visibility: str
     owner: str
@@ -37,15 +40,88 @@ class ShareRequest(BaseModel):
     scope: Optional[str] = None # B2B, B2C, etc
     is_shareable: bool
     reshare_rule: Optional[str] = None # A, B, C
-    # In real app, might need target list, but for now generic "sharing settings" update
-    
-# Fix UPLOAD_DIR to be absolute path in backend root
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
-# backend/app/api/v1/endpoints -> backend/app/api/v1 -> backend/app/api -> backend/app -> backend
-UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
+
+# Simple absolute path relative to project root
+# Assuming we are in backend/app/api/v1/endpoints
+# backend/uploads
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+UPLOAD_DIR = os.path.join(PROJECT_ROOT, "uploads")
 
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
+
+def format_doc(doc: Document, owner_name_override: str = None, scope: str = None) -> Dict[str, Any]:
+    """Helper to format document for frontend with safety checks."""
+    try:
+        # File Size safety
+        try:
+            raw_size = doc.file_size
+            if isinstance(raw_size, str):
+                raw_size = int(raw_size)
+            size_mb = (raw_size or 0) / 1024 / 1024
+        except:
+            size_mb = 0
+
+        # Date safety
+        try:
+            if doc.created_at:
+                if isinstance(doc.created_at, str):
+                    # Handle string dates from SQLite
+                    date_val = datetime.fromisoformat(doc.created_at.replace('Z', '+00:00'))
+                    date_str = date_val.strftime("%Y-%m-%d")
+                else:
+                    date_str = doc.created_at.strftime("%Y-%m-%d")
+            else:
+                date_str = datetime.utcnow().strftime("%Y-%m-%d")
+        except:
+            date_str = datetime.utcnow().strftime("%Y-%m-%d")
+        
+        # Determine owner
+        owner = owner_name_override
+        if not owner:
+            try:
+                if doc.company:
+                    owner = doc.company.name
+                else:
+                    owner = "Me"
+            except:
+                owner = "System"
+
+        # Label safety
+        try:
+            label_val = doc.label
+            if hasattr(label_val, 'value'):
+                label_str = str(label_val.value)
+            else:
+                label_str = str(label_val)
+        except:
+            label_str = "Document"
+
+        return {
+            "id": str(doc.id),
+            "name": doc.name or "Unnamed Document",
+            "label": label_str,
+            "fileType": doc.file_type or "unknown",
+            "size": f"{size_mb:.2f} MB",
+            "visibility": doc.visibility or "PRIVATE",
+            "owner": owner,
+            "date": date_str,
+            "scope": scope or doc.scope or "B2B",
+            "isShareable": bool(doc.is_shareable),
+            "reshareRule": doc.reshare_rule or "C"
+        }
+    except Exception as e:
+        logger.error(f"FATAL error formatting document {getattr(doc, 'id', 'unknown')}: {str(e)}")
+        return {
+            "id": str(getattr(doc, 'id', 'error')),
+            "name": "Error loading document",
+            "label": "Error",
+            "fileType": "unknown",
+            "size": "0.00 MB",
+            "visibility": "PRIVATE",
+            "owner": "Unknown",
+            "date": datetime.utcnow().strftime("%Y-%m-%d"),
+        }
 
 @router.post("/upload")
 async def upload_document(
@@ -55,8 +131,13 @@ async def upload_document(
     db: Session = Depends(get_db)
 ):
     try:
+        # Create a safe unique filename
+        file_uuid = uuid.uuid4()
+        ext = os.path.splitext(file.filename)[1]
+        safe_filename = f"{file_uuid}{ext}"
+        file_path = os.path.join(UPLOAD_DIR, safe_filename)
+        
         # Save file locally
-        file_path = os.path.join(UPLOAD_DIR, f"{datetime.now().timestamp()}_{file.filename}")
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
             
@@ -68,40 +149,24 @@ async def upload_document(
             company_id=current_user.company_id,
             uploaded_by=current_user.id,
             name=file.filename,
-            file_url=file_path, # Local path for now
-            file_type=file.filename.split('.')[-1],
+            file_url=f"/uploads/{safe_filename}", 
+            file_type=file.filename.split('.')[-1].lower(),
             file_size=file_size,
             label=label,
-            visibility='PRIVATE' # Default
+            visibility='PRIVATE',
+            scope='B2B'
         )
         db.add(new_doc)
         db.commit()
         db.refresh(new_doc)
         
-        
-        # Calculate relative URL for frontend access
-        # Filename was generated above: f"{datetime.now().timestamp()}_{file.filename}" which is what we saved
-        # But we didn't store that variable separately. Let's fix that.
-        
         return {
             "status": "success", 
-            "document_id": new_doc.id,
-            "url": f"/uploads/{os.path.basename(file_path)}",
-            "name": new_doc.name
+            "document": format_doc(new_doc, "Me"),
+            "url": new_doc.file_url
         }
     except Exception as e:
-        import traceback
-        traceback.print_exc() # Print full stack trace to console
-        print(f"UPLOAD ERROR: {str(e)}") # Print error message
-        try:
-             # Try to print DB URL from session if possible, masking password
-             # This is hacky but needed for debug
-             url = str(db.get_bind().url)
-             if "password" in url:
-                  url = "REDACTED"
-             print(f"DB URL: {url}")
-        except:
-             pass
+        logger.exception("Upload failed")
         raise HTTPException(status_code=500, detail=f"Upload Error: {str(e)}")
 
 @router.get("/list")
@@ -109,84 +174,63 @@ async def list_documents(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # 1. My Documents
-    my_docs = db.query(Document).filter(Document.company_id == current_user.company_id).all()
-    
-    # 2. Public Documents (exclude own to avoid dupe if I made it public)
-    public_docs = db.query(Document).filter(
-        Document.visibility == 'PUBLIC',
-        Document.company_id != current_user.company_id
-    ).all()
-    
-    # 3. Shared With Me (Broadcast Logic + Explicit Shares)
-    shared_docs = []
-    
-    # A. Explicit Shares (InterCompanyShare)
-    shares = db.query(InterCompanyShare).filter(
-        (InterCompanyShare.to_company_id == current_user.company_id) |
-        (InterCompanyShare.to_user_id == current_user.id)
-    ).filter(InterCompanyShare.is_revoked == False).all()
-    
-    for share in shares:
-        if share.document:
-            shared_docs.append({
-                "doc": share.document,
-                "scope": share.scope,
-                "owner": share.from_company.name if share.from_company else "Shared"
-            })
-            
-    # B. Broadcast Logic (Based on Document Metadata)
-    # Get all PRIVATE documents from OTHER companies where Scope permits access
-    # Rule 1: B2B -> Visible to all roles except 'client'
-    # Rule 2: B2C -> Visible to all roles
-    # Rule 3: B2E -> Visible only to company employees (handled by My Docs usually, 
-    #                but if intended for 'Partner Employees' we might need logic. 
-    #                Let's assume B2E here means 'Business to Employees of ANY partner' for simplicity 
-    #                OR strictly internal. Let's assume Broadcast B2E is Internal-Only, so skipped here.)
-    
-    broadcast_query = db.query(Document).filter(
-        Document.company_id != current_user.company_id,
-        Document.visibility == 'PRIVATE'
-    )
-    
-    # Client Restriction
-    if current_user.role == 'client':
-        # Clients only see B2C
-        broadcast_query = broadcast_query.filter(Document.scope == 'B2C')
-    else:
-        # Business users see B2B and B2C
-        broadcast_query = broadcast_query.filter(Document.scope.in_(['B2B', 'B2C']))
+    try:
+        # 1. My Documents
+        my_docs = db.query(Document).filter(Document.company_id == current_user.company_id).all()
         
-    broadcast_docs = broadcast_query.all()
-    
-    for doc in broadcast_docs:
-        # Avoid duplicates if already explicitly shared
-        if not any(d['doc'].id == doc.id for d in shared_docs):
-            shared_docs.append({
-                "doc": doc,
-                "scope": doc.scope,
-                "owner": doc.company.name if doc.company else "Network Partner"
-            })
+        # 3. Shared With Me
+        shared_docs = []
+        
+        # A. Explicit Shares (InterCompanyShare)
+        # We need to eager load document and from_company to avoid late session issues
+        shares = db.query(InterCompanyShare).filter(
+            (InterCompanyShare.to_company_id == current_user.company_id) |
+            (InterCompanyShare.to_user_id == current_user.id)
+        ).filter(InterCompanyShare.is_revoked == False).all()
+        
+        for share in shares:
+            if share.document:
+                shared_docs.append({
+                    "doc": share.document,
+                    "scope": share.scope,
+                    "owner": share.from_company.name if share.from_company else "Partner"
+                })
+                
+        # B. Broadcast Logic
+        broadcast_query = db.query(Document).filter(
+            Document.company_id != current_user.company_id,
+            Document.visibility == 'PRIVATE'
+        )
+        
+        if current_user.role == 'client':
+            broadcast_query = broadcast_query.filter(Document.scope == 'B2C')
+        else:
+            broadcast_query = broadcast_query.filter(Document.scope.in_(['B2B', 'B2C']))
+            
+        broadcast_docs = broadcast_query.all()
+        
+        for doc in broadcast_docs:
+            if not any(d['doc'].id == doc.id for d in shared_docs):
+                shared_docs.append({
+                    "doc": doc,
+                    "scope": doc.scope,
+                    "owner": doc.company.name if doc.company else "Network Partner"
+                })
 
-    # Format Responses
-    def format_doc(doc, owner_name_override=None, scope=None):
+        # 2. Public Documents
+        public_docs = db.query(Document).filter(
+            Document.visibility == 'PUBLIC',
+            Document.company_id != current_user.company_id
+        ).all()
+
         return {
-            "id": doc.id,
-            "name": doc.name,
-            "label": doc.label,
-            "fileType": doc.file_type,
-            "size": f"{doc.file_size / 1024 / 1024:.2f} MB",
-            "visibility": doc.visibility,
-            "owner": owner_name_override or (doc.company.name if doc.company else "Me"),
-            "date": doc.created_at.strftime("%Y-%m-%d"),
-            "scope": scope
+            "my_docs": [format_doc(d, "Me") for d in my_docs],
+            "public_docs": [format_doc(d) for d in public_docs],
+            "shared_with_me": [format_doc(s['doc'], s['owner'], s['scope']) for s in shared_docs]
         }
-
-    return {
-        "my_docs": [format_doc(d, "Me") for d in my_docs],
-        "public_docs": [format_doc(d) for d in public_docs],
-        "shared_with_me": [format_doc(s['doc'], s['owner'], s['scope']) for s in shared_docs]
-    }
+    except Exception as e:
+        logger.exception("Failed to list documents")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch documents: {str(e)}")
 
 @router.post("/{doc_id}/share")
 async def update_share_settings(
@@ -202,7 +246,6 @@ async def update_share_settings(
     if doc.company_id != current_user.company_id:
         raise HTTPException(status_code=403, detail="Not authorized")
         
-    # Update Metadata
     doc.visibility = settings.visibility
     doc.scope = settings.scope
     doc.is_shareable = settings.is_shareable

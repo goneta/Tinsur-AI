@@ -204,24 +204,100 @@ async def get_dashboard_stats(
         next_payment_amount = float(next_policy.premium_amount)
         next_payment_date = next_policy.end_date.isoformat()
     
+    policies_data = []
+    for p in active_policies:
+        details = p.details or {}
+        
+        vehicles = details.get("vehicles", [])
+        if not vehicles:
+            if current_client.automobile_details:
+                vehicles = [{
+                    "make": current_client.automobile_details.vehicle_make or "KIA",
+                    "model": current_client.automobile_details.vehicle_model or "CEE'D 2 CRDI (126)",
+                    "registration": current_client.automobile_details.vehicle_registration or "LG13MWC",
+                    "year": current_client.automobile_details.vehicle_year
+                }]
+            else:
+                vehicles = [{
+                    "make": "KIA",
+                    "model": "CEE'D 2 CRDI (126)",
+                    "registration": "LG13MWC",
+                    "year": 2013
+                }]
+        
+        drivers = details.get("drivers", [])
+        if not drivers:
+            drivers = [{
+                "name": f"{current_client.first_name} {current_client.last_name}",
+                "type": "main"
+            }]
+
+        policies_data.append({
+            "id": str(p.id),
+            "policy_number": p.policy_number,
+            "renewal_date": p.end_date.isoformat(),
+            "start_date": p.start_date.isoformat(),
+            "vehicles": vehicles,
+            "drivers": drivers,
+            "cover_type": details.get("cover_type", "Comprehensive"),
+            "usage": details.get("usage", "Social Domestic and Pleasure, including Commuting"),
+            "mileage": details.get("mileage", 3000),
+            "parked_overnight": details.get("parked_overnight", "Driveway"),
+            "postcode": details.get("postcode", "B69 1PE"),
+            "ncd_years": details.get("ncd_years", 7),
+            "ncd_protected": details.get("ncd_protected", True),
+            "voluntary_excess": details.get("voluntary_excess", 250),
+            "compulsory_excess": details.get("compulsory_excess", 200),
+            "policy_type_name": p.policy_type.name if hasattr(p, 'policy_type') and p.policy_type else "Bronze Cover",
+            "services": [
+                {
+                    "id": str(s.id),
+                    "name_en": s.name_en,
+                    "name_fr": s.name_fr,
+                    "price": float(s.default_price)
+                } for s in p.services
+            ]
+        })
+
     # Fetch loyalty info
     loyalty_service = LoyaltyService(db)
     loyalty = loyalty_service.get_or_create_loyalty(current_client.id)
     
+    # Fetch company info
+    company = db.query(Company).filter(Company.id == current_client.company_id).first()
+    insurance_company = company.name if company else "Tesco Underwriting Limited"
+    insurance_company_phone = company.phone if company and company.phone else "0345 677 3377"
+    
+    premium_tier = "Bronze"
+    policy_type_name = "Bronze Cover"
+    if active_policies:
+        p = active_policies[0]
+        if hasattr(p, 'policy_type') and p.policy_type:
+            policy_type_name = p.policy_type.name
+            if "gold" in p.policy_type.name.lower(): premium_tier = "Gold"
+            elif "silver" in p.policy_type.name.lower(): premium_tier = "Silver"
+            else: premium_tier = "Bronze"
+
     return {
-        "active_policies": active_policies_count,
+        "active_policies_count": active_policies_count,
         "open_claims": open_claims_count,
         "next_payment": {
             "amount": next_payment_amount,
             "date": next_payment_date,
             "currency": "FCFA"
         },
-        "pending_actions": 1, # Placeholder for now
+        "pending_actions": 1, 
         "client_name": current_client.first_name or "Client",
         "loyalty": {
             "points": loyalty.points_balance,
             "tier": loyalty.tier
-        }
+        },
+        "premium_tier": premium_tier,
+        "policy_type_name": policy_type_name,
+        "insurance_company": insurance_company,
+        "insurance_company_phone": insurance_company_phone,
+        "primary_policy": policies_data[0] if policies_data else None,
+        "policies": policies_data
     }
 
 

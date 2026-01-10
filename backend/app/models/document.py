@@ -22,6 +22,17 @@ class DocumentLabel(str, enum.Enum):
     CAR_PAPERS = 'Car Papers'
     PHOTO = 'Photo'
     AGREEMENT = 'Agreement'
+    INCIDENT_PHOTO = 'Incident Photo'
+    IDENTIFICATION = 'Identification'
+    OTHER = 'Other'
+
+    @classmethod
+    def _missing_(cls, value):
+        # Graceful fallback for string values stored in DB instead of Enum names
+        for member in cls:
+            if member.value == value:
+                return member
+        return cls.OTHER
 
 class Document(Base):
     """Model for storing document metadata."""

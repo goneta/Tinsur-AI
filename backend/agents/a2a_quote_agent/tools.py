@@ -4,7 +4,8 @@ import sys
 import uuid
 import json
 from google.adk.tools import tool
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
+import sqlalchemy
 
 @tool
 def get_eligible_policies(client_id: str, company_id: str) -> str:
@@ -25,6 +26,21 @@ def get_eligible_policies(client_id: str, company_id: str) -> str:
         
         match_result = policy_service.match_eligible_policies(uuid.UUID(company_id), uuid.UUID(client_id))
         
+        # Convert SQLAlchemy objects to dict for JSON serialization
+        if "data" in match_result:
+            match_result["eligible_policies"] = [
+                {
+                    "id": str(p.id),
+                    "name": p.name,
+                    "description": p.description,
+                    "estimated_premium": float(p.price)
+                } for p in match_result["data"]
+            ]
+            del match_result["data"] # Remove non-serializable objects
+            
+        if "recommended_id" in match_result and match_result["recommended_id"]:
+            match_result["recommended_id"] = str(match_result["recommended_id"])
+            
         return json.dumps(match_result)
     except Exception as e:
         return f"Error checking eligibility: {str(e)}"
@@ -151,5 +167,81 @@ def generate_insurance_quote(client_id: str, company_id: str, policy_type_id: st
     except Exception as e:
         if db: db.rollback()
         return f"Error generating quote: {str(e)}"
+    finally:
+        db.close()
+
+@tool
+def search_clients(query: str, company_id: str) -> str:
+    """
+    Searches for clients by name, email, or phone.
+    Returns a list of matching clients with their IDs.
+    """
+    print(f"DEBUG: search_clients called with query: {query}")
+    backend_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+    if backend_root not in sys.path: sys.path.append(backend_root)
+    
+    try:
+        from app.core.database import SessionLocal
+        from app.models.client import Client
+        from sqlalchemy import or_
+        
+        db = SessionLocal()
+        search_filter = or_(
+            Client.first_name.ilike(f"%{query}%"),
+            Client.last_name.ilike(f"%{query}%"),
+            Client.email.ilike(f"%{query}%"),
+            Client.phone.ilike(f"%{query}%")
+        )
+        
+        clients = db.query(Client).filter(
+            Client.company_id == uuid.UUID(company_id),
+            search_filter
+        ).limit(5).all()
+        
+        results = [
+            {
+                "id": str(c.id),
+                "name": f"{c.first_name} {c.last_name}",
+                "email": c.email,
+                "phone": c.phone
+            } for c in clients
+        ]
+        
+        return json.dumps(results)
+    except Exception as e:
+        return f"Error searching clients: {str(e)}"
+    finally:
+        db.close()
+
+@tool
+def list_recent_clients(company_id: str) -> str:
+    """
+    Lists the most recently updated clients in the organization.
+    Useful for quickly picking a client the user might be working with.
+    """
+    print(f"DEBUG: list_recent_clients called")
+    backend_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+    if backend_root not in sys.path: sys.path.append(backend_root)
+    
+    try:
+        from app.core.database import SessionLocal
+        from app.models.client import Client
+        
+        db = SessionLocal()
+        clients = db.query(Client).filter(
+            Client.company_id == uuid.UUID(company_id)
+        ).order_by(Client.updated_at.desc()).limit(5).all()
+        
+        results = [
+            {
+                "id": str(c.id),
+                "name": f"{c.first_name} {c.last_name}",
+                "email": c.email
+            } for c in clients
+        ]
+        
+        return json.dumps(results)
+    except Exception as e:
+        return f"Error listing clients: {str(e)}"
     finally:
         db.close()
