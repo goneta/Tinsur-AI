@@ -11,8 +11,17 @@ from app.models.api_keys import ApiKey
 
 class AgentAuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint):
-        # Allow health checks or docs without auth if needed
-        if request.url.path in ["/", "/docs", "/openapi.json", "/health"]:
+        # Allow health checks, docs, or public auth/portal routes without Agent API Key
+        path = request.url.path
+        print(f"DEBUG_AUTH_MIDDLEWARE: Path={path}")
+        
+        is_whitelisted = path in ["/", "/docs", "/openapi.json", "/health"] or \
+                         path.startswith("/api/v1/auth") or \
+                         path.startswith("/api/v1/portal/register")
+        
+        print(f"DEBUG_AUTH_MIDDLEWARE: Is whitelisted? {is_whitelisted}")
+        
+        if is_whitelisted:
              return await call_next(request)
 
         # Retrieve API Key from headers

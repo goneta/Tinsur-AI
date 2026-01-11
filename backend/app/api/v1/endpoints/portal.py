@@ -168,7 +168,7 @@ async def get_my_payments(
     """
     payments = db.query(Payment).filter(
         Payment.client_id == current_client.id
-    ).order_by(desc(Payment.payment_date)).offset(skip).limit(limit).all()
+    ).order_by(desc(Payment.created_at)).offset(skip).limit(limit).all()
     
     return payments
 
@@ -406,7 +406,9 @@ async def calculate_my_quote(
         coverage_amount=calculation_request.coverage_amount,
         risk_factors=calculation_request.risk_factors,
         duration_months=calculation_request.duration_months,
-        company_id=current_client.company_id
+        company_id=current_client.company_id,
+        selected_services=calculation_request.selected_services,
+        financial_overrides=calculation_request.financial_overrides
     )
     return result
 
@@ -435,7 +437,9 @@ async def create_my_quote(
             premium_frequency=quote_data.premium_frequency,
             duration_months=quote_data.duration_months,
             discount_percent=quote_data.discount_percent,
-            created_by=current_client.user_id
+            created_by=current_client.user_id,
+            selected_services=quote_data.selected_services,
+            financial_overrides=quote_data.financial_overrides
         )
         return quote
     except Exception as e:

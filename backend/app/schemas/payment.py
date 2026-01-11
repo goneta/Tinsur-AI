@@ -75,6 +75,7 @@ class PaymentResponse(PaymentBase):
     refunded_at: Optional[datetime]
     client_name: Optional[str] = None
     policy_number_display: Optional[str] = None
+    premium_frequency: Optional[str] = None
     created_by_name: Optional[str] = None
     created_at: datetime
     updated_at: datetime

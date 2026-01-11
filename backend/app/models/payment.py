@@ -67,6 +67,12 @@ class Payment(Base):
         return None
 
     @property
+    def premium_frequency(self):
+        if self.policy:
+            return self.policy.premium_frequency
+        return None
+
+    @property
     def created_by_name(self):
         if self.creator:
             if hasattr(self.creator, 'role') and self.creator.role == 'client':

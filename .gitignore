@@ -11,4 +11,6 @@ workthroughs
 walkthroughs
 implementation_plans
 implementation_plan
-*.png
+# *.png
+# Insurance documentation references
+ai_docs/references/examples/insurance_docs/

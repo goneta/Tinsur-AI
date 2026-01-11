@@ -1,7 +1,7 @@
 """
 Quote service for business logic operations.
 """
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from uuid import UUID
 from decimal import Decimal
 from datetime import datetime, date, timedelta
@@ -39,7 +39,8 @@ class QuoteService:
         financial_overrides: Optional[Dict[str, Any]] = None,
         # Added missing args expected by endpoint
         policy_type_id: Optional[UUID] = None,
-        coverage_amount: Optional[Decimal] = None
+        coverage_amount: Optional[Decimal] = None,
+        selected_services: Optional[List[UUID]] = None
     ) -> Dict[str, Any]:
         """
         Calculate premium based on policy type and risk factors.
@@ -187,12 +188,24 @@ class QuoteService:
         # (We append Fees to this as they are pre-tax generally, or we can make them post-tax.
         # User didn't specify Fees location, but usually fees are taxable or exempt. 
         # We will include them in Subtotal for Tax calculation unless specified otherwise)
+        
+        # Add selected services to extra_fee if provided
+        if selected_services and policy_type_id:
+             policy = self.quote_repo.db.query(PremiumPolicyType).filter(PremiumPolicyType.id == policy_type_id).first()
+             if policy:
+                  for service_id in selected_services:
+                       policy_service = next((ps for ps in policy.services if ps.id == service_id), None)
+                       if policy_service:
+                            extra_fee += Decimal(str(policy_service.default_price or 0))
+
         subtotal = base_premium - discount_amount + total_risk_adjustment + extra_fee
 
         # Tax (User Requirement: Subtotal * Tax Rate)
-        tax_percent = Decimal('0')
+        # Default Tax Rate (VAT) is 18% if not specified
+        tax_percent = Decimal('18') 
         if financial_overrides and 'government_tax' in financial_overrides:
             taxes = financial_overrides['government_tax']
+            tax_percent = Decimal('0') # Reset to use overrides
             if isinstance(taxes, list):
                 for t in taxes:
                     tax_percent += Decimal(str(t))
@@ -311,7 +324,8 @@ class QuoteService:
         discount_percent: Decimal = Decimal('0'),
         created_by: UUID = None,
         pos_location_id: UUID = None,
-        financial_overrides: Dict[str, Any] = None
+        financial_overrides: Dict[str, Any] = None,
+        selected_services: List[UUID] = None
     ) -> Quote:
         """Create a new quote with calculated premium."""
         # Fetch client data to ensure eligibility checks can run
@@ -338,7 +352,8 @@ class QuoteService:
             company_id=company_id,
             financial_overrides=financial_overrides,
             policy_type_id=policy_type_id,
-            coverage_amount=coverage_amount
+            coverage_amount=coverage_amount,
+            selected_services=selected_services
         )
         
         # Override discount_percent if company_discount is selected (for storage)

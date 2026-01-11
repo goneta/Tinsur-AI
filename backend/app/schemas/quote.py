@@ -31,8 +31,10 @@ class QuoteCalculationRequest(BaseModel):
     
     # Risk factors (varies by policy type)
     risk_factors: Dict[str, Any] = Field(default_factory=dict)
-    # Example for vehicle: {'vehicle_age': 3, 'driver_age': 35, 'accidents': 0, 'vehicle_value': 20000000}
-    # Example for property: {'property_value': 50000000, 'location': 'Abidjan', 'construction_type': 'concrete', 'age': 10}
+    
+    # Selected additional services
+    selected_services: Optional[List[UUID]] = Field(default_factory=list)
+
     financial_overrides: Optional[Dict[str, Any]] = Field(default=None)
     # Overrides for base rate, fees, etc.
 
@@ -43,6 +45,7 @@ class QuoteCreate(QuoteBase):
     created_by: Optional[UUID] = None
     pos_location_id: Optional[UUID] = None
     financial_overrides: Optional[Dict[str, Any]] = None
+    selected_services: Optional[List[UUID]] = Field(default_factory=list)
 
 
 class QuoteUpdate(BaseModel):
