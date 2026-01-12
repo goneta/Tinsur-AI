@@ -114,7 +114,7 @@ class QuoteService:
                      base_premium = base_premium * duration_factor
                  
                  # Populate included services and excess
-                 included_services = [s.name_en for s in policy.services]
+                 included_services = [{"en": s.name_en, "fr": s.name_fr} for s in policy.services]
                  excess = Decimal(str(policy.excess or 0))
         
         # 2. Fallback to Coverage * Rate if no policy price or 0
@@ -167,13 +167,17 @@ class QuoteService:
         # Fees (Fixed amounts)
         arrangement_fee = Decimal('0')
         extra_fee = Decimal('0')
+        admin_fee = Decimal('0')
         
         if company_id:
             company = self.quote_repo.db.query(Company).filter(Company.id == company_id).first()
             if company:
                 apr_percent = company.apr_percent or 0.0
                 arrangement_fee = Decimal(str(company.arrangement_fee or 0))
+                # Fixed: Use Government Tax from Company Settings
+                tax_percent = Decimal(str(company.government_tax_percent or 0))
                 extra_fee = Decimal(str(company.extra_fee or 0))
+                admin_fee = Decimal(str(company.admin_fee or 0))
 
         if financial_overrides and 'fixed_fee' in financial_overrides:
             fees = financial_overrides['fixed_fee']
@@ -183,12 +187,6 @@ class QuoteService:
             else:
                 extra_fee += Decimal(str(fees))
 
-        # Subtotal (Base - Discount + Risk + Fees)
-        # User Formula: Subtotal = Base Premium - Total Discount + Total Risk Adjustment
-        # (We append Fees to this as they are pre-tax generally, or we can make them post-tax.
-        # User didn't specify Fees location, but usually fees are taxable or exempt. 
-        # We will include them in Subtotal for Tax calculation unless specified otherwise)
-        
         # Add selected services to extra_fee if provided
         if selected_services and policy_type_id:
              policy = self.quote_repo.db.query(PremiumPolicyType).filter(PremiumPolicyType.id == policy_type_id).first()
@@ -198,19 +196,13 @@ class QuoteService:
                        if policy_service:
                             extra_fee += Decimal(str(policy_service.default_price or 0))
 
-        subtotal = base_premium - discount_amount + total_risk_adjustment + extra_fee
+        # Subtotal (Base - Discount + Risk + Extra Fees + Admin Fee)
+        subtotal = base_premium - discount_amount + total_risk_adjustment + extra_fee + admin_fee
 
-        # Tax (User Requirement: Subtotal * Tax Rate)
-        # Default Tax Rate (VAT) is 18% if not specified
-        tax_percent = Decimal('18') 
+        # Tax (User Requirement: Mandatory Government Tax)
+        # Use Company Settings (already fetched), allow override if explicit
         if financial_overrides and 'government_tax' in financial_overrides:
-            taxes = financial_overrides['government_tax']
-            tax_percent = Decimal('0') # Reset to use overrides
-            if isinstance(taxes, list):
-                for t in taxes:
-                    tax_percent += Decimal(str(t))
-            else:
-                 tax_percent = Decimal(str(taxes))
+             tax_percent = Decimal(str(financial_overrides['government_tax']))
         
         tax_amount = subtotal * (tax_percent / Decimal('100'))
 
@@ -242,6 +234,7 @@ class QuoteService:
             # Financials
             'apr_percent': float(apr_percent),
             'arrangement_fee': arrangement_fee,
+            'admin_fee': admin_fee,
             'extra_fee': extra_fee,
             'total_financed_amount': total_financed_amount,
             'monthly_installment': monthly_installment,
@@ -420,6 +413,7 @@ class QuoteService:
             # Snapshot Financials
             apr_percent=calculation['apr_percent'],
             arrangement_fee=calculation['arrangement_fee'],
+            admin_fee=calculation['admin_fee'],
             extra_fee=calculation['extra_fee'],
             total_financed_amount=calculation['total_financed_amount'],
             monthly_installment=calculation['monthly_installment'],

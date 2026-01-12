@@ -73,6 +73,7 @@ class QuoteResponse(QuoteBase):
     final_premium: Decimal
     apr_percent: Optional[float] = 0.0
     arrangement_fee: Optional[Decimal] = 0.0
+    admin_fee: Optional[Decimal] = 0.0
     extra_fee: Optional[Decimal] = 0.0
     total_financed_amount: Optional[Decimal] = 0.0
     monthly_installment: Optional[Decimal] = 0.0
@@ -108,8 +109,11 @@ class QuoteCalculationResponse(BaseModel):
     discount_amount: Decimal
     tax_amount: Decimal
     base_premium: Decimal
+    risk_adjustment: Decimal
+    ubi_adjustment: Decimal
     apr_percent: float
     arrangement_fee: Decimal
+    admin_fee: Decimal
     extra_fee: Decimal
     total_financed_amount: Decimal
     monthly_installment: Decimal

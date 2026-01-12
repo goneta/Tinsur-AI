@@ -34,6 +34,7 @@ class Quote(Base):
     # Financial Snapshot (Calculated at creation)
     apr_percent = Column(Float, default=0.0)
     arrangement_fee = Column(Numeric(15, 2), default=0.0)
+    admin_fee = Column(Numeric(15, 2), default=0.0)
     extra_fee = Column(Numeric(15, 2), default=0.0)
     total_financed_amount = Column(Numeric(15, 2), default=0.0)
     monthly_installment = Column(Numeric(15, 2), default=0.0)
@@ -51,6 +52,7 @@ class Quote(Base):
     # Status
     status = Column(String(50), default='draft')  # 'draft', 'sent', 'accepted', 'rejected', 'expired'
     valid_until = Column(Date)
+    valid_for_days = Column(Integer, default=30)
     
     # Additional data
     details = Column(JSON, default={})

@@ -42,6 +42,10 @@ class CompanyResponse(BaseModel):
     apr_percent: Optional[float] = 0.0
     arrangement_fee: Optional[float] = 0.0
     extra_fee: Optional[float] = 0.0
+    # Mandatory Fees
+    government_tax_percent: Optional[float] = 0.0
+    admin_fee: Optional[float] = 0.0
+    
     currency: str = "USD"
     country: Optional[str] = None
     timezone: str = "UTC"
@@ -68,6 +72,10 @@ class CompanyUpdate(BaseModel):
     apr_percent: Optional[float] = None
     arrangement_fee: Optional[float] = None
     extra_fee: Optional[float] = None
+    # Mandatory Fees
+    government_tax_percent: Optional[float] = None
+    admin_fee: Optional[float] = None
+
     primary_color: Optional[str] = Field(None, max_length=10)
     secondary_color: Optional[str] = Field(None, max_length=10)
 

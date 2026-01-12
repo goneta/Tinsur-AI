@@ -24,6 +24,8 @@ class PolicyService(Base):
     name_fr = Column(String(255), nullable=True)
     description = Column(Text, nullable=True)
     default_price = Column(Numeric(15, 2), default=0.00)
+    category = Column(String(100), default='Other')
+    icon_name = Column(String(50), default='Shield')
     is_active = Column(Boolean, default=True)
 
     # Relationships

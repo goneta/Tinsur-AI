@@ -56,14 +56,33 @@ def seed_premium_policies():
         # 2. Create Policy Types
         policy_defs = [
             {
-                "name": "Premium Gold",
-                "price": 50000,
-                "criteria": ["No Accidents", "Low Car Age", "Low Mileage"]
+                "name": "Bronze",
+                "price": 159.01,
+                "criteria": ["Experienced Driver"],
+                "services": ["Comprehensive cover", "Small courtesy car", "Windscreen cover"]
             },
             {
-                "name": "Safe Expert",
-                "price": 40000,
-                "criteria": ["No Accidents", "Experienced Driver"]
+                "name": "Silver",
+                "price": 189.00,
+                "criteria": ["No Accidents", "Experienced Driver"],
+                "services": [
+                    "Comprehensive cover", "Small courtesy car", "Windscreen cover",
+                    "90-day comprehensive EU cover", "Uninsured driver promise", "Claims portal access"
+                ]
+            },
+            {
+                "name": "Gold",
+                "price": 245.00,
+                "criteria": ["No Accidents", "Low Car Age", "Low Mileage"],
+                "services": [
+                    "Comprehensive cover", "Small courtesy car", "Upgraded courtesy car", 
+                    "90-day comprehensive EU cover", "Windscreen cover", "Uninsured driver promise",
+                    "Loss of keys", "Claims portal access", "Personal accident cover",
+                    "Personal belongings cover", "Manufacturer-fitted audio equipment / sat nav",
+                    "Audio equipment / sat nav", "Driving other cars (conditional)",
+                    "Car seats cover", "Theft of keys", "New car replacement",
+                    "Misfuelling cover", "Onward travel", "Vandalism promise", "Hotel expenses"
+                ]
             }
         ]
 
@@ -85,9 +104,29 @@ def seed_premium_policies():
                 
                 # Add criteria
                 for c_name in p_data["criteria"]:
-                    policy.criteria.append(criteria_map[c_name])
+                    if c_name in criteria_map:
+                        policy.criteria.append(criteria_map[c_name])
+                
+                # Add services
+                if "services" in p_data:
+                    for s_name in p_data["services"]:
+                        service = db.query(PolicyService).filter(
+                            PolicyService.company_id == company.id,
+                            PolicyService.name_en == s_name
+                        ).first()
+                        if service:
+                            policy.services.append(service)
             else:
-                print(f"Policy {p_data['name']} already exists.")
+                print(f"Policy {p_data['name']} already exists. Updating services...")
+                # Update existing services if needed
+                if "services" in p_data:
+                    for s_name in p_data["services"]:
+                        service = db.query(PolicyService).filter(
+                            PolicyService.company_id == company.id,
+                            PolicyService.name_en == s_name
+                        ).first()
+                        if service and service not in existing.services:
+                            existing.services.append(service)
 
         db.commit()
         print("Premium Policies Seed Completed.")

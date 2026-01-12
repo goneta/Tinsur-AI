@@ -40,6 +40,7 @@ class Policy(Base):
     # Status
     status = Column(String(50), default='active', index=True)  # 'active', 'expired', 'canceled', 'lapsed'
     cancellation_reason = Column(Text)
+    auto_renew = Column(Boolean, default=False)
     
     # Documents
     policy_document_url = Column(String(500))

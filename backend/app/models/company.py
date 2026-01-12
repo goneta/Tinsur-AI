@@ -37,6 +37,10 @@ class Company(Base):
     currency = Column(String(10), default="USD")
     country = Column(String(100))
     timezone = Column(String(50), default="UTC")
+
+    # New Mandatory Fees (TVA & Admin)
+    government_tax_percent = Column(Float, default=0.0)
+    admin_fee = Column(Numeric(15, 2), default=0.0)
     
     is_active = Column(Boolean, default=True)
     

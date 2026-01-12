@@ -638,6 +638,10 @@ translations = [
     {"key": "service.spare_parts", "language_code": "en", "value": "Spare parts change", "group": "admin"},
     {"key": "service.breakdown", "language_code": "en", "value": "Breakdown cover", "group": "admin"},
     {"key": "service.personal_injury", "language_code": "en", "value": "Personal Injury Insurance", "group": "admin"},
+    {"key": "service.claims_concierge", "language_code": "en", "value": "Personal Claims Concierge", "group": "admin"},
+    {"key": "service.priority_support", "language_code": "en", "value": "24/7 Priority Support", "group": "admin"},
+    {"key": "service.replacement_vehicle_plus", "language_code": "en", "value": "Replacement Vehicle Plus", "group": "admin"},
+    {"key": "service.premium_legal", "language_code": "en", "value": "Premium Legal Protection", "group": "admin"},
     {"key": "policy.eligibility", "language_code": "en", "value": "Eligibility Criteria", "group": "admin"},
     {"key": "policy.rule_accidents", "language_code": "en", "value": "number_accidents = 0", "group": "admin"},
 
@@ -810,6 +814,10 @@ translations = [
     {"key": "service.spare_parts", "language_code": "fr", "value": "changement de parbrise", "group": "admin"},
     {"key": "service.breakdown", "language_code": "fr", "value": "Couverture en cas de panne", "group": "admin"},
     {"key": "service.personal_injury", "language_code": "fr", "value": "Assurance accidents corporels", "group": "admin"},
+    {"key": "service.claims_concierge", "language_code": "fr", "value": "Concierge de sinistres personnel", "group": "admin"},
+    {"key": "service.priority_support", "language_code": "fr", "value": "Assistance prioritaire 24/7", "group": "admin"},
+    {"key": "service.replacement_vehicle_plus", "language_code": "fr", "value": "Véhicule de remplacement Plus", "group": "admin"},
+    {"key": "service.premium_legal", "language_code": "fr", "value": "Protection juridique Premium", "group": "admin"},
     {"key": "policy.eligibility", "language_code": "fr", "value": "Critères d'admissibilité", "group": "admin"},
     {"key": "policy.rule_accidents", "language_code": "fr", "value": "nombre_accidents = 0", "group": "admin"},
 

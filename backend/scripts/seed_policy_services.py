@@ -23,42 +23,26 @@ def seed_policy_services_raw():
 
         # Services to add
         services_data = [
-            {
-                "name_en": "Courtesy Car",
-                "name_fr": "Véhicule de remplacement",
-                "default_price": 50.00,
-                "description": "Provision of a courtesy car while yours is being repaired."
-            },
-            {
-                "name_en": "Windscreen Cover",
-                "name_fr": "Couverture pare-brise",
-                "default_price": 25.00,
-                "description": "Coverage for windscreen repair or replacement."
-            },
-            {
-                "name_en": "£5,000 Personal Accident Cover",
-                "name_fr": "Couverture accident personnel de 5 000 £",
-                "default_price": 15.00,
-                "description": "Personal accident cover up to £5,000."
-            },
-            {
-                "name_en": "No Claims Discount Protection",
-                "name_fr": "Protection du bonus sans sinistre",
-                "default_price": 30.00,
-                "description": "Protect your No Claims Discount even if you make a claim."
-            },
-            {
-                "name_en": "RAC Roadside Only Breakdown Cover",
-                "name_fr": "Assistance routière RAC (dépannage sur place uniquement)",
-                "default_price": 40.00,
-                "description": "Roadside assistance provided by RAC."
-            },
-            {
-                "name_en": "Legal Cover",
-                "name_fr": "Protection juridique",
-                "default_price": 20.00,
-                "description": "Coverage for legal expenses."
-            }
+            {"name_en": "Comprehensive cover", "name_fr": "Couverture tous risques", "default_price": 0.00, "description": "Full coverage for your vehicle."},
+            {"name_en": "Small courtesy car", "name_fr": "Véhicule de courtoisie (petit modèle)", "default_price": 2.50, "description": "Access to a small courtesy car."},
+            {"name_en": "Upgraded courtesy car", "name_fr": "Véhicule de courtoisie amélioré", "default_price": 5.00, "description": "Access to a higher-class courtesy car."},
+            {"name_en": "90-day comprehensive EU cover", "name_fr": "Couverture tous risques dans l’UE pendant 90 jours", "default_price": 3.00, "description": "Full coverage while driving in Europe for 90 days."},
+            {"name_en": "Windscreen cover", "name_fr": "Garantie bris de glace", "default_price": 1.50, "description": "Coverage for windscreen damage."},
+            {"name_en": "Uninsured driver promise", "name_fr": "Garantie conducteur non assuré", "default_price": 2.00, "description": "Protection if hit by an uninsured driver."},
+            {"name_en": "Loss of keys", "name_fr": "Perte de clés", "default_price": 1.20, "description": "Coverage for lost keys."},
+            {"name_en": "Claims portal access", "name_fr": "Accès au portail de déclaration de sinistre", "default_price": 0.00, "description": "Online access to manage claims."},
+            {"name_en": "Personal accident cover", "name_fr": "Garantie individuelle accident", "default_price": 4.00, "description": "Compensation for injury or death."},
+            {"name_en": "Personal belongings cover", "name_fr": "Garantie effets personnels", "default_price": 2.50, "description": "Coverage for items inside the vehicle."},
+            {"name_en": "Manufacturer-fitted audio equipment / sat nav", "name_fr": "Équipement audio / GPS monté par le constructeur", "default_price": 1.50, "description": "Coverage for built-in audio/nav equipment."},
+            {"name_en": "Audio equipment / sat nav", "name_fr": "Équipement audio / GPS", "default_price": 2.00, "description": "Coverage for portable audio/nav equipment."},
+            {"name_en": "Driving other cars (conditional)", "name_fr": "Conduite d’autres véhicules (sous conditions)", "default_price": 3.50, "description": "Allows driving other vehicles with third-party cover."},
+            {"name_en": "Car seats cover", "name_fr": "Garantie sièges auto", "default_price": 1.80, "description": "Coverage for child car seats."},
+            {"name_en": "Theft of keys", "name_fr": "Vol de clés", "default_price": 1.50, "description": "Coverage for stolen keys."},
+            {"name_en": "New car replacement", "name_fr": "Remplacement du véhicule neuf", "default_price": 6.00, "description": "Replaces car with a new model if totaled within first year."},
+            {"name_en": "Misfuelling cover", "name_fr": "Garantie erreur de carburant", "default_price": 1.20, "description": "Coverage for engine damage from wrong fuel."},
+            {"name_en": "Onward travel", "name_fr": "Garantie poursuite du voyage", "default_price": 2.20, "description": "Assistance to continue journey after breakdown."},
+            {"name_en": "Vandalism promise", "name_fr": "Garantie vandalisme", "default_price": 2.50, "description": "No loss of NCD for vandalism claims."},
+            {"name_en": "Hotel expenses", "name_fr": "Frais d’hébergement", "default_price": 1.50, "description": "Covers hotel costs after an accident far from home."}
         ]
 
         for company in companies:

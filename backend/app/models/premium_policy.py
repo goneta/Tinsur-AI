@@ -55,6 +55,8 @@ class PremiumPolicyType(Base):
     description = Column(Text)
     price = Column(Numeric(15, 2), nullable=False)
     excess = Column(Numeric(15, 2), default=0.00)
+    tagline = Column(String(255))
+    is_featured = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
