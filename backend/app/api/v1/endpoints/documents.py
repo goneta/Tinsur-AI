@@ -1,6 +1,7 @@
 
 from typing import List, Optional, Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from uuid import UUID
 import uuid
@@ -15,6 +16,8 @@ from app.models.user import User
 from app.models.document import Document, DocumentLabel
 from app.models.inter_company_share import InterCompanyShare
 from app.models.company import Company
+from app.repositories.policy_repository import PolicyRepository
+from app.services.document_service import document_service
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -254,3 +257,60 @@ async def update_share_settings(
     db.commit()
     return {"status": "success", "message": "Settings updated"}
 
+
+@router.get("/policy/{policy_id}", response_model=List[str])
+def list_policy_documents(
+    policy_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """List auto-generated insurance documents for a specific policy."""
+    repo = PolicyRepository(db)
+    policy = repo.get_by_id(policy_id)
+    
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+        
+    # Access Control: Company or Client
+    if policy.company_id != current_user.company_id:
+         # Check if client
+         if str(current_user.id) != str(policy.client_id):
+             raise HTTPException(status_code=403, detail="Not authorized")
+
+    doc_dir = os.path.join(document_service.output_dir, str(policy_id))
+    if not os.path.exists(doc_dir):
+        return []
+
+    files = []
+    for f in os.listdir(doc_dir):
+        if f.endswith(".html") or f.endswith(".pdf"):
+            files.append(f"documents/{policy_id}/{f}")
+            
+    return files
+
+@router.get("/policy/{policy_id}/{filename}")
+def get_policy_document(
+    policy_id: UUID,
+    filename: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Serve a specific auto-generated document."""
+    # Access Control
+    repo = PolicyRepository(db)
+    policy = repo.get_by_id(policy_id)
+    
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+
+    if policy.company_id != current_user.company_id:
+         if str(current_user.id) != str(policy.client_id):
+             raise HTTPException(status_code=403, detail="Not authorized")
+
+    safe_filename = os.path.basename(filename)
+    file_path = os.path.join(document_service.output_dir, str(policy_id), safe_filename)
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    return FileResponse(file_path)

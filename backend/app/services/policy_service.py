@@ -20,6 +20,9 @@ from app.services.reinsurance_service import ReinsuranceService
 from app.services.archive_service import ArchiveService
 from app.services.underwriting_service import UnderwritingService
 from app.services.regulatory_service import RegulatoryService
+from app.services.document_service import document_service
+from app.repositories.client_repository import ClientRepository
+from app.repositories.company_repository import CompanyRepository
 
 class PolicyService:
     """Service for policy-related business logic."""
@@ -113,11 +116,22 @@ class PolicyService:
         self.reinsurance_service.process_policy_cessions(policy)
         
         # Archive Policy Document (Immutable Legal Proof)
-        if policy.policy_document_url:
-            # In a real system, we'd fetch the file bytes from storage here
-            # For now, we simulate with a dummy hash of the policy number
-            dummy_content = f"Policy Contract: {policy.policy_number}".encode()
-            self.archive_service.archive_policy_document(policy.id, policy.policy_document_url, dummy_content)
+        dummy_content = f"Policy Contract: {policy.policy_number}".encode()
+        self.archive_service.archive_policy_document(policy.id, policy.policy_document_url, dummy_content)
+        
+        # Generate Policy Documents
+        try:
+            client_repo = ClientRepository(self.policy_repo.db)
+            company_repo = CompanyRepository(self.policy_repo.db)
+            
+            client = client_repo.get_by_id(policy.client_id)
+            company = company_repo.get_by_id(policy.company_id)
+            
+            if client and company:
+                document_service.generate_documents(policy, client, company)
+        except Exception as e:
+            print(f"Error generating documents for policy {policy.id}: {e}")
+            # Non-blocking error, log and continue
         
         return policy
     
@@ -200,6 +214,24 @@ class PolicyService:
                         # Ideally should stop policy creation if strict, 
                         # but for now let's just log and continue or add warning to notes.
                         
+                        print(f"Inventory Error: {e}")
+                        # Optionally rollback or just log? 
+                        # Ideally should stop policy creation if strict, 
+                        # but for now let's just log and continue or add warning to notes.
+                        
+        # Generate Policy Documents
+        try:
+            client_repo = ClientRepository(self.policy_repo.db)
+            company_repo = CompanyRepository(self.policy_repo.db)
+            
+            client = client_repo.get_by_id(created_policy.client_id)
+            company = company_repo.get_by_id(created_policy.company_id)
+            
+            if client and company:
+                document_service.generate_documents(created_policy, client, company)
+        except Exception as e:
+            print(f"Error generating documents for policy {created_policy.id}: {e}")
+
         return created_policy
     
     def renew_policy(

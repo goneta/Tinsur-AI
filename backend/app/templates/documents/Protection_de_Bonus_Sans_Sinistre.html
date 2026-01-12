@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protection de Bonus Sans Sinistre</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background-color: #fff;
+        }
+        h1 {
+            color: #003366;
+            font-size: 20px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #003366;
+            padding-bottom: 10px;
+        }
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        .highlight {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #003366;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #003366;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+        }
+        .note {
+            font-style: italic;
+            margin: 20px 0;
+        }
+        .download-btn {
+            background-color: #003366;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px 0;
+            display: block;
+        }
+        .download-btn:hover {
+            background-color: #005599;
+        }
+    </style>
+</head>
+<body>
+    <button class="download-btn" onclick="downloadPDF()">📥 Télécharger en PDF</button>
+
+    <h1>Informations sur la Protection de Bonus Sans Sinistre</h1>
+    
+    <p>La protection du bonus sans sinistre ne protège pas le prix global de votre police d'assurance. Le prix de votre police d'assurance peut augmenter suite à un accident même si vous n'êtes pas responsable.</p>
+    
+    <p>La protection du bonus sans sinistre vous permet de faire une ou plusieurs réclamations avant que votre nombre d'années de bonus sans sinistre ne diminue. Veuillez consulter les procédures de réduction progressive pour plus de détails.</p>
+    
+    <div class="highlight">
+        <p><strong>Vous avez acheté la Protection BSS. Cela a augmenté votre prime de <devise><cout_protection_bss>.</strong></p>
+        <p><strong>Vous avez déclaré un BSS actuel de <annees_bss_actuel> ans.</strong></p>
+    </div>
+    
+    <p>Les tableaux ci-dessous montrent : (i) la réduction moyenne du bonus sans sinistre accordée aux assurés automobile de <nom_entite_souscripteur> l'année dernière selon leur nombre d'années de BSS ; et (ii) ce qui arriverait à vos années de BSS si vous deviez faire une ou plusieurs réclamations au cours des 12 prochains mois avec et sans cette protection.</p>
+    
+    <h2 style="color: #003366; font-size: 16px; margin-top: 30px;">Nombre d'Années de Bonus Sans Sinistre</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre d'Années de Bonus Sans Sinistre</th>
+                <th>Réduction BSS Moyenne en <annee_reference_bss></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Un An de BSS</td>
+                <td><reduction_bss_1_an>%</td>
+            </tr>
+            <tr>
+                <td>Deux Ans de BSS</td>
+                <td><reduction_bss_2_ans>%</td>
+            </tr>
+            <tr>
+                <td>Trois Ans de BSS</td>
+                <td><reduction_bss_3_ans>%</td>
+            </tr>
+            <tr>
+                <td>Quatre Ans de BSS</td>
+                <td><reduction_bss_4_ans>%</td>
+            </tr>
+            <tr>
+                <td>Cinq Ans de BSS</td>
+                <td><reduction_bss_5_ans>%</td>
+            </tr>
+            <tr>
+                <td>Six Ans de BSS</td>
+                <td><reduction_bss_6_ans>%</td>
+            </tr>
+            <tr>
+                <td>Sept Ans de BSS</td>
+                <td><reduction_bss_7_ans>%</td>
+            </tr>
+            <tr>
+                <td>Huit Ans de BSS</td>
+                <td><reduction_bss_8_ans>%</td>
+            </tr>
+            <tr>
+                <td>Neuf Ans ou Plus de BSS</td>
+                <td><reduction_bss_9_ans_plus>%</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <h2 style="color: #003366; font-size: 16px; margin-top: 30px;">Procédures de Réduction Progressive du Bonus Sans Sinistre</h2>
+    <table>
+        <thead>
+            <tr>
+                <th colspan="2">Nombre d'Années de Bonus Sans Sinistre à ce renouvellement : <annees_bss_actuel></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td colspan="2" style="background-color: #e6f2ff; font-weight: bold;">Bonus Sans Sinistre à la Prochaine Date de Renouvellement SANS Protection BSS</td>
+            </tr>
+            <tr>
+                <td>1 sinistre au cours des 12 prochains mois</td>
+                <td><bss_apres_1_sinistre_sans_protection> Ans</td>
+            </tr>
+            <tr>
+                <td>2 sinistres au cours des 12 prochains mois</td>
+                <td><bss_apres_2_sinistres_sans_protection> An<span style="display: <affichage_pluriel_2_sinistres_sans_protection>;">s</span></td>
+            </tr>
+            <tr>
+                <td>3 sinistres au cours des 12 prochains mois</td>
+                <td><bss_apres_3_sinistres_sans_protection> An</td>
+            </tr>
+            <tr>
+                <td>4 sinistres au cours des 12 prochains mois</td>
+                <td><bss_apres_4_sinistres_sans_protection> An</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="background-color: #e6f2ff; font-weight: bold;">Bonus Sans Sinistre à la Prochaine Date de Renouvellement AVEC Protection BSS</td>
+            </tr>
+            <tr>
+                <td>1 sinistre sur toute période de <periode_protection_bss> ans</td>
+                <td><bss_apres_1_sinistre_avec_protection> Ans</td>
+            </tr>
+            <tr>
+                <td>2 sinistres sur toute période de <periode_protection_bss> ans</td>
+                <td><bss_apres_2_sinistres_avec_protection> Ans</td>
+            </tr>
+            <tr>
+                <td>3 sinistres sur toute période de <periode_protection_bss> ans</td>
+                <td><bss_apres_3_sinistres_avec_protection> Ans</td>
+            </tr>
+            <tr>
+                <td>4 sinistres sur toute période de <periode_protection_bss> ans</td>
+                <td><bss_apres_4_sinistres_avec_protection> An<span style="display: <affichage_pluriel_4_sinistres_avec_protection>;">s</span></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <p class="note"><strong>Veuillez noter :</strong> les réclamations relevant de certaines sections de la police peuvent ne pas avoir d'impact sur le BSS. Veuillez vous référer au libellé de votre police pour plus de détails.</p>
+    
+    <div class="footer">
+        <p><strong>Police Souscrite Par :</strong><br>
+        <nom_entite_souscripteur><br>
+        <nom_police_premium></p>
+        
+        <p><strong>Numéro de Police :</strong> <numero_police><br>
+        <strong>Opérateur :</strong> <nom_operateur_systeme><br>
+        <strong>ID du Courtier :</strong> <id_courtier><br>
+        <strong>Version CDL :</strong> <version_cdl><br>
+        <strong>Client :</strong> <reference_client_complete><br>
+        <strong>Imprimé :</strong> <date_impression> @ <heure_impression> <reference_template_document></p>
+        
+        <p>© Copyright <annee_copyright> <nom_systeme_fournisseur></p>
+    </div>
+
+    <script>
+        function downloadPDF() {
+            // Create a clean version for download
+            const content = document.body.innerHTML;
+            const printWindow = window.open('', '', 'height=800,width=800');
+            printWindow.document.write('<html><head><title>Protection de Bonus Sans Sinistre</title>');
+            printWindow.document.write('<style>');
+            printWindow.document.write(`
+                body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                h1 { color: #003366; font-size: 20px; border-bottom: 2px solid #003366; padding-bottom: 10px; }
+                h2 { color: #003366; font-size: 16px; margin-top: 30px; }
+                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                th { background-color: #003366; color: white; }
+                tr:nth-child(even) { background-color: #f9f9f9; }
+                .highlight { background-color: #f0f0f0; padding: 10px; margin: 15px 0; border-left: 4px solid #003366; }
+                .note { font-style: italic; margin: 20px 0; }
+                .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; }
+                .download-btn { display: none; }
+            `);
+            printWindow.document.write('</style></head><body>');
+            printWindow.document.write(content);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            
+            setTimeout(() => {
+                printWindow.print();
+            }, 250);
+        }
+    </script>
+</body>
+</html>

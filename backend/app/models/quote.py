@@ -50,7 +50,7 @@ class Quote(Base):
     risk_score = Column(Numeric(5, 2))
     
     # Status
-    status = Column(String(50), default='draft')  # 'draft', 'sent', 'accepted', 'rejected', 'expired'
+    status = Column(String(50), default='draft')  # 'draft', 'submitted', 'under_review', 'approved', 'rejected', 'expired'
     valid_until = Column(Date)
     valid_for_days = Column(Integer, default=30)
     

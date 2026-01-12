@@ -38,7 +38,7 @@ class Policy(Base):
     end_date = Column(Date, nullable=False)
     
     # Status
-    status = Column(String(50), default='active', index=True)  # 'active', 'expired', 'canceled', 'lapsed'
+    status = Column(String(50), default='active', index=True)  # 'pending_activation', 'active', 'suspended', 'cancelled', 'expired', 'renewed'
     cancellation_reason = Column(Text)
     auto_renew = Column(Boolean, default=False)
     

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document d'Information Produit d'Assurance Automobile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .document {
+            background-color: white;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #00539f;
+            color: white;
+            padding: 20px;
+            margin: -30px -30px 20px -30px;
+        }
+        h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        h2 {
+            color: #00539f;
+            font-size: 18px;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+        .company-info {
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .checkmark {
+            color: #009900;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        .cross {
+            color: #cc0000;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        .warning {
+            color: #ff6600;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        li {
+            margin-bottom: 8px;
+            padding-left: 25px;
+            position: relative;
+        }
+        .intro-text {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-left: 4px solid #00539f;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .policy-dates {
+            background-color: #e6f2ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .footer {
+            font-size: 11px;
+            color: #666;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ccc;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="document">
+        <div class="header">
+            <h1>Assurance Automobile</h1>
+            <div class="company-info">
+                <strong>Compagnie:</strong> <compagnie_dassurance><br>
+                <strong>Produit:</strong> Assurance Automobile <nom_police_premium>
+            </div>
+        </div>
+
+        <div class="intro-text">
+            <strong>Document d'Information Produit d'Assurance</strong><br><br>
+            Ceci est un résumé des garanties et exclusions disponibles dans le cadre de la Police d'Assurance Automobile <compagnie_dassurance>. Il ne comprend pas l'intégralité des avantages, limites et exclusions de la police. Les conditions générales complètes se trouvent dans le livret de la police d'assurance automobile disponible sur notre site Web et qui sera fourni à la conclusion du contrat. Ce document doit être lu conjointement avec votre tableau des garanties, votre certificat d'assurance automobile et votre déclaration des faits.
+        </div>
+
+        <h2>Quel est ce type d'assurance?</h2>
+        <p>Ce produit est une police d'assurance automobile <type_police_description>. Ce produit couvrira la responsabilité civile que vous encourez en cas de décès ou de blessure d'une personne et/ou de dommages matériels causés par ou résultant de l'utilisation de votre voiture. <description_couverture_principale></p>
+
+        <div class="grid">
+            <div class="section">
+                <h2>Qu'est-ce qui est assuré?</h2>
+                
+                <h3 style="color: #333; font-size: 16px; margin-top: 15px;">Couverture pour votre véhicule</h3>
+                <ul>
+                    <li><span class="checkmark">✓</span> Jusqu'à <limite_valeur_vehicule> pour les dommages à la voiture causés par accident, dommage malveillant, vandalisme; ou dommages causés par incendie, vol ou tentative de vol;</li>
+                    <li><span class="checkmark">✓</span> <description_voiture_courtoisie>;</li>
+                    <li><span class="checkmark">✓</span> <nombre_jours_couverture_ue> jours de couverture pour conduire dans l'UE.</li>
+                </ul>
+
+                <h3 style="color: #333; font-size: 16px; margin-top: 15px;">Responsabilité du titulaire de la police ou d'autres personnes</h3>
+                <ul>
+                    <li><span class="checkmark">✓</span> <devise><limite_dommages_materiels_tiers> pour les dommages matériels aux tiers;</li>
+                    <li><span class="checkmark">✓</span> <couverture_deces_blessures_tiers> pour le décès ou les blessures de tiers.</li>
+                </ul>
+
+                <h3 style="color: #333; font-size: 16px; margin-top: 15px;">Également inclus</h3>
+                <ul>
+                    <li><span class="checkmark">✓</span> <devise><montant_remplacement_cles> pour le coût de remplacement des clés volées;</li>
+                    <li><span class="checkmark">✓</span> <devise><montant_accident_corporel> de couverture d'accident corporel pour le titulaire de la police et son partenaire;</li>
+                    <li><span class="checkmark">✓</span> Jusqu'à <devise><montant_frais_medicaux> de frais médicaux pour chaque personne blessée dans la voiture.</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>Qu'est-ce qui n'est pas assuré?</h2>
+                <ul>
+                    <li><span class="cross">✗</span> Dommages ou vol si votre voiture est laissée déverrouillée et qu'il n'y a personne dedans;</li>
+                    <li><span class="cross">✗</span> Sinistres survenant lorsqu'un conducteur désigné conduit illégalement sous l'influence de l'alcool ou de drogues;</li>
+                    <li><span class="cross">✗</span> Perte ou dommage à la voiture si, au moment de l'incident, elle était conduite ou utilisée sans votre permission par un membre de votre famille ou quelqu'un qui vit avec vous;</li>
+                    <li><span class="cross">✗</span> Dommage délibéré à la voiture par toute personne assurée par la police;</li>
+                    <li><span class="cross">✗</span> Équipement non fixé de façon permanente à la voiture;</li>
+                    <li><span class="cross">✗</span> Vol de clés laissées dans ou sur la voiture au moment du vol;</li>
+                    <li><span class="cross">✗</span> Coûts de main-d'œuvre si la voiture doit être réparée suite à une panne;</li>
+                    <li><span class="cross">✗</span> Frais supplémentaires si les pièces de rechange ne sont pas disponibles au <zones_geographiques_disponibilite_pieces>;</li>
+                    <li><span class="cross">✗</span> <exclusion_equipement_divertissement>;</li>
+                    <li><span class="cross">✗</span> <exclusion_remplacement_voiture_neuve>;</li>
+                    <li><span class="cross">✗</span> <exclusion_tiers_non_assure>;</li>
+                    <li><span class="cross">✗</span> <exclusion_parebrise>;</li>
+                    <li><span class="cross">✗</span> <exclusion_toits_ouvrants>;</li>
+                    <li><span class="cross">✗</span> <exclusion_frais_voyage>;</li>
+                    <li><span class="cross">✗</span> Accident corporel en cas de non-port de la ceinture de sécurité ou de tentative de suicide;</li>
+                    <li><span class="cross">✗</span> <exclusion_effets_personnels>;</li>
+                    <li><span class="cross">✗</span> <exclusion_voiture_courtoisie_conditions>;</li>
+                    <li><span class="cross">✗</span> <exclusion_couts_carburant_voyage>;</li>
+                    <li><span class="cross">✗</span> Incidents en dehors du <zones_geographiques_couverture_voyage> dans le cadre de la couverture voyage ultérieur;</li>
+                    <li><span class="cross">✗</span> Perte ou dommage à la voiture suite à un mauvais carburant.</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>Où suis-je couvert?</h2>
+        <ul>
+            <li><span class="checkmark">✓</span> <zones_geographiques_couverture_principale>. <zones_geographiques_couverture_ue> pour <nombre_jours_couverture_ue> jours de couverture complète et la couverture minimale requise par la suite.</li>
+        </ul>
+
+        <h2>Quelles sont mes obligations?</h2>
+        <ul style="list-style: disc; padding-left: 25px;">
+            <li>Il est de votre responsabilité de vous assurer que toutes les informations fournies par vous, ou qui ont été fournies en votre nom, sont véridiques et complètes. Vous devez vérifier tous les documents attentivement pour vous assurer que la couverture répond à vos besoins. S'il y a des erreurs sur votre déclaration des faits ou tableau des garanties, ou si l'information n'est pas correcte, votre police peut être annulée. Vous devez contacter <compagnie_dassurance> si vous avez un doute que les détails de votre police sont corrects.</li>
+            <li>Vous devez informer <compagnie_dassurance> dès que pratiquement possible de tout changement aux informations que vous avez fournies qui sont détaillées dans votre déclaration des faits, tableau des garanties et certificat d'assurance automobile.</li>
+            <li>Lorsque nous vous envoyons votre invitation de renouvellement, vous devriez vérifier tous les détails, y compris si votre police sera automatiquement renouvelée. Vous pouvez vous désinscrire du renouvellement automatique à tout moment en contactant <compagnie_dassurance>.</li>
+            <li>Si vous choisissez de payer votre assurance par versements mensuels, vous devrez signer et retourner un formulaire de Convention de Crédit à la Consommation dans l'enveloppe pré-adressée qui sera dans votre pack de bienvenue.</li>
+            <li>Si vous souhaitez faire une réclamation, vous devez nous informer dans les <delai_declaration_sinistre> jours suivant la connaissance de tout incident pouvant donner lieu à une réclamation dans le cadre de cette police, même si vous n'avez pas l'intention de réclamer pour votre propre voiture. Les réclamations pour vol de clés doivent être signalées à <compagnie_dassurance> et à la police dans les <delai_declaration_vol_cles> heures.</li>
+            <li>Vous devez maintenir votre voiture en bon état de fonctionnement et prendre des mesures pour protéger la voiture et tout ce qui y est attaché contre la perte ou les dommages.</li>
+        </ul>
+
+        <h2>Quand et comment dois-je payer?</h2>
+        <p>Vous pouvez payer votre prime en totalité par <moyens_paiement_integral> ou nous pouvons fournir l'option de payer par versements mensuels par <moyen_paiement_mensuel>.</p>
+        <p>Si vous choisissez de payer par versements mensuels, vous devrez peut-être payer un acompte en utilisant votre <moyens_paiement_acompte>, suivi de paiements mensuels par <moyen_paiement_mensuel>, répartis sur la durée de la police. En payant mensuellement, vous conclurez une Convention de Crédit à la Consommation et des intérêts seront facturés au taux indiqué dans votre devis.</p>
+
+        <h2>Y a-t-il des restrictions sur la couverture?</h2>
+        <ul>
+            <li><span class="warning">!</span> <restriction_accident_corporel>;</li>
+            <li><span class="warning">!</span> Nous ne couvrirons pas la première partie de toute réclamation que vous avez accepté de payer (la franchise). Le montant de la franchise peut différer selon le type de réclamation et qui conduit.</li>
+        </ul>
+
+        <h2>Comment puis-je annuler le contrat?</h2>
+        <p>Vous pouvez annuler votre assurance automobile à tout moment en contactant <compagnie_dassurance>.</p>
+        <p>Vous disposez d'un délai de rétractation de <delai_retractation> jours à compter de la réception de votre livret de police pour annuler la couverture. Pour exercer votre droit d'annulation pendant le délai de rétractation, veuillez contacter <compagnie_dassurance>, qui remboursera votre prime pour le temps restant sur votre police, moins les frais d'annulation, tant qu'aucune réclamation n'a été faite.</p>
+        <p>Si vous annulez votre police après <delai_retractation> jours, <compagnie_dassurance> remboursera toute prime payée pour la période d'assurance restante, moins les frais d'annulation, tant qu'aucune réclamation n'a été faite dans la période d'assurance actuelle.</p>
+        <p>Si vous annulez votre assurance automobile, toutes les couvertures optionnelles seront automatiquement annulées.</p>
+
+        <div class="policy-dates">
+            <h2 style="margin-top: 0;">Quand la couverture commence-t-elle et se termine-t-elle?</h2>
+            <p style="margin-bottom: 0;">Votre police commencera le <strong><date_effet_police></strong> et se terminera le <strong><date_expiration_police></strong></p>
+        </div>
+
+        <div class="footer">
+            <p><strong><nom_entite_legale></strong> (opérant sous le nom de <compagnie_dassurance>) enregistrée au <pays_enregistrement>, est autorisée par la <autorite_prudentielle> et réglementée par la <autorite_conduite_financiere> et la <autorite_prudentielle>. Le numéro d'enregistrement des services financiers de <compagnie_dassurance> est <numero_enregistrement_services_financiers>.</p>
+            <p style="margin-top: 10px;"><reference_document_produit></p>
+        </div>
+    </div>
+</body>
+</html>
