@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional
 from pydantic import BaseModel
 
 class TranslationBase(BaseModel):
@@ -13,6 +13,7 @@ class TranslationCreate(TranslationBase):
 
 class TranslationUpdate(BaseModel):
     value: Optional[str] = None
+    group: Optional[str] = None
     is_active: Optional[bool] = None
 
 class TranslationResponse(TranslationBase):
@@ -20,6 +21,3 @@ class TranslationResponse(TranslationBase):
 
     class Config:
         from_attributes = True
-
-# Map for frontend: {"key": "value"}
-TranslationMap = Dict[str, str]
