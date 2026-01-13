@@ -14,16 +14,29 @@ from app.core.dependencies import get_current_user, require_agent, get_current_a
 
 from app.schemas.client import (
     ClientCreate, ClientUpdate, ClientResponse, 
-    ClientAutomobileUpdate, ClientHousingUpdate, ClientHealthUpdate, ClientLifeUpdate
+    ClientAutomobileUpdate, ClientHousingUpdate, ClientHealthUpdate, ClientLifeUpdate,
+    ClientAutomobileCreate, ClientAutomobileResponse,
+    ClientDriverCreate, ClientDriverResponse
 )
 from app.repositories.client_repository import ClientRepository
-from app.models.client_details import ClientAutomobile, ClientHousing, ClientHealth, ClientLife
+from app.models.client_details import ClientAutomobile, ClientHousing, ClientHealth, ClientLife, ClientDriver
 from app.models.client import Client
 from app.models.user import User
 from app.core.agent_client import AgentClient
 import json
 
 router = APIRouter()
+
+@router.get("/me", response_model=ClientResponse)
+async def get_current_client(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Get current client information based on logged in user."""
+    client = db.query(Client).filter(Client.user_id == current_user.id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Client record not found for this user")
+    return client
 
 @router.get("/debug-auth")
 def debug_auth(
@@ -59,21 +72,10 @@ async def create_client(
     else:
         # Unauthenticated flow: Require company_id in payload
         if not client_data.company_id:
-            # Fallback: Try to find a default company or raise error. 
-            # For now, we must raise error if we can't contextually assign a company.
-            # But the user asked to "validate". 
-            
-            # Temporary: Allow creating for the FIRST company found if none provided?
-            # No, that's unsafe. But the user said "make it work".
-            # Better: Check if payload has company_id. If not, Error.
             raise HTTPException(
                 status_code=400, 
                 detail="Authentication failed and no company_id provided. For public submissions, please include company_id."
             )
-        
-        # If created_by is missing, leave it None (system created)
-    
-    repo = ClientRepository(db)
     
     repo = ClientRepository(db)
     client = repo.create(client_data)
@@ -95,7 +97,7 @@ async def create_client(
         response = await agent_client.send_message(
             "compliance_aml_agent",
             json.dumps(screening_payload),
-            context={"company_id": str(current_user.company_id)}
+            context={"company_id": str(current_user.company_id)} if current_user else {}
         )
         
         if "messages" in response and response["messages"]:
@@ -106,10 +108,8 @@ async def create_client(
             client.is_high_risk = compliance_data.get("is_high_risk", False)
             client.compliance_notes = compliance_data.get("notes", "No notes provided.")
             
-            # If flagged, change status to suspended or similar
             if client.compliance_status == "flagged" or client.is_high_risk:
                 client.status = "suspended"
-                print(f"Client {client.id} SUSPENDED for compliance review.")
             
             db.commit()
             db.refresh(client)
@@ -131,15 +131,8 @@ async def get_clients(
     current_user: Optional[User] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Get all clients.
-    Publicly accessible (returns all or demo data) if not authenticated, per user request.
-    """
+    """Get all clients."""
     repo = ClientRepository(db)
-    
-    # User requested Bypass: If no user, fetch for Demo Company or All.
-    # Using specific Demo Company ID 1e47dd3a... known from logs if we wanted strictness.
-    # But repo now handles None as "All".
     company_id = current_user.company_id if current_user else None
     
     clients = repo.get_all(
@@ -167,12 +160,13 @@ async def count_clients(
 @router.get("/{client_id}", response_model=ClientResponse)
 async def get_client(
     client_id: uuid.UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
     """Get a specific client by ID."""
     repo = ClientRepository(db)
-    client = repo.get_by_id(client_id, current_user.company_id)
+    # If unauth, we might restrict this later. For now, allow (demo purposes)
+    client = repo.get_by_id(client_id, current_user.company_id if current_user else None)
     
     if not client:
         raise HTTPException(
@@ -230,7 +224,7 @@ async def update_automobile_details(
     current_user: User = Depends(require_agent),
     db: Session = Depends(get_db)
 ):
-    """Update client automobile details."""
+    """Update primary client automobile details."""
     repo = ClientRepository(db)
     client = repo.get_by_id(client_id, current_user.company_id)
     if not client:
@@ -245,8 +239,68 @@ async def update_automobile_details(
         setattr(auto_details, field, value)
         
     db.commit()
-    db.refresh(client) # Refresh client to load relationship
+    db.refresh(client)
     return {"status": "success", "data": client.automobile_details}
+
+@router.post("/{client_id}/vehicles", response_model=ClientAutomobileResponse)
+async def create_client_vehicle(
+    client_id: uuid.UUID,
+    vehicle_data: ClientAutomobileCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Add a new vehicle to the client."""
+    repo = ClientRepository(db)
+    
+    # Auth Check
+    if current_user.role == 'client':
+        # Verify the user is the client themselves
+        client = db.query(Client).filter(Client.user_id == current_user.id).first()
+        if not client or client.id != client_id:
+             raise HTTPException(status_code=403, detail="Not authorized to add vehicles for this client")
+        company_id = client.company_id
+    else:
+        # Verify agent has access to this client's company
+        company_id = current_user.company_id
+        
+    client = repo.get_by_id(client_id, company_id)
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+        
+    vehicle = ClientAutomobile(**vehicle_data.dict(), client_id=client_id)
+    db.add(vehicle)
+    db.commit()
+    db.refresh(vehicle)
+    return vehicle
+
+@router.post("/{client_id}/drivers", response_model=ClientDriverResponse)
+async def create_client_driver(
+    client_id: uuid.UUID,
+    driver_data: ClientDriverCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Add a new driver to the client."""
+    repo = ClientRepository(db)
+
+    # Auth Check
+    if current_user.role == 'client':
+        client = db.query(Client).filter(Client.user_id == current_user.id).first()
+        if not client or client.id != client_id:
+             raise HTTPException(status_code=403, detail="Not authorized to add drivers for this client")
+        company_id = client.company_id
+    else:
+        company_id = current_user.company_id
+
+    client = repo.get_by_id(client_id, company_id)
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+        
+    driver = ClientDriver(**driver_data.dict(), client_id=client_id)
+    db.add(driver)
+    db.commit()
+    db.refresh(driver)
+    return driver
 
 
 @router.put("/{client_id}/housing")
@@ -326,9 +380,6 @@ async def update_life_details(
     db.refresh(client)
     return {"status": "success", "data": client.life_details}
 
-# Uploads Configuration
-# clients.py is in backend/app/api/v1/endpoints/
-# We want backend/uploads/clients
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads", "clients")
 if not os.path.exists(UPLOAD_DIR):
@@ -350,25 +401,18 @@ def upload_client_profile_picture(
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
 
-    # Validate file type
     if not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="File must be an image")
 
     try:
-        # Create unique filename
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"client_{client_id}_{timestamp}_{file.filename}"
         file_path = os.path.join(UPLOAD_DIR, filename)
         
-        # Save file
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
             
-        # Update client record
         relative_path = f"/uploads/clients/{filename}"
-        
-        # Use repository or direct DB update. Repository update expects schema.
-        # Direct update is simpler for single field.
         client.profile_picture = relative_path
         db.commit()
         db.refresh(client)

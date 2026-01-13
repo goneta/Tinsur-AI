@@ -1,0 +1,10 @@
+﻿--- Companies ---
+('7564f5f1-cbd7-49c6-848a-3f55205e6415', 'Demo Insurance Co', 'demo')
+('905da5f0-9d4f-416b-9144-217caa5f04b9', 'Demo Insurance Co', 'demoinsurance.com')
+
+--- Admin User ---
+('9fec9160-4824-44a1-9fdf-941c40be149e', 'admin@demoinsurance.com', '7564f5f1-cbd7-49c6-848a-3f55205e6415', 'super_admin')
+
+--- Client Counts per Company ---
+('7564f5f1-cbd7-49c6-848a-3f55205e6415', 26)
+('905da5f0-9d4f-416b-9144-217caa5f04b9', 20)

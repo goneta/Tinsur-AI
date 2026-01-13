@@ -2,7 +2,6 @@
 User model for authentication and authorization.
 """
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text, Numeric
-from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Text, Numeric
 from sqlalchemy.orm import relationship
 import uuid
 from app.core.guid import GUID

@@ -74,10 +74,13 @@ class Client(Base):
     creator = relationship("User", foreign_keys=[created_by])
     
     # Detail Relationships (One-to-One)
-    automobile_details = relationship("ClientAutomobile", uselist=False, back_populates="client", cascade="all, delete-orphan")
     housing_details = relationship("ClientHousing", uselist=False, back_populates="client", cascade="all, delete-orphan")
     health_details = relationship("ClientHealth", uselist=False, back_populates="client", cascade="all, delete-orphan")
     life_details = relationship("ClientLife", uselist=False, back_populates="client", cascade="all, delete-orphan")
+    
+    # Detail Relationships (One-to-Many)
+    automobile_details = relationship("ClientAutomobile", uselist=True, back_populates="client", cascade="all, delete-orphan")
+    drivers = relationship("ClientDriver", uselist=True, back_populates="client", cascade="all, delete-orphan")
     
     def __repr__(self):
         if self.client_type == 'individual':

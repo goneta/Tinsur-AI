@@ -28,7 +28,7 @@ from app.models.claim import Claim
 from app.models.co_insurance import CoInsuranceShare
 from app.models.share_code import ShareCode
 from app.models.system_settings import SystemSettings, AiUsageLog
-from app.models.client_details import ClientAutomobile, ClientHousing, ClientHealth, ClientLife
+from app.models.client_details import ClientAutomobile, ClientHousing, ClientHealth, ClientLife, ClientDriver
 from app.models.agent_memory import AgentMemory
 from app.models.pos_location import POSLocation
 from app.models.commission import Commission
@@ -70,6 +70,7 @@ __all__ = [
     "SystemSettings",
     "AiUsageLog",
     "ClientAutomobile",
+    "ClientDriver",
     "ClientHousing",
     "ClientHealth",
     "ClientLife",

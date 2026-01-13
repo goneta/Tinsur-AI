@@ -12,6 +12,9 @@ from app.core.config import settings
 from sqlalchemy.pool import NullPool
 
 # PostgreSQL / SQLite
+print(f"DB_URL={settings.DATABASE_URL}")
+import traceback
+traceback.print_stack()
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,

@@ -12,6 +12,7 @@ from app.models.quote import Quote
 from app.models.claim import Claim
 from app.models.payment import Payment
 from app.models.policy_type import PolicyType
+from app.models.client_details import ClientAutomobile
 from app.core.security import get_password_hash
 
 # Helper for random strings
@@ -170,6 +171,46 @@ def seed_data():
             db.refresh(c)
         print(f"Ensured {len(clients)} client profiles.")
 
+        # 3.5 Create Vehicles (1-2 per client)
+        MAKES_MODELS = {
+            "Toyota": ["Corolla", "Camry", "Rav4", "Hilux"],
+            "Honda": ["Civic", "Accord", "CR-V"],
+            "Hyundai": ["Elantra", "Tucson", "Santa Fe"],
+            "Mercedes-Benz": ["C-Class", "E-Class", "GLC"],
+            "BMW": ["3 Series", "5 Series", "X5"]
+        }
+        FUEL_TYPES = ["petrol", "diesel", "hybrid", "electric"]
+        USAGES = ["private", "commercial", "taxi", "delivery"]
+        COLORS = ["White", "Black", "Silver", "Blue", "Red", "Grey"]
+        LOCATIONS = ["Driveway", "Garage", "Street", "Secure Lot"]
+
+        all_vehicles = []
+        for client in clients:
+            for i in range(random.randint(1, 2)):
+                make = random.choice(list(MAKES_MODELS.keys()))
+                model = random.choice(MAKES_MODELS[make])
+                vehicle = ClientAutomobile(
+                    client_id=client.id,
+                    vehicle_registration=f"{random_string(3).upper()}-{random.randint(100,999)}",
+                    vehicle_make=make,
+                    vehicle_model=model,
+                    vehicle_year=random.randint(2010, 2024),
+                    vehicle_value=random.randint(3000000, 20000000),
+                    vehicle_mileage=random.uniform(1000, 150000),
+                    engine_capacity_cc=random.choice([1200, 1600, 1800, 2000, 2400, 3000]),
+                    fuel_type=random.choice(FUEL_TYPES),
+                    vehicle_usage=random.choice(USAGES),
+                    seat_count=random.choice([2, 5, 7]),
+                    chassis_number=random_string(17).upper(),
+                    vehicle_color=random.choice(COLORS),
+                    country_of_registration="Cameroon",
+                    parked_location=random.choice(LOCATIONS)
+                )
+                db.add(vehicle)
+                all_vehicles.append(vehicle)
+        db.commit()
+        print(f"Ensured {len(all_vehicles)} vehicles created.")
+
         # 4. Create Policies, Quotes, Claims
         for client in clients:
             # Each client gets 1-2 quotes/policies
@@ -229,7 +270,7 @@ def seed_data():
                             claim_amount=round(premium * random.uniform(0.1, 0.5), 0),
                             status=random.choice(["submitted", "in_review", "approved"]),
                             incident_date=date.today() - timedelta(days=random.randint(1, 15)),
-                            description="Accident mineur ou dommage matériel."
+                            incident_description="Accident mineur ou dommage matériel."
                         )
                         db.add(claim)
                     

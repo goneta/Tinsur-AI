@@ -14,39 +14,40 @@ class ClientAutomobile(Base):
     __tablename__ = "client_automobile"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"), unique=True)
+    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"))
     
     # Vehicle Details
-    vehicle_registration = Column(String(50))
-    vehicle_make = Column(String(50))
-    vehicle_model = Column(String(50))
-    vehicle_year = Column(Integer)
-    vehicle_value = Column(Numeric(15, 2))
-    vehicle_mileage = Column(Float)
-    engine_capacity_cc = Column(Integer)
-    fuel_type = Column(String(50)) # petrol, diesel, electric, hybrid
-    vehicle_usage = Column(String(50)) # private, commercial, taxi, delivery
-    seat_count = Column(Integer)
-    chassis_number = Column(String(100)) # VIN
-    vehicle_color = Column(String(50))
-    country_of_registration = Column(String(100))
+    vehicle_registration = Column(String(50), nullable=True)
+    vehicle_make = Column(String(50), nullable=True)
+    vehicle_model = Column(String(50), nullable=True)
+    vehicle_year = Column(Integer, nullable=True)
+    vehicle_value = Column(Numeric(15, 2), nullable=True)
+    vehicle_mileage = Column(Float, nullable=True)
+    engine_capacity_cc = Column(Integer, nullable=True)
+    fuel_type = Column(String(50), nullable=True) # petrol, diesel, electric, hybrid
+    vehicle_usage = Column(String(50), nullable=True) # private, commercial, taxi, delivery
+    seat_count = Column(Integer, nullable=True)
+    chassis_number = Column(String(100), nullable=True) # VIN
+    vehicle_color = Column(String(50), nullable=True)
+    country_of_registration = Column(String(100), nullable=True)
     registration_document_url = Column(String(500), nullable=True)
+    parked_location = Column(String(100), nullable=True)
 
     
     # Driver Details (Main Driver)
-    driver_name = Column(String(100))
-    driver_dob = Column(Date)
-    license_number = Column(String(100))
-    license_issue_date = Column(Date)
-    license_expiry_date = Column(Date)
-    license_category = Column(String(50))
-    driving_experience_years = Column(Integer)
+    driver_name = Column(String(100), nullable=True)
+    driver_dob = Column(Date, nullable=True)
+    license_number = Column(String(100), nullable=True)
+    license_issue_date = Column(Date, nullable=True)
+    license_expiry_date = Column(Date, nullable=True)
+    license_category = Column(String(50), nullable=True)
+    driving_experience_years = Column(Integer, nullable=True)
     
     # History
-    accident_count = Column(Integer, default=0)
-    claim_count = Column(Integer, default=0)
-    no_claim_bonus_status = Column(String(50))
-    previous_insurer = Column(String(100))
+    accident_count = Column(Integer, default=0, nullable=True)
+    claim_count = Column(Integer, default=0, nullable=True)
+    no_claim_bonus_status = Column(String(50), nullable=True)
+    previous_insurer = Column(String(100), nullable=True)
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -151,3 +152,27 @@ class ClientLife(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     client = relationship("Client", back_populates="life_details")
+
+class ClientDriver(Base):
+    """Driver details associated with a client account."""
+    __tablename__ = "client_drivers"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"))
+    
+    full_name = Column(String(100))
+    phone_number = Column(String(50))
+    address = Column(String(255))
+    license_number = Column(String(100))
+    license_issue_date = Column(Date)
+    employment_status = Column(String(50))
+    marital_status = Column(String(50))
+    number_of_children = Column(Integer, default=0)
+    photo_url = Column(String(500), nullable=True)
+    
+    is_main_driver = Column(Boolean, default=False)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    client = relationship("Client", back_populates="drivers")

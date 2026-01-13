@@ -175,16 +175,32 @@ class AuthService:
              # Should be caught by authenticate_user raising exception, but just in case
              raise HTTPException(status_code=401, detail="Authentication failed")
         
+        print(f"DEBUG: Creating tokens for user {user.id}")
         tokens = self.create_tokens(user)
+        print("DEBUG: Tokens created successfully")
         
-        return {
-            **tokens.dict(),
-            "user": {
-                "id": str(user.id),
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "role": user.role,
-                "company_id": str(user.company_id)
+        print("DEBUG: Constructing response dict")
+        try:
+            res = {
+                **tokens.dict(),
+                "user": {
+                    "id": str(user.id),
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "role": user.role,
+                    "company_id": str(user.company_id),
+                    "is_active": user.is_active,
+                    "is_verified": user.is_verified,
+                    "mfa_enabled": user.mfa_enabled,
+                    "created_at": user.created_at.isoformat() if (user.created_at and hasattr(user.created_at, 'isoformat')) else str(user.created_at) if user.created_at else None,
+                    "updated_at": user.updated_at.isoformat() if (user.updated_at and hasattr(user.updated_at, 'isoformat')) else str(user.updated_at) if user.updated_at else None,
+                    "profile_picture": user.profile_picture,
+                    "pos_location_id": str(user.pos_location_id) if user.pos_location_id else None
+                }
             }
-        }
+            print("DEBUG: Response dict constructed")
+            return res
+        except Exception as e:
+            print(f"DEBUG: Error in Constructing response dict: {str(e)}")
+            raise e

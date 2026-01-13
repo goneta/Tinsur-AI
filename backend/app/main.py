@@ -68,6 +68,8 @@ app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 @app.on_event("startup")
 async def startup_event():
     """Run on application startup."""
+    # Ensure all models are registered
+    import app.models
     # Create database tables
     Base.metadata.create_all(bind=engine)
     

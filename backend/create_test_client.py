@@ -18,7 +18,7 @@ def create_test_client_raw():
             company_id = company_row[0]
             print(f"Using Company ID: {company_id}")
 
-            email = "client@example.com"
+            email = "test_client@tinsur.ai"
             password = "password123"
             hashed_password = get_password_hash(password)
             

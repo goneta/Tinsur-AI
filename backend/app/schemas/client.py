@@ -24,6 +24,7 @@ class ClientAutomobileBase(BaseModel):
     vehicle_color: Optional[str] = None
     country_of_registration: Optional[str] = None
     registration_document_url: Optional[str] = None
+    parked_location: Optional[str] = None
     
     driver_name: Optional[str] = None
     driver_dob: Optional[date] = None
@@ -152,6 +153,32 @@ class ClientLifeResponse(ClientLifeBase):
         from_attributes = True
 
 
+class ClientDriverBase(BaseModel):
+    full_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    address: Optional[str] = None
+    license_number: Optional[str] = None
+    license_issue_date: Optional[date] = None
+    employment_status: Optional[str] = None
+    marital_status: Optional[str] = None
+    number_of_children: Optional[int] = 0
+    photo_url: Optional[str] = None
+    is_main_driver: Optional[bool] = False
+
+class ClientDriverCreate(ClientDriverBase):
+    pass
+
+class ClientDriverUpdate(ClientDriverBase):
+    pass
+
+class ClientDriverResponse(ClientDriverBase):
+    id: uuid.UUID
+    client_id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+    class Config:
+        from_attributes = True
+
 # --- Main Client Schemas ---
 
 class ClientBase(BaseModel):
@@ -166,7 +193,7 @@ class ClientBase(BaseModel):
     gender: Optional[str] = None
     address: Optional[str] = None
     city: Optional[str] = None
-    country: str = "Côte d'Ivoire"
+    country: Optional[str] = "Côte d'Ivoire"
     profile_picture: Optional[str] = None
     
     # New Fields
@@ -185,15 +212,15 @@ class ClientBase(BaseModel):
     no_claims_years: Optional[int] = 0
     driving_license_years: Optional[int] = 0
 
-    kyc_status: str = 'pending'
-    pep_status: bool = False
-    consent_accepted: bool = False
+    kyc_status: Optional[str] = 'pending'
+    pep_status: Optional[bool] = False
+    consent_accepted: Optional[bool] = False
     
     driving_licence_number: Optional[str] = None
     id_card_url: Optional[str] = None
     driving_license_url: Optional[str] = None
     tax_id: Optional[str] = None
-    risk_profile: str = "medium"
+    risk_profile: Optional[str] = "medium"
 
 
 class ClientCreate(ClientBase):
@@ -259,7 +286,8 @@ class ClientInDB(ClientBase):
 class ClientResponse(ClientInDB):
     """Client response schema."""
     # Optional details inclusions
-    automobile_details: Optional[ClientAutomobileResponse] = None
+    automobile_details: Optional[List[ClientAutomobileResponse]] = None
+    drivers: Optional[List[ClientDriverResponse]] = None
     housing_details: Optional[ClientHousingResponse] = None
     health_details: Optional[ClientHealthResponse] = None
     life_details: Optional[ClientLifeResponse] = None

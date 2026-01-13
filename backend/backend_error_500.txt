@@ -1,0 +1,100 @@
+﻿^^^^^^^^^^^^^^^
+  File "C:\Python312\
+Lib\site-packages\sql
+alchemy\pool\base.py"
+, line 390, in 
+_create_connection
+    return _Connectio
+nRecord(self)
+           ^^^^^^^^^^
+^^^^^^^^^^^^^
+  File "C:\Python312\
+Lib\site-packages\sql
+alchemy\pool\base.py"
+, line 675, in 
+__init__
+    self.__connect()
+  File "C:\Python312\
+Lib\site-packages\sql
+alchemy\pool\base.py"
+, line 901, in 
+__connect
+    with 
+util.safe_reraise():
+  File "C:\Python312\
+Lib\site-packages\sql
+alchemy\util\langhelp
+ers.py", line 224, 
+in __exit__
+    raise exc_value.w
+ith_traceback(exc_tb)
+  File "C:\Python312\
+Lib\site-packages\sql
+alchemy\pool\base.py"
+, line 897, in 
+__connect
+    self.dbapi_connec
+tion = connection = p
+ool._invoke_creator(s
+elf)
+                     
+                    ^
+^^^^^^^^^^^^^^^^^^^^^
+^^^^
+  File "C:\Python312\
+Lib\site-packages\sql
+alchemy\engine\create
+.py", line 646, in 
+connect
+    return dialect.co
+nnect(*cargs, 
+**cparams)
+           ^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+^^^
+  File "C:\Python312\
+Lib\site-packages\sql
+alchemy\engine\defaul
+t.py", line 625, in 
+connect
+    return self.loade
+d_dbapi.connect(*carg
+s, **cparams)  # 
+type: ignore[no-any-r
+eturn]  # NOQA: E501
+           ^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
+  File "C:\Python312\
+Lib\site-packages\psy
+copg2\__init__.py", 
+line 122, in connect
+    conn = 
+_connect(dsn, connect
+ion_factory=connectio
+n_factory, **kwasync)
+           ^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^
+sqlalchemy.exc.Operat
+ionalError: (psycopg2
+.OperationalError) 
+connection to server 
+at "127.0.0.1", port 
+5432 failed: 
+Connection refused 
+(0x0000274D/10061)
+	Is the server 
+running on that host 
+and accepting TCP/IP 
+connections?
+
+(Background on this 
+error at: https://sql
+alche.me/e/20/e3q8)
+
+ERROR:    
+Application startup 
+failed. Exiting.
+DEBUG: Loading API v1 Router...

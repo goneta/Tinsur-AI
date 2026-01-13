@@ -4,7 +4,7 @@ Write-Host "Starting Insurance SaaS Backend Services..." -ForegroundColor Green
 
 # Start Main Backend
 Write-Host "Starting Main API (Port 8000)..."
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$currentDir'; python app/main.py"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$currentDir'; python -m app.main"
 
 # Start Claims Agent
 Write-Host "Starting Claims Agent (Port 8019)..."
