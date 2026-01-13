@@ -60,7 +60,7 @@ class PolicyService:
         """Create a policy from an accepted quote."""
         quote = self.quote_repo.get_by_id(quote_id)
         
-        if not quote or quote.status != 'accepted':
+        if not quote or quote.status not in ['accepted', 'policy_created']:
             return None
         
         if quote.is_expired:
