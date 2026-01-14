@@ -18,7 +18,9 @@ from app.schemas.premium_policy import (
     PremiumPolicyTypeResponse,
     PremiumPolicyTypeResponse,
     PremiumPolicyTypeListResponse,
-    PremiumPolicyMatchResponse
+    PremiumPolicyTypeListResponse,
+    PremiumPolicyMatchResponse,
+    PremiumPolicyMatchRequest
 )
 from app.services.premium_policy_service import PremiumPolicyService
 
@@ -228,9 +230,9 @@ def delete_premium_policy_type(
     db.commit()
     return None
 
-@router.get("/match", response_model=PremiumPolicyMatchResponse)
+@router.post("/match", response_model=PremiumPolicyMatchResponse)
 def match_policies(
-    client_id: Optional[UUID] = None,
+    request: PremiumPolicyMatchRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -242,7 +244,7 @@ def match_policies(
     service = PremiumPolicyService(db)
     
     # Determine target client_id
-    target_client_id = client_id
+    target_client_id = request.client_id
     
     # If user is a client, override target_client_id with their own client profile id
     if current_user.role == 'client':
@@ -253,10 +255,20 @@ def match_policies(
              raise HTTPException(status_code=404, detail="Client profile not found for this user")
         target_client_id = client_profile.id
     
-    if not target_client_id:
-        raise HTTPException(status_code=400, detail="Client ID is required")
+    if not target_client_id and current_user.role != 'client':
+        # Allow missing client_id if we have overrides (transient quote)? 
+        # For now, enforce client_id if not client, OR maybe rely on overrides entirely?
+        # Let's keep logic simple: strict check unless we decide transient quotes without client_id are allowed.
+        # But wait, wizard might be used before client is fully created? 
+        # Plan says "client_id: Optional". If missing, we rely PURELY on overrides.
+        pass 
         
-    result = service.match_eligible_policies(current_user.company_id, target_client_id)
+    overrides = {
+        "vehicle_details": request.vehicle_details,
+        "driver_details": request.driver_details
+    }
+
+    result = service.match_eligible_policies(current_user.company_id, target_client_id, overrides)
     
     # Map status to HTTP exceptions or return specific structure
     if result["status"] == "no_policies":

@@ -83,3 +83,9 @@ class PremiumPolicyMatchResponse(BaseModel):
     recommended_id: Optional[UUID] = None
     missing_fields: List[str] = []
 
+class PremiumPolicyMatchRequest(BaseModel):
+    client_id: Optional[UUID] = None
+    vehicle_details: Optional[dict] = None
+    driver_details: Optional[dict] = None
+
+

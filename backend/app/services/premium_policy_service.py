@@ -10,10 +10,12 @@ class PremiumPolicyService:
     def __init__(self, db: Session):
         self.db = db
 
-    def match_eligible_policies(self, company_id: UUID, client_id: UUID) -> Dict[str, Any]:
+    def match_eligible_policies(self, company_id: UUID, client_id: Optional[UUID] = None, overrides: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Matches a client against all active premium policies based on criteria.
         Returns a dictionary with status and data.
+        
+        overrides: Optional dict containing 'vehicle_details' and 'driver_details' from the wizard.
         """
         
         # 1. Check if any active policies exist
@@ -29,13 +31,39 @@ class PremiumPolicyService:
                 "data": []
             }
 
-        # 2. Get Client Data
-        client = self.db.query(Client).filter(Client.id == client_id).first()
-        if not client:
-            return {
-                "status": "error",
-                "message": "Client not found",
-                "data": []
+        # 2. Get Client Data (if provided)
+        client_data = {}
+        
+        if client_id:
+            client = self.db.query(Client).filter(Client.id == client_id).first()
+            if not client:
+                return {
+                    "status": "error",
+                    "message": "Client not found",
+                    "data": []
+                }
+            
+            # Calculate Age from DB
+            age = None
+            if client.date_of_birth:
+                 today = date.today()
+                 age = today.year - client.date_of_birth.year - ((today.month, today.day) < (client.date_of_birth.month, client.date_of_birth.day))
+
+            client_data = {
+                "accident_count": client.accident_count,
+                "no_claims_years": client.no_claims_years,
+                "driving_license_years": client.driving_license_years,
+                "employment_status": client.employment_status,
+                "age": age,
+                "annual_income": client.annual_income,
+                "occupation": client.occupation,
+                "gender": client.gender,
+                "marital_status": client.marital_status,
+                "risk_profile": client.risk_profile,
+                "residency": client.country,
+                "city": client.city,
+                "client_type": client.client_type,
+                "is_high_risk": client.is_high_risk
             }
 
         # 3. Identify Required Fields from all active criteria
@@ -48,34 +76,37 @@ class PremiumPolicyService:
         for criteria in all_criteria:
             required_fields.add(criteria.field_name)
 
-        # 4. Content Validation
-        # Map criteria field names to Client model attributes
-        # This mapping needs to be robust. 
-        # Standard fields: accident_count, no_claims_years, driving_license_years, employment_status
-        
-        # Calculate Age
-        age = None
-        if client.date_of_birth:
-             today = date.today()
-             age = today.year - client.date_of_birth.year - ((today.month, today.day) < (client.date_of_birth.month, client.date_of_birth.day))
-
-        client_data = {
-            "accident_count": client.accident_count,
-            "no_claims_years": client.no_claims_years,
-            "driving_license_years": client.driving_license_years,
-            "employment_status": client.employment_status,
-            # Expanded fields
-            "age": age,
-            "annual_income": client.annual_income,
-            "occupation": client.occupation,
-            "gender": client.gender,
-            "marital_status": client.marital_status,
-            "risk_profile": client.risk_profile,
-            "residency": client.country,
-            "city": client.city,
-            "client_type": client.client_type,
-            "is_high_risk": client.is_high_risk
-        }
+        # 4. Merge with Overrides and Content Validation
+        if overrides:
+            driver_details = overrides.get('driver_details', {})
+            vehicle_details = overrides.get('vehicle_details', {})
+            
+            # Map Driver details
+            if 'age' in driver_details:
+                client_data['age'] = driver_details['age']
+            if 'date_of_birth' in driver_details and driver_details['date_of_birth']:
+                 try:
+                     dob = datetime.strptime(driver_details['date_of_birth'], '%Y-%m-%d').date()
+                     today = date.today()
+                     client_data['age'] = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+                 except:
+                     pass
+                     
+            if 'license_years' in driver_details:
+                client_data['driving_license_years'] = driver_details['license_years']
+            if 'ncd' in driver_details:
+                client_data['no_claims_years'] = driver_details['ncd']
+                
+            # Map Vehicle details
+            # Add vehicle keys to client_data for rule evaluation
+            if 'value' in vehicle_details:
+                client_data['vehicle_value'] = vehicle_details['value']
+            if 'vehicle_value' in vehicle_details:
+                client_data['vehicle_value'] = vehicle_details['vehicle_value']
+            if 'make' in vehicle_details:
+                client_data['vehicle_make'] = vehicle_details['make']
+            if 'age' in vehicle_details: # Vehicle Age
+                client_data['vehicle_age'] = vehicle_details['age']
         
 
 
