@@ -1,7 +1,7 @@
 from typing import Any, List, Dict
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from app.api import deps
+from app.core import dependencies as deps
 from app.models.translation import Translation
 from app.schemas.translation import TranslationCreate, TranslationUpdate, TranslationResponse
 
