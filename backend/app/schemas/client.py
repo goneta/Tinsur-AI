@@ -154,9 +154,13 @@ class ClientLifeResponse(ClientLifeBase):
 
 
 class ClientDriverBase(BaseModel):
-    full_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     phone_number: Optional[str] = None
     address: Optional[str] = None
+    city: Optional[str] = None
+    postal_code: Optional[str] = None
+    country: Optional[str] = None
     license_number: Optional[str] = None
     license_issue_date: Optional[date] = None
     employment_status: Optional[str] = None
@@ -164,6 +168,16 @@ class ClientDriverBase(BaseModel):
     number_of_children: Optional[int] = 0
     photo_url: Optional[str] = None
     is_main_driver: Optional[bool] = False
+    date_of_birth: Optional[date] = None
+    
+    # New Fields
+    license_type: Optional[str] = None
+    cars_in_household: Optional[int] = 0
+    residential_status: Optional[str] = None
+    accident_count: Optional[int] = 0
+    no_claims_years: Optional[int] = 0
+    driving_license_years: Optional[int] = 0
+    driving_license_url: Optional[str] = None
 
 class ClientDriverCreate(ClientDriverBase):
     pass

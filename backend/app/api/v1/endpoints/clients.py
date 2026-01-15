@@ -16,7 +16,7 @@ from app.schemas.client import (
     ClientCreate, ClientUpdate, ClientResponse, 
     ClientAutomobileUpdate, ClientHousingUpdate, ClientHealthUpdate, ClientLifeUpdate,
     ClientAutomobileCreate, ClientAutomobileResponse,
-    ClientDriverCreate, ClientDriverResponse
+    ClientDriverCreate, ClientDriverResponse, ClientDriverUpdate
 )
 from app.repositories.client_repository import ClientRepository
 from app.models.client_details import ClientAutomobile, ClientHousing, ClientHealth, ClientLife, ClientDriver
@@ -242,6 +242,46 @@ async def update_automobile_details(
     db.refresh(client)
     return {"status": "success", "data": client.automobile_details}
 
+@router.put("/{client_id}/vehicles/{vehicle_id}", response_model=ClientAutomobileResponse)
+async def update_client_vehicle(
+    client_id: uuid.UUID,
+    vehicle_id: uuid.UUID,
+    vehicle_data: ClientAutomobileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update a specific vehicle."""
+    repo = ClientRepository(db)
+    
+    # Auth Check
+    if current_user.role == 'client':
+        client = db.query(Client).filter(Client.user_id == current_user.id).first()
+        if not client or client.id != client_id:
+             raise HTTPException(status_code=403, detail="Not authorized to update vehicles for this client")
+        company_id = client.company_id
+    else:
+        # Verify agent has access to this client's company
+        company_id = current_user.company_id
+        
+    client = repo.get_by_id(client_id, company_id)
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+        
+    vehicle = db.query(ClientAutomobile).filter(
+        ClientAutomobile.id == vehicle_id,
+        ClientAutomobile.client_id == client_id
+    ).first()
+    
+    if not vehicle:
+         raise HTTPException(status_code=404, detail="Vehicle not found")
+         
+    for field, value in vehicle_data.dict(exclude_unset=True).items():
+        setattr(vehicle, field, value)
+        
+    db.commit()
+    db.refresh(vehicle)
+    return vehicle
+
 @router.post("/{client_id}/vehicles", response_model=ClientAutomobileResponse)
 async def create_client_vehicle(
     client_id: uuid.UUID,
@@ -298,6 +338,51 @@ async def create_client_driver(
         
     driver = ClientDriver(**driver_data.dict(), client_id=client_id)
     db.add(driver)
+    db.commit()
+    db.refresh(driver)
+    return driver
+
+@router.put("/{client_id}/drivers/{driver_id}", response_model=ClientDriverResponse)
+async def update_client_driver(
+    client_id: uuid.UUID,
+    driver_id: uuid.UUID,
+    driver_data: ClientDriverUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update an existing driver."""
+    repo = ClientRepository(db)
+    
+    # Auth Check
+    if current_user.role == 'client':
+        client = db.query(Client).filter(Client.user_id == current_user.id).first()
+        if not client or client.id != client_id:
+             raise HTTPException(status_code=403, detail="Not authorized to update drivers for this client")
+        company_id = client.company_id
+    else:
+        # Verify agent has access to this client's company
+        company_id = current_user.company_id
+        
+    client = repo.get_by_id(client_id, company_id)
+    if not client:
+        raise HTTPException(status_code=404, detail=f"Client {client_id} not found in company {company_id}")
+        
+    driver = db.query(ClientDriver).filter(
+        ClientDriver.id == driver_id, 
+        ClientDriver.client_id == client_id
+    ).first()
+    
+    if not driver:
+        # Check if driver exists but for different client to give better error
+        driver_any_client = db.query(ClientDriver).filter(ClientDriver.id == driver_id).first()
+        if driver_any_client:
+            raise HTTPException(status_code=404, detail=f"Driver found but belongs to client {driver_any_client.client_id}, not {client_id}")
+        else:
+            raise HTTPException(status_code=404, detail=f"Driver {driver_id} not found")
+    
+    for field, value in driver_data.dict(exclude_unset=True).items():
+        setattr(driver, field, value)
+        
     db.commit()
     db.refresh(driver)
     return driver
@@ -417,7 +502,113 @@ def upload_client_profile_picture(
         db.commit()
         db.refresh(client)
         return client
-        
     except Exception as e:
-        print(f"Upload failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Could not save profile picture: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Could not save file: {str(e)}")
+
+@router.post("/{client_id}/drivers/{driver_id}/license", response_model=ClientDriverResponse)
+def upload_driver_license(
+    client_id: uuid.UUID,
+    driver_id: uuid.UUID,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Upload a driving license for a driver.
+    """
+    repo = ClientRepository(db)
+    
+    # Auth Check
+    if current_user.role == 'client':
+        client = db.query(Client).filter(Client.user_id == current_user.id).first()
+        if not client or client.id != client_id:
+             raise HTTPException(status_code=403, detail="Not authorized to update drivers for this client")
+        company_id = client.company_id
+    else:
+        # Verify agent has access to this client's company
+        company_id = current_user.company_id
+        
+    client = repo.get_by_id(client_id, company_id)
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+
+    driver = db.query(ClientDriver).filter(
+        ClientDriver.id == driver_id, 
+        ClientDriver.client_id == client_id
+    ).first()
+    
+    if not driver:
+         raise HTTPException(status_code=404, detail="Driver not found")
+
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="File must be an image")
+
+    # Ensure upload directory exists
+    DRIVER_UPLOAD_DIR = os.path.join(BASE_DIR, "uploads", "drivers")
+    if not os.path.exists(DRIVER_UPLOAD_DIR):
+        os.makedirs(DRIVER_UPLOAD_DIR)
+
+    try:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"license_{driver_id}_{timestamp}_{file.filename}"
+        file_path = os.path.join(DRIVER_UPLOAD_DIR, filename)
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        relative_path = f"/uploads/drivers/{filename}"
+        driver.driving_license_url = relative_path
+        db.commit()
+        db.refresh(driver)
+        return driver
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Could not save file: {str(e)}")
+
+@router.post("/{client_id}/vehicles/{vehicle_id}/image", response_model=ClientAutomobileResponse)
+async def upload_vehicle_image(
+    client_id: uuid.UUID,
+    vehicle_id: uuid.UUID,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload a vehicle image for a specific vehicle."""
+    repo = ClientRepository(db)
+    
+    # Auth Check
+    if current_user.role == 'client':
+        client = db.query(Client).filter(Client.user_id == current_user.id).first()
+        if not client or client.id != client_id:
+             raise HTTPException(status_code=403, detail="Not authorized to update vehicles for this client")
+    
+    automobile = db.query(ClientAutomobile).filter(
+        ClientAutomobile.id == vehicle_id,
+        ClientAutomobile.client_id == client_id
+    ).first()
+    
+    if not automobile:
+        raise HTTPException(status_code=404, detail="Vehicle record not found")
+
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="File must be an image")
+
+    # Ensure upload directory exists
+    VEHICLE_UPLOAD_DIR = os.path.join(BASE_DIR, "uploads", "vehicles")
+    if not os.path.exists(VEHICLE_UPLOAD_DIR):
+        os.makedirs(VEHICLE_UPLOAD_DIR)
+
+    try:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"vehicle_{vehicle_id}_{timestamp}_{file.filename}"
+        file_path = os.path.join(VEHICLE_UPLOAD_DIR, filename)
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        relative_path = f"/uploads/vehicles/{filename}"
+        automobile.vehicle_image_url = relative_path
+        db.commit()
+        db.refresh(automobile)
+        return automobile
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Could not save file: {str(e)}")

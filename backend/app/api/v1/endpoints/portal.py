@@ -573,3 +573,212 @@ async def reply_my_ticket(
     db.commit()
     db.refresh(message)
     return message
+
+
+# --- Referrals ---
+from app.services.referral_service import ReferralService
+from app.schemas import referral as referral_schemas
+from app.models.referral import Referral
+
+@router.post("/referrals", response_model=referral_schemas.Referral)
+async def create_my_referral(
+    db: Session = Depends(get_db),
+    current_client: Client = Depends(get_current_client)
+):
+    """
+    Generate a referral code for the current client.
+    """
+    service = ReferralService(db)
+    return service.create_referral(
+        company_id=current_client.company_id,
+        referrer_client_id=current_client.id
+    )
+
+@router.get("/referrals/stats")
+async def get_my_referral_stats(
+    db: Session = Depends(get_db),
+    current_client: Client = Depends(get_current_client)
+):
+    """
+    Get referral statistics for the current client.
+    """
+    # Custom stats for the client
+    referrals = db.query(Referral).filter(
+        Referral.company_id == current_client.company_id,
+        Referral.referrer_client_id == current_client.id
+    ).all()
+    
+    total_earned = sum(r.reward_amount or 0 for r in referrals if r.reward_paid)
+    pending_count = sum(1 for r in referrals if r.status == 'pending')
+    converted_count = sum(1 for r in referrals if r.status == 'converted' or r.status == 'rewarded')
+    
+    # Check if they have a code
+    my_referral = db.query(Referral).filter(
+        Referral.company_id == current_client.company_id,
+        Referral.referrer_client_id == current_client.id
+    ).first()
+    
+    return {
+        "referral_code": my_referral.referral_code if my_referral else None,
+        "total_earned": total_earned,
+        "pending_count": pending_count,
+        "converted_count": converted_count,
+        "total_referrals": len(referrals)
+    }
+
+@router.get("/referrals", response_model=List[referral_schemas.Referral])
+async def get_my_referrals(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_client: Client = Depends(get_current_client)
+):
+    """
+    List clients I have referred.
+    """
+    return db.query(Referral).filter(
+        Referral.company_id == current_client.company_id,
+        Referral.referrer_client_id == current_client.id
+    ).order_by(desc(Referral.created_at)).offset(skip).limit(limit).all()
+
+
+# --- Account Settings ---
+from app.models.user import User
+from app.core.security import verify_password
+from pydantic import BaseModel, EmailStr
+
+class ProfileUpdate(BaseModel):
+    first_name: str
+    last_name: str
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+class TwoFactorUpdate(BaseModel):
+    enabled: bool
+
+@router.get("/profile", response_model=dict)
+async def get_my_profile(
+    db: Session = Depends(get_db),
+    current_client: Client = Depends(get_current_client)
+):
+    """
+    Get client profile details.
+    """
+    # Fetch linked user for MFA status
+    mfa_enabled = False
+    if current_client.user_id:
+        user = db.query(User).filter(User.id == current_client.user_id).first()
+        if user:
+            mfa_enabled = user.mfa_enabled or False
+
+    return {
+        "first_name": current_client.first_name,
+        "last_name": current_client.last_name,
+        "email": current_client.email,
+        "phone": current_client.phone,
+        "address": current_client.address,
+        "city": current_client.city,
+        "mfa_enabled": mfa_enabled,
+        "client_type": current_client.client_type
+    }
+
+@router.put("/profile", response_model=dict)
+async def update_my_profile(
+    profile_data: ProfileUpdate,
+    db: Session = Depends(get_db),
+    current_client: Client = Depends(get_current_client)
+):
+    """
+    Update client profile details.
+    """
+    # Update Client record
+    current_client.first_name = profile_data.first_name
+    current_client.last_name = profile_data.last_name
+    current_client.phone = profile_data.phone
+    current_client.address = profile_data.address
+    current_client.city = profile_data.city
+    
+    # Update User record if linked
+    if current_client.user_id:
+        user = db.query(User).filter(User.id == current_client.user_id).first()
+        if user:
+            user.first_name = profile_data.first_name
+            user.last_name = profile_data.last_name
+            user.phone = profile_data.phone
+            
+    db.commit()
+    return {"message": "Profile updated successfully"}
+
+@router.post("/security/password", response_model=dict)
+async def change_my_password(
+    password_data: PasswordChange,
+    db: Session = Depends(get_db),
+    current_client: Client = Depends(get_current_client)
+):
+    """
+    Change client password.
+    """
+    if not current_client.user_id:
+         raise HTTPException(status_code=400, detail="No user account linked to this client profile")
+         
+    user = db.query(User).filter(User.id == current_client.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User account not found")
+        
+    if not verify_password(password_data.current_password, user.password_hash):
+        raise HTTPException(status_code=400, detail="Incorrect current password")
+        
+    user.password_hash = get_password_hash(password_data.new_password)
+    db.commit()
+    
+    return {"message": "Password updated successfully"}
+
+@router.post("/security/2fa", response_model=dict)
+async def toggle_my_2fa(
+    data: TwoFactorUpdate,
+    db: Session = Depends(get_db),
+    current_client: Client = Depends(get_current_client)
+):
+    """
+    Enable or Disable Two-Factor Authentication.
+    """
+    if not current_client.user_id:
+         raise HTTPException(status_code=400, detail="No user account linked")
+         
+    user = db.query(User).filter(User.id == current_client.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User account not found")
+        
+    user.mfa_enabled = data.enabled
+    
+    # In a real implementation, we would generate and return a secret/QR code here if enabling
+    # For now, we just toggle the flag as requested "optional" feature starter.
+    
+    db.commit()
+    status_msg = "enabled" if data.enabled else "disabled"
+    return {"message": f"Two-factor authentication {status_msg}", "mfa_enabled": user.mfa_enabled}
+
+@router.delete("/account", response_model=dict)
+async def delete_my_account(
+    db: Session = Depends(get_db),
+    current_client: Client = Depends(get_current_client)
+):
+    """
+    Request account deletion (Soft Delete).
+    """
+    # Soft delete client
+    current_client.status = 'inactive'
+    
+    # Soft delete user
+    if current_client.user_id:
+        user = db.query(User).filter(User.id == current_client.user_id).first()
+        if user:
+            user.is_active = False
+            
+    db.commit()
+    return {"message": "Account successfully deactivated. You will now be logged out."}

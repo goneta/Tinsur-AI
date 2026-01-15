@@ -32,10 +32,12 @@ class ClientAutomobile(Base):
     country_of_registration = Column(String(100), nullable=True)
     registration_document_url = Column(String(500), nullable=True)
     parked_location = Column(String(100), nullable=True)
+    vehicle_image_url = Column(String(500), nullable=True)
 
     
     # Driver Details (Main Driver)
-    driver_name = Column(String(100), nullable=True)
+    last_name = Column(String(100), nullable=True) # Name
+    first_name = Column(String(100), nullable=True) # Forenames
     driver_dob = Column(Date, nullable=True)
     license_number = Column(String(100), nullable=True)
     license_issue_date = Column(Date, nullable=True)
@@ -160,17 +162,33 @@ class ClientDriver(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"))
     
-    full_name = Column(String(100))
+    first_name = Column(String(50))
+    last_name = Column(String(50))
     phone_number = Column(String(50))
+    
     address = Column(String(255))
+    city = Column(String(100))
+    postal_code = Column(String(20), nullable=True)
+    country = Column(String(100))
+    
     license_number = Column(String(100))
     license_issue_date = Column(Date)
     employment_status = Column(String(50))
     marital_status = Column(String(50))
     number_of_children = Column(Integer, default=0)
     photo_url = Column(String(500), nullable=True)
+    date_of_birth = Column(Date, nullable=True)
     
+    # New Fields
+    license_type = Column(String(50), nullable=True)
+    cars_in_household = Column(Integer, default=0)
+    residential_status = Column(String(50), nullable=True)
+    accident_count = Column(Integer, default=0)
+    no_claims_years = Column(Integer, default=0)
+    driving_license_years = Column(Integer, default=0)
+
     is_main_driver = Column(Boolean, default=False)
+    driving_license_url = Column(String(500), nullable=True)
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

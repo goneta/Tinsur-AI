@@ -2,21 +2,20 @@
 Referral model for tracking client referrals.
 """
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Numeric
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
-
 from app.core.database import Base
+from app.core.guid import GUID
 
 class Referral(Base):
     """Referral model."""
     __tablename__ = "referrals"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
-    referrer_client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="SET NULL"))
-    referred_client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="SET NULL"), nullable=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
+    referrer_client_id = Column(GUID(), ForeignKey("clients.id", ondelete="SET NULL"))
+    referred_client_id = Column(GUID(), ForeignKey("clients.id", ondelete="SET NULL"), nullable=True)
     
     referral_code = Column(String(50), unique=True, nullable=False)
     status = Column(String(50), default='pending') # 'pending', 'converted', 'expired'

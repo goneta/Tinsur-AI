@@ -7,6 +7,7 @@ import uuid
 from app.core import dependencies as deps
 from app.models.referral import Referral
 from app.schemas import referral as schemas
+from app.services.referral_service import ReferralService
 
 router = APIRouter()
 
@@ -20,18 +21,11 @@ def create_referral(
     """
     Create a new referral (generate code).
     """
-    code = f"REF-{str(uuid.uuid4())[:8].upper()}"
-    
-    referral = Referral(
+    service = ReferralService(db)
+    return service.create_referral(
         company_id=current_user.company_id,
-        referrer_client_id=referral_in.referrer_client_id,
-        referral_code=code,
-        status="pending"
+        referrer_client_id=referral_in.referrer_client_id
     )
-    db.add(referral)
-    db.commit()
-    db.refresh(referral)
-    return referral
 
 @router.get("/", response_model=List[schemas.Referral])
 def read_referrals(
@@ -43,10 +37,28 @@ def read_referrals(
     """
     Retrieve referrals.
     """
-    referrals = db.query(Referral).filter(
+    # Note: ReferralService.get_client_referrals filters by specific client.
+    # The original API endpoint seemed to return ALL referrals for the company (based on the query).
+    # "referrals = db.query(Referral).filter(Referral.company_id == current_user.company_id)..."
+    # So I should probably add a get_company_referrals method to the service if I want to match exact behavior,
+    # OR just keep the simple query here if it's purely administrative.
+    # However, to keep "Service as Source of Truth", I'll add a generic get_referrals to service or just use query here for list.
+    # Given the simplicity, I'll stick to the pattern but maybe I need to extend the service slightly or just use the DB query here if it's efficient.
+    # Actually, let's keep the logic consistent. The original was company-wide.
+    
+    # Adding a method to service on the fly might be risky if I didn't verify it. 
+    # But wait, I created the service myself.
+    # The original implementation was:
+    # referrals = db.query(Referral).filter(Referral.company_id == current_user.company_id).offset(skip).limit(limit).all()
+    
+    # I'll stick to direct DB query here for pagination/filtering for now to minimalize risk, 
+    # as the Service was mainly for "Business Logic" like creation/stats.
+    # REVISION: The plan said "Refactor... to use ReferralService".
+    # I should probably use service for business logic. Listing is barely business logic.
+    
+    return db.query(Referral).filter(
         Referral.company_id == current_user.company_id
     ).offset(skip).limit(limit).all()
-    return referrals
 
 @router.get("/stats")
 def read_referral_stats(
@@ -56,25 +68,5 @@ def read_referral_stats(
     """
     Get company-wide referral statistics.
     """
-    from sqlalchemy import func
-    
-    total_rewards = db.query(func.sum(Referral.reward_amount)).filter(
-        Referral.company_id == current_user.company_id,
-        Referral.reward_paid == True
-    ).scalar() or 0
-    
-    pending_conversions = db.query(Referral).filter(
-        Referral.company_id == current_user.company_id,
-        Referral.status == "pending"
-    ).count()
-
-    converted_count = db.query(Referral).filter(
-        Referral.company_id == current_user.company_id,
-        Referral.status == "converted"
-    ).count()
-    
-    return {
-        "total_rewards": total_rewards,
-        "pending_conversions": pending_conversions,
-        "converted_count": converted_count
-    }
+    service = ReferralService(db)
+    return service.get_company_stats(current_user.company_id)
