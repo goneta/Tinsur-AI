@@ -6,7 +6,10 @@ from a2a.server.apps import A2AStarletteApplication
 from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.tasks import InMemoryTaskStore
 from a2a.types import AgentCapabilities, AgentCard, AgentSkill
-from agent_executor import MultiAiAgentsExecutor
+try:
+    from agent_executor import MultiAiAgentsExecutor
+except ImportError:
+    from .agent_executor import MultiAiAgentsExecutor
 
 env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '.env'))
 load_dotenv(env_path, override=True)
@@ -24,7 +27,7 @@ def main():
     agent_card = AgentCard(
         name="Main Orchestrator Agent",
         description="Main Orchestrator (Replication of 17-multi-ai_agents)",
-        url="http://localhost:8025/",
+        url="http://localhost:33335/",
         defaultInputModes=["text"],
         defaultOutputModes=["text"],
         skills=[skill],
@@ -42,11 +45,11 @@ def main():
         agent_card=agent_card,
     )
 
-    print("Starting a2a_multi_ai_agents on port 8025")
+    print("Starting a2a_multi_ai_agents on port 33335")
     try:
         app = server.build()
-        port = int(os.getenv("PORT", 8025))
-        uvicorn.run(app, host="0.0.0.0", port=port, log_level="debug")
+        port = int(os.getenv("PORT", 33335))
+        uvicorn.run(app, host="127.0.0.1", port=port, log_level="debug")
     except BaseException as e:
         import traceback
         traceback.print_exc()

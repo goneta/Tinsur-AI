@@ -5,7 +5,10 @@ from a2a.server.request_handlers import DefaultRequestHandler
 from a2a.server.tasks import InMemoryTaskStore
 from a2a.types import AgentCapabilities, AgentCard, AgentSkill
 from a2a.types import AgentCapabilities, AgentCard, AgentSkill
-from agent_executor import ClaimsAgentExecutor
+try:
+    from agent_executor import ClaimsAgentExecutor
+except ImportError:
+    from .agent_executor import ClaimsAgentExecutor
 from dotenv import load_dotenv
 import os
 
@@ -25,7 +28,7 @@ def main():
     agent_card = AgentCard(
         name="Claims Agent",
         description="Business Agent for Claims",
-        url="http://localhost:8019/",
+        url="http://localhost:33333/",
         defaultInputModes=["text"],
         defaultOutputModes=["text"],
         skills=[skill],
@@ -43,9 +46,9 @@ def main():
         agent_card=agent_card,
     )
 
-    print("Starting a2a_claims_agent on port 8019")
-    port = int(os.getenv("PORT", 8019))
-    uvicorn.run(server.build(), host="0.0.0.0", port=port)
+    print("Starting a2a_claims_agent on port 33333")
+    port = int(os.getenv("PORT", 33333))
+    uvicorn.run(server.build(), host="127.0.0.1", port=port)
 
 if __name__ == "__main__":
     main()

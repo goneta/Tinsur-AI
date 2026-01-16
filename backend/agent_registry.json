@@ -1,14 +1,14 @@
 [
     {
         "name": "orchestrator_agent",
-        "port": 8007,
+        "port": 33335,
         "path": "agents/a2a_multi_agent/__main__.py",
         "type": "business",
         "enabled": true
     },
     {
         "name": "claims_agent",
-        "port": 8019,
+        "port": 33333,
         "path": "agents/a2a_claims_agent/__main__.py",
         "type": "business",
         "enabled": true
