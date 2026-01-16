@@ -1,0 +1,49 @@
+{
+    "nav": {
+        "dashboard": "Tablero",
+        "policy": "Póliza",
+        "claims": "Siniestros",
+        "make_claim": "Declarar un siniestro",
+        "quote": "Presupuesto de seguro",
+        "underwriting": "Suscripción",
+        "billing": "Facturación",
+        "clients": "Clientes",
+        "reports": "Informes",
+        "settings": "Configuración"
+    },
+    "common": {
+        "premium": "Prima",
+        "deductible": "Deducible",
+        "coverage": "Cobertura",
+        "amount": "Monto",
+        "status": "Estado",
+        "actions": "Acciones",
+        "cancel": "Cancelar",
+        "save": "Guardar",
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "submit": "Enviar"
+    },
+    "dashboard": {
+        "welcome": "Bienvenido de nuevo",
+        "overview": "Visión general",
+        "subtitle": "Aquí está lo que sucede con su cartera de seguros hoy.",
+        "download_report": "Descargar Informe",
+        "total_clients": "Total Clientes",
+        "active_policies": "Pólizas Activas",
+        "pending_quotes": "Presupuestos Pendientes",
+        "monthly_revenue": "Ingresos Mensuales",
+        "recent_activity": "Actividad Reciente",
+        "recent_activity_desc": "Acciones recientes en todas sus pólizas y clientes.",
+        "no_activity": "No se encontró actividad reciente.",
+        "quick_actions": "Acciones Rápidas",
+        "quick_actions_desc": "Tareas y operaciones comunes.",
+        "create_quote": "Crear Nuevo Presupuesto",
+        "add_client": "Agregar Nuevo Cliente",
+        "process_payment": "Procesar Pago",
+        "from_last_month": "desde el mes pasado",
+        "ai_assistant": "Asistente de IA",
+        "ai_manager_title": "Gerente de Inteligencia de IA",
+        "close_ai_panel": "Cerrar Panel de IA"
+    }
+}
