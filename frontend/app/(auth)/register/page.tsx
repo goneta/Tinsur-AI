@@ -14,25 +14,29 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-const registerSchema = z.object({
-    email: z.string().email('Invalid email address'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-    first_name: z.string().min(2, 'First name is required'),
-    last_name: z.string().min(2, 'Last name is required'),
-    phone: z.string().optional(),
-    company_name: z.string().min(2, 'Company name is required'),
-    company_subdomain: z
-        .string()
-        .min(3, 'Subdomain must be at least 3 characters')
-        .regex(/^[a-z0-9-]+$/, 'Subdomain must contain only lowercase letters, numbers, and hyphens'),
-});
-
-type RegisterFormData = z.infer<typeof registerSchema>;
+import { LanguageSwitcher } from '@/components/language-switcher';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function RegisterPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const { register: registerUser } = useAuth();
+    const { t } = useLanguage();
+
+    const registerSchema = z.object({
+        email: z.string().email(t('Invalid email address')),
+        password: z.string().min(8, t('Password must be at least 8 characters')),
+        first_name: z.string().min(2, t('First name is required')),
+        last_name: z.string().min(2, t('Last name is required')),
+        phone: z.string().optional(),
+        company_name: z.string().min(2, t('Company name is required')),
+        company_subdomain: z
+            .string()
+            .min(3, t('Subdomain must be at least 3 characters'))
+            .regex(/^[a-z0-9-]+$/, t('Subdomain must contain only lowercase letters, numbers, and hyphens')),
+    });
+
+    type RegisterFormData = z.infer<typeof registerSchema>;
 
     const {
         register,
@@ -49,19 +53,25 @@ export default function RegisterPage() {
         try {
             await registerUser(data);
         } catch (err: any) {
-            setError(err.message || 'Registration failed. Please try again.');
+            console.error("Registration error:", err);
+            const detail = err.response?.data?.detail;
+            // Fallback to message or generic error
+            setError(detail || err.message || t('Registration failed. Please try again.'));
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8 relative">
+            <div className="absolute top-4 right-4">
+                <LanguageSwitcher />
+            </div>
             <Card className="w-full max-w-2xl">
                 <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
+                    <CardTitle className="text-2xl font-bold text-center">{t('Create an Account')}</CardTitle>
                     <CardDescription className="text-center">
-                        Register your insurance company and start managing policies
+                        {t('Register your insurance company and start managing policies')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -74,7 +84,7 @@ export default function RegisterPage() {
 
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
-                                <Label htmlFor="first_name">First Name</Label>
+                                <Label htmlFor="first_name">{t('First Name')}</Label>
                                 <Input
                                     id="first_name"
                                     placeholder="John"
@@ -87,7 +97,7 @@ export default function RegisterPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="last_name">Last Name</Label>
+                                <Label htmlFor="last_name">{t('Last Name')}</Label>
                                 <Input
                                     id="last_name"
                                     placeholder="Doe"
@@ -101,7 +111,7 @@ export default function RegisterPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="email">{t('Email')}</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -115,7 +125,7 @@ export default function RegisterPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label htmlFor="password">{t('Password')}</Label>
                             <Input
                                 id="password"
                                 type="password"
@@ -129,7 +139,7 @@ export default function RegisterPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="phone">Phone (Optional)</Label>
+                            <Label htmlFor="phone">{t('Phone')} ({t('Optional')})</Label>
                             <Input
                                 id="phone"
                                 type="tel"
@@ -139,11 +149,11 @@ export default function RegisterPage() {
                         </div>
 
                         <div className="border-t pt-4">
-                            <h3 className="mb-4 text-sm font-semibold">Company Information</h3>
+                            <h3 className="mb-4 text-sm font-semibold">{t('Company Information')}</h3>
 
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="company_name">Company Name</Label>
+                                    <Label htmlFor="company_name">{t('Company Name')}</Label>
                                     <Input
                                         id="company_name"
                                         placeholder="ABC Insurance Co."
@@ -156,7 +166,7 @@ export default function RegisterPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="company_subdomain">Company Subdomain</Label>
+                                    <Label htmlFor="company_subdomain">{t('Company Subdomain')}</Label>
                                     <div className="flex">
                                         <Input
                                             id="company_subdomain"
@@ -172,20 +182,20 @@ export default function RegisterPage() {
                                         <p className="text-sm text-red-600">{errors.company_subdomain.message}</p>
                                     )}
                                     <p className="text-xs text-gray-500">
-                                        This will be your unique company identifier
+                                        {t('This will be your unique company identifier')}
                                     </p>
                                 </div>
                             </div>
                         </div>
 
                         <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? 'Creating account...' : 'Create Account'}
+                            {loading ? t('Creating account...') : t('Create Account')}
                         </Button>
 
                         <div className="text-center text-sm">
-                            <span className="text-gray-600">Already have an account? </span>
+                            <span className="text-gray-600">{t('Already have an account?')} </span>
                             <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                                Sign in
+                                {t('Sign in')}
                             </Link>
                         </div>
                     </form>
