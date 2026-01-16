@@ -1,0 +1,12 @@
+{
+    "name": "tinsur-ai-root",
+    "private": true,
+    "scripts": {
+        "dev": "npm run dev --workspace=tinsur-ai-frontend",
+        "build": "npm run build --workspace=tinsur-ai-frontend",
+        "start": "npm run start --workspace=tinsur-ai-frontend"
+    },
+    "workspaces": [
+        "frontend"
+    ]
+}
