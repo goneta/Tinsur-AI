@@ -137,7 +137,8 @@ export function VehicleDetailsTable({ clientId, mode, vehicle, onUpdate, onBack 
         }
     };
 
-    const renderFileInput = (field: FieldDefinition, currentValue: string | null) => {
+    // Extracted File Input Component
+    const VehicleFileInput = ({ field, currentValue }: { field: FieldDefinition, currentValue: string | null | File }) => {
         const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
             const file = e.target.files?.[0];
             if (!file) return;
@@ -150,7 +151,6 @@ export function VehicleDetailsTable({ clientId, mode, vehicle, onUpdate, onBack 
             // Edit mode direct upload
             if (!vehicle?.id) return;
 
-            setUploading(true);
             try {
                 const result = await clientApi.uploadVehicleImage(clientId, vehicle.id, file);
                 toast({ title: "Success", description: "Vehicle photo uploaded successfully." });
@@ -159,8 +159,6 @@ export function VehicleDetailsTable({ clientId, mode, vehicle, onUpdate, onBack 
                 setFormData((prev: any) => ({ ...prev, vehicle_image_url: result.vehicle_image_url }));
             } catch (error: any) {
                 toast({ title: "Upload Failed", description: formatApiError(error) || "Could not upload image", variant: "destructive" });
-            } finally {
-                setUploading(false);
             }
         };
 
@@ -174,19 +172,19 @@ export function VehicleDetailsTable({ clientId, mode, vehicle, onUpdate, onBack 
                     <div className="relative group">
                         <div className="h-16 w-16 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex-shrink-0">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={displayUrl} alt="VehiclePhoto" className="w-full h-full object-cover" />
+                            <img src={typeof displayUrl === 'string' ? displayUrl : ''} alt="VehiclePhoto" className="w-full h-full object-cover" />
                         </div>
                         <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                             <Camera className="text-white h-4 w-4" />
-                            <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} disabled={uploading} />
+                            <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
                         </label>
                     </div>
                 ) : (
                     <Button variant="outline" className="h-10 px-4 rounded-xl border-dashed border-2 border-gray-200 hover:border-[#00539F] hover:bg-blue-50/50 text-gray-500 font-bold flex items-center gap-2 group transition-all" asChild>
                         <label className="cursor-pointer">
-                            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4 group-hover:text-[#00539F]" />}
-                            <span className="group-hover:text-[#00539F]">{uploading ? 'Uploading...' : 'Upload Photo'}</span>
-                            <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} disabled={uploading} />
+                            <Camera className="h-4 w-4 group-hover:text-[#00539F]" />
+                            <span className="group-hover:text-[#00539F]">Upload Photo</span>
+                            <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
                         </label>
                     </Button>
                 )}
@@ -203,7 +201,7 @@ export function VehicleDetailsTable({ clientId, mode, vehicle, onUpdate, onBack 
 
         if (field.type === 'file') {
             const fileVal = mode === 'create' ? formData[field.key] : formData[field.key];
-            return renderFileInput(field, fileVal);
+            return <VehicleFileInput field={field} currentValue={fileVal} />;
         }
 
         switch (field.type) {
@@ -285,7 +283,7 @@ export function VehicleDetailsTable({ clientId, mode, vehicle, onUpdate, onBack 
                                     <TableRow key={field.key} className="hover:bg-gray-50/30 transition-colors">
                                         <TableCell className="font-bold text-gray-500 pl-8 py-4">{field.label}</TableCell>
                                         <TableCell className="py-2 font-bold text-gray-900">
-                                            {renderFileInput(field, value)}
+                                            <VehicleFileInput field={field} currentValue={value} />
                                         </TableCell>
                                         <TableCell className="text-right pr-8 py-4"></TableCell>
                                     </TableRow>

@@ -20,7 +20,7 @@ import { quoteApi } from '@/lib/quote-api';
 import { policyApi } from '@/lib/policy-api';
 import { claimApi } from '@/lib/claim-api';
 import { paymentApi } from '@/lib/payment-api';
-import { InsuranceDetailsTab, Driver, Vehicle as PortalVehicle } from '@/components/portal/insurance-details-tab';
+import { InsuranceDetailsTab, PortalDriver as Driver, PortalVehicle } from '@/components/portal/insurance-details-tab';
 
 // ... (keep existing imports, remove unused ones later if strictly needed, but verify first)
 
@@ -54,7 +54,8 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                 employmentStatus: d.employment_status,
                 maritalStatus: d.marital_status,
                 numberOfChildren: d.number_of_children,
-                photoUrl: d.photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${d.last_name}`
+                photoUrl: d.photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${d.last_name}`,
+                dateOfBirth: '' // TODO: Map real DOB if available in backend
             }));
         }
 
@@ -73,7 +74,9 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
             employmentStatus: c.employment_status || '',
             maritalStatus: c.marital_status || '',
             numberOfChildren: c.life_details?.dependent_count || 0,
-            photoUrl: c.profile_picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.first_name}`
+            numberOfChildren: c.life_details?.dependent_count || 0,
+            photoUrl: c.profile_picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.first_name}`,
+            dateOfBirth: c.date_of_birth ? new Date(c.date_of_birth).toISOString().split('T')[0] : ''
         }];
     };
 
