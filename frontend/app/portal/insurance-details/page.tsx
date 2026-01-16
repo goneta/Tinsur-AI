@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { InsuranceDetailsTab, Driver, Vehicle as PortalVehicle } from '@/components/portal/insurance-details-tab';
+import { InsuranceDetailsTab, PortalDriver as Driver, PortalVehicle } from '@/components/portal/insurance-details-tab';
 import { clientApi } from '@/lib/client-api';
 import { policyApi } from '@/lib/policy-api';
 import { quoteApi } from '@/lib/quote-api';
