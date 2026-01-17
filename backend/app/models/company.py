@@ -22,7 +22,8 @@ class Company(Base):
     address = Column(Text)
     
     # Company registration and legal info
-    registration_number = Column(String(100))
+    registration_number = Column(String(100)) # Stores the user-provided "N° RCCM"
+    system_registration_number = Column(String(50), unique=True, nullable=True) # Automatically generated "COMP-..."
     
     # Financial information
     bank_details = Column(JSON, default=[])  # List of bank accounts

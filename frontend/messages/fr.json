@@ -528,9 +528,32 @@
         }
     },
     "register": {
+        "title": "Créer un Compte",
+        "subtitle": "Inscrivez votre compagnie d'assurance et commencez à gérer les polices",
         "first_name": "Prénom",
         "last_name": "Nom",
-        "phone": "Numéro de téléphone"
+        "email": "Email",
+        "password": "Mot de passe",
+        "phone": "Téléphone",
+        "address": "Adresse",
+        "company_info": "Information de l'Entreprise",
+        "company_name": "Nom de l'Entreprise",
+        "rccm": "Numéro de l'Entreprise (N° RCCM)",
+        "subdomain": "Sous-domaine de l'Entreprise",
+        "subdomain_desc": "Ce sera votre identifiant unique d'entreprise",
+        "create_btn": "Créer un Compte",
+        "already_have_account": "Vous avez déjà un compte ?",
+        "sign_in_link": "Se connecter",
+        "optional": "(Optionnel)"
+    },
+    "login": {
+        "welcome": "Bon retour",
+        "subtitle": "Connectez-vous à votre compte Tinsur.AI",
+        "email": "Email",
+        "password": "Mot de passe",
+        "sign_in_btn": "Se connecter",
+        "no_account": "Vous n'avez pas de compte ?",
+        "register_link": "Inscrivez-vous maintenant"
     },
     "employees": {
         "title": "Employés",

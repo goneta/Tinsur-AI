@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AuthHeader } from "@/components/layout/auth-header";
 
 
 type LoginFormData = z.infer<typeof baseSchema>;
@@ -24,8 +25,6 @@ const baseSchema = z.object({
     password: z.string().min(6),
 });
 
-
-import { LanguageSwitcher } from '@/components/language-switcher';
 
 export default function LoginPage() {
     const [error, setError] = useState('');
@@ -65,14 +64,12 @@ export default function LoginPage() {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8 relative">
-            <div className="absolute top-4 right-4">
-                <LanguageSwitcher />
-            </div>
+            <AuthHeader />
             <Card className="w-full max-w-md">
                 <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold text-center" suppressHydrationWarning>{t('Welcome Back')}</CardTitle>
+                    <CardTitle className="text-2xl font-bold text-center" suppressHydrationWarning>{t('login.welcome', 'Welcome Back')}</CardTitle>
                     <CardDescription className="text-center">
-                        {t('Sign in to your Insurance SaaS account')}
+                        {t('login.subtitle', 'Sign in to your Tinsur.AI account')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -84,7 +81,7 @@ export default function LoginPage() {
                         )}
 
                         <div className="space-y-2">
-                            <Label htmlFor="email">{t('Email')}</Label>
+                            <Label htmlFor="email">{t('login.email', 'Email')}</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -98,7 +95,7 @@ export default function LoginPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="password">{t('Password')}</Label>
+                            <Label htmlFor="password">{t('login.password', 'Password')}</Label>
                             <Input
                                 id="password"
                                 type="password"
@@ -112,13 +109,13 @@ export default function LoginPage() {
                         </div>
 
                         <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? t('Signing in...') : t('Sign In')}
+                            {loading ? t('Signing in...') : t('login.sign_in_btn', 'Sign In')}
                         </Button>
 
                         <div className="text-center text-sm">
-                            <span className="text-gray-600">{t("Don't have an account? ")}</span>
+                            <span className="text-gray-600">{t('login.no_account', "Don't have an account?")} </span>
                             <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
-                                {t('Register now')}
+                                {t('login.register_link', 'Register now')}
                             </Link>
                         </div>
                     </form>

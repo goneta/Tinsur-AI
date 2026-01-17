@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-import { LanguageSwitcher } from '@/components/language-switcher';
+import { AuthHeader } from "@/components/layout/auth-header";
 import { useLanguage } from '@/contexts/language-context';
 
 export default function RegisterPage() {
@@ -26,14 +26,16 @@ export default function RegisterPage() {
     const registerSchema = z.object({
         email: z.string().email(t('Invalid email address')),
         password: z.string().min(8, t('Password must be at least 8 characters')),
-        first_name: z.string().min(2, t('First name is required')),
-        last_name: z.string().min(2, t('Last name is required')),
+        first_name: z.string().min(2, t('register.first_name', 'First name is required')),
+        last_name: z.string().min(2, t('register.last_name', 'Last name is required')),
         phone: z.string().optional(),
-        company_name: z.string().min(2, t('Company name is required')),
+        company_name: z.string().min(2, t('register.company_name', 'Company name is required')),
         company_subdomain: z
             .string()
             .min(3, t('Subdomain must be at least 3 characters'))
             .regex(/^[a-z0-9-]+$/, t('Subdomain must contain only lowercase letters, numbers, and hyphens')),
+        address: z.string().optional(),
+        rccm_number: z.string().optional(),
     });
 
     type RegisterFormData = z.infer<typeof registerSchema>;
@@ -64,14 +66,12 @@ export default function RegisterPage() {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8 relative">
-            <div className="absolute top-4 right-4">
-                <LanguageSwitcher />
-            </div>
+            <AuthHeader />
             <Card className="w-full max-w-2xl">
                 <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold text-center">{t('Create an Account')}</CardTitle>
+                    <CardTitle className="text-2xl font-bold text-center">{t('register.title', 'Create an Account')}</CardTitle>
                     <CardDescription className="text-center">
-                        {t('Register your insurance company and start managing policies')}
+                        {t('register.subtitle', 'Register your insurance company and start managing policies')}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -84,7 +84,7 @@ export default function RegisterPage() {
 
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
-                                <Label htmlFor="first_name">{t('First Name')}</Label>
+                                <Label htmlFor="first_name">{t('register.first_name', 'First Name')}</Label>
                                 <Input
                                     id="first_name"
                                     placeholder="John"
@@ -97,7 +97,7 @@ export default function RegisterPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="last_name">{t('Last Name')}</Label>
+                                <Label htmlFor="last_name">{t('register.last_name', 'Last Name')}</Label>
                                 <Input
                                     id="last_name"
                                     placeholder="Doe"
@@ -111,7 +111,7 @@ export default function RegisterPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="email">{t('Email')}</Label>
+                            <Label htmlFor="email">{t('register.email', 'Email')}</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -125,7 +125,7 @@ export default function RegisterPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="password">{t('Password')}</Label>
+                            <Label htmlFor="password">{t('register.password', 'Password')}</Label>
                             <Input
                                 id="password"
                                 type="password"
@@ -139,7 +139,7 @@ export default function RegisterPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="phone">{t('Phone')} ({t('Optional')})</Label>
+                            <Label htmlFor="phone">{t('register.phone', 'Phone')} ({t('register.optional', 'Optional')})</Label>
                             <Input
                                 id="phone"
                                 type="tel"
@@ -148,12 +148,21 @@ export default function RegisterPage() {
                             />
                         </div>
 
+                        <div className="space-y-2">
+                            <Label htmlFor="address">{t('register.address', 'Address')} ({t('register.optional', 'Optional')})</Label>
+                            <Input
+                                id="address"
+                                placeholder={t('123 Main St, City')}
+                                {...register('address')}
+                            />
+                        </div>
+
                         <div className="border-t pt-4">
-                            <h3 className="mb-4 text-sm font-semibold">{t('Company Information')}</h3>
+                            <h3 className="mb-4 text-sm font-semibold">{t('register.company_info', 'Company Information')}</h3>
 
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="company_name">{t('Company Name')}</Label>
+                                    <Label htmlFor="company_name">{t('register.company_name', 'Company Name')}</Label>
                                     <Input
                                         id="company_name"
                                         placeholder="ABC Insurance Co."
@@ -166,7 +175,16 @@ export default function RegisterPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="company_subdomain">{t('Company Subdomain')}</Label>
+                                    <Label htmlFor="rccm_number">{t('register.rccm', 'Company Number (N° RCCM)')} ({t('register.optional', 'Optional')})</Label>
+                                    <Input
+                                        id="rccm_number"
+                                        placeholder="RCCM-123456"
+                                        {...register('rccm_number')}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="company_subdomain">{t('register.subdomain', 'Company Subdomain')}</Label>
                                     <div className="flex">
                                         <Input
                                             id="company_subdomain"
@@ -175,27 +193,27 @@ export default function RegisterPage() {
                                             className={errors.company_subdomain ? 'border-red-500' : ''}
                                         />
                                         <span className="ml-2 flex items-center text-sm text-gray-500">
-                                            .insurancesaas.com
+                                            .Tinsur.AI.com
                                         </span>
                                     </div>
                                     {errors.company_subdomain && (
                                         <p className="text-sm text-red-600">{errors.company_subdomain.message}</p>
                                     )}
                                     <p className="text-xs text-gray-500">
-                                        {t('This will be your unique company identifier')}
+                                        {t('register.subdomain_desc', 'This will be your unique company identifier')}
                                     </p>
                                 </div>
                             </div>
                         </div>
 
                         <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? t('Creating account...') : t('Create Account')}
+                            {loading ? t('Creating account...') : t('register.create_btn', 'Create Account')}
                         </Button>
 
                         <div className="text-center text-sm">
-                            <span className="text-gray-600">{t('Already have an account?')} </span>
+                            <span className="text-gray-600">{t('register.already_have_account', 'Already have an account?')} </span>
                             <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                                {t('Sign in')}
+                                {t('register.sign_in_link', 'Sign in')}
                             </Link>
                         </div>
                     </form>

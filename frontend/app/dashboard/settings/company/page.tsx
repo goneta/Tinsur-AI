@@ -258,7 +258,7 @@ export default function CompanySettingsPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="regNumber">{t('settings.company.reg_number', 'Registration Number')}</Label>
+                                <Label htmlFor="regNumber">{t('settings.company.rccm_number', 'Company Number (N° RCCM)')}</Label>
                                 <Input
                                     id="regNumber"
                                     value={registrationNumber}

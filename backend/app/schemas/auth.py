@@ -45,8 +45,10 @@ class RegisterRequest(BaseModel):
     first_name: str
     last_name: str
     phone: Optional[str] = None
+    address: Optional[str] = None
     company_name: Optional[str] = None  # For creating new company
     company_subdomain: Optional[str] = None
+    rccm_number: Optional[str] = None
 
 
 class RefreshTokenRequest(BaseModel):

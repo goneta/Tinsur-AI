@@ -45,11 +45,21 @@ class AuthService:
                     detail="Company subdomain already taken"
                 )
             
+            # Generate system registration number
+            import string
+            import random
+            random_chars = ''.join(random.choices(string.ascii_uppercase + string.digits, k=14))
+            system_reg_num = f"COMP-{random_chars}"
+
             # Create new company
             company = Company(
                 name=request.company_name,
                 subdomain=request.company_subdomain,
-                email=request.email
+                email=request.email,
+                phone=request.phone,
+                address=request.address,
+                registration_number=request.rccm_number,  # Map RCCM to registration_number column
+                system_registration_number=system_reg_num
             )
             self.db.add(company)
             self.db.flush()
