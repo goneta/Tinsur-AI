@@ -134,9 +134,14 @@ export default function PoliciesPage() {
             policyNumber: policy.policy_number,
             status: policy.status,
             activeDate: policy.start_date ? new Date(policy.start_date).toLocaleDateString() : 'N/A',
-            premium: `£${policy.premium_amount}`,
+            premium: `£${policy.premium_amount}`, // Format override if formatPrice available
+            premiumAmount: policy.premium_amount, // Pass raw for monthly calc
             coverLevel: t(policyTypeNames[policy.policy_type_id] || 'Standard', policyTypeNames[policy.policy_type_id] || 'Standard'),
-            features: features
+            type: policyTypeNames[policy.policy_type_id], // Pass raw type name for logic
+            features: features,
+            entityImage: (policy.details as any)?.image_url, // Generic field if available, or vehicle_iamge
+            clientName: (policy as any).client_name || "Client", // Fallback
+            clientImage: (policy as any).client_avatar // Fallback
         };
 
         return (

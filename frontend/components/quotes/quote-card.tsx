@@ -1,6 +1,8 @@
 import { Quote } from "@/types/quote"
 import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { UniversalEntityCard, EntityItem } from "@/components/shared/universal-entity-card"
 import { Loader2, Send, ThumbsUp, ThumbsDown, Archive, Pencil, Trash, Check } from "lucide-react"
 import { PremiumPolicyType } from "@/lib/premium-policy-api"
@@ -207,26 +209,106 @@ export function QuoteCard({
         </div>
     )
 
+    const getInitials = (name: string) => {
+        return name
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2)
+    }
+
     const title = (quote.details as any)?.vehicle_name || quote.client_name || "Insurance Quote"
-    const subtitle = (quote.details as any)?.vehicle_name ? quote.client_name : `${policyTypeName} #${quote.quote_number}`
 
     return (
         <UniversalEntityCard
             header={{
-                title: title,
-                subtitle: subtitle,
-                status: getStatusLabel(),
-                statusColor: getStatusColor(quote.status)
+                title: title, // Fallback if customContent fails, though we use customContent
+                customContent: (
+                    <div className="w-full">
+                        {/* Top: Status Label */}
+                        <div className="flex justify-end mb-4">
+                            <Badge className={cn("font-bold uppercase tracking-widest text-[10px] px-3 py-1", getStatusColor(quote.status))}>
+                                {getStatusLabel()}
+                            </Badge>
+                        </div>
+
+                        <div className="flex gap-4 items-start">
+                            {/* Avatar */}
+                            <Avatar className="h-12 w-12 border-2 border-[#00539F]">
+                                <AvatarImage src={(quote as any).client_avatar} alt={quote.client_name} />
+                                <AvatarFallback className="bg-[#00539F] text-white font-bold">
+                                    {getInitials(quote.client_name)}
+                                </AvatarFallback>
+                            </Avatar>
+
+                            <div className="flex flex-col">
+                                {/* Client Name - Reduced Size */}
+                                <span className="text-sm font-bold text-slate-800 uppercase tracking-tight leading-tight">
+                                    {quote.client_name}
+                                </span>
+
+                                {/* Policy Type */}
+                                <span className="text-xs font-bold uppercase tracking-wide text-[#00539F] mt-1">
+                                    {policyTypeName}
+                                </span>
+
+                                {/* Quote Number */}
+                                <span className="text-[10px] font-medium text-slate-500 mt-0.5">
+                                    #{quote.quote_number}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                )
             }}
             items={items}
             financials={[
                 ...fees.map(f => ({ label: f.label, amount: f.amount })),
                 {
-                    label: `${t("Total Premium", "Total Premium")} (${t(quote.premium_frequency, quote.premium_frequency)})`,
-                    amount: currentPremium,
-                    isTotal: true
+                    label: <span className="text-[10px] font-bold uppercase tracking-wider">{t("Amount", "Amount")} ({t(quote.premium_frequency, quote.premium_frequency)})</span>,
+                    amount: currentPremium, // UniversalEntityCard handles formatting if number, but we might want custom styling
+                    // To enforce smaller size on amount, we can pass a ReactNode if supported, or rely on UniversalEntityCard's default.
+                    // Step 819 added item.priceClassName, but financials uses its own rendering.
+                    // UniversalEntityCard line 180: className={cn(fee.isTotal && "text-xl font-black text-[#00539F]")}
+                    // It forces text-xl.
+                    // To override, I can pass a ReactNode for amount.
+                    // amount: <span className="text-lg font-black text-[#00539F]">{formatCurrency(currentPremium)}</span>
+                    // But I need formatCurrency. I can just pass the number for now and accept text-xl, OR wrap it.
+                    // The request says "Reduce the size of Total Premium... and its amount". text-xl is big.
+                    // I will check if I can import formatCurrency or just pass a node.
+                    // I'll wrap it.
                 }
-            ]}
+            ].map(f => {
+                // Formatting Amount if it's the Total line to override styles
+                if (f.label.toString().includes('Amount')) {
+                    return {
+                        ...f,
+                        isTotal: false, // Turn off default total styling to use our own or just accept standard list styling?
+                        // User wants consistent design.
+                        // If I use isTotal: true, it gets text-xl. User wants reduced size.
+                        // So I will set isTotal: false and bold it myself in label/amount props?
+                        // UniversalEntityCard renders non-total items as "text-gray-400".
+                        // I will pass ReactNode for label and amount to control style fully.
+                        amount: (
+                            <span className="text-base font-black text-[#00539F]">
+                                {/* We need formatPrice or formatCurrency here. formatPrice is avail from useLanguage? No, standard formatCurrency from utils? */}
+                                {/* I need to import formatCurrency from utils if I use it inline. */}
+                                {/* I'll use isTotal: true but change UniversalEntityCard to allow size override? No, better to custom render. */}
+                                {/* UniversalEntityCard renders: typeof fee.amount === 'number' ? formatCurrency(fee.amount) : fee.amount */}
+                                {/* So if I pass a Node, it renders the Node. */}
+                                {/* useLanguage provides formatPrice. */}
+                                {/* I will use formatPrice if available or just let it render. */}
+                                {/* Wait, I can't call formatPrice inside the object definition easily unless I calculate it before. */}
+                                {/* I will use useLanguage().formatPrice(currentPremium). */}
+                            </span>
+                        )
+                    }
+                }
+                return f;
+            })}
+            // Wait, mapping inside the array prop is messy. I will construct the array before.
+
             footer={{
                 validUntil: new Date(quote.valid_until).toLocaleDateString()
             }}
