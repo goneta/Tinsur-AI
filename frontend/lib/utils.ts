@@ -6,6 +6,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number, currency: string = 'XOF', locale: string = 'fr-FR'): string {
+  if (currency === 'XOF' || currency === 'FCFA') {
+    return new Intl.NumberFormat(locale, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount) + ' FCFA';
+  }
+
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency,

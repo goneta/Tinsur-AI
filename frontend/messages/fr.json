@@ -814,6 +814,14 @@
         "description": "Description",
         "type_reply": "Tapez votre réponse..."
     },
+    "policy": {
+        "demo_co": "Demo Assurance Cie",
+        "mature_driver_gold": "Conducteur Expérimenté Or"
+    },
+    "criteria": {
+        "driving_license_years": "Années de Permis",
+        "age": "Âge"
+    },
     "premium_policies": {
         "title": "Polices Premium",
         "desc": "Gérez les produits d'assurance premium et les critères.",

@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { DataView } from '@/components/ui/data-view'
 import { useToast } from '@/components/ui/use-toast'
+import { UniversalEntityCard } from '@/components/shared/universal-entity-card'
+import { FormattedCurrency } from '@/components/shared/formatted-currency'
 import { premiumPolicyApi, PremiumPolicyType } from '@/lib/premium-policy-api'
 import { columns as getColumns } from './columns'
 import { PremiumPolicyForm } from './components/premium-policy-form'
@@ -67,126 +69,115 @@ export default function PremiumPoliciesPage() {
 
     const columns = useMemo(() => getColumns(handleEdit, handleDelete, formatPrice), [handleEdit, handleDelete, formatPrice])
 
-    const renderPolicyCard = useCallback((policy: PremiumPolicyType) => (
-        <Card className="relative overflow-hidden hover:shadow-xl transition-all h-full flex flex-col border border-border shadow-sm group bg-white p-0 rounded-none">
-            {/* Green Header Strip */}
-            <div className="h-4 bg-[#76c077] w-full" />
+    const renderPolicyCard = useCallback((policy: PremiumPolicyType) => {
+        // Map services to generic card items
+        const serviceItems = (policy.services || []).map(service => ({
+            id: `service-${service.id}`,
+            label: (
+                <span className="text-[10px]">
+                    {language === 'fr' && service.name_fr ? service.name_fr : service.name_en}
+                </span>
+            ),
+            checked: true,
+            disabled: true,
+            price: service.default_price, // Add price to display on the right
+            priceClassName: "text-[10px]" // Reduced font size for price
+        }));
 
-            <div className="p-5 flex flex-col h-full relative">
-                {/* Action Buttons (Absolute Top Right) */}
-                <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                        onClick={() => handleEdit(policy)}
-                        title="Edit"
-                    >
-                        <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(policy)}
-                        title="Delete"
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </div>
+        // Map criteria to generic card items
+        const criteriaItems = (policy.criteria || []).map(criterion => ({
+            id: `criteria-${criterion.id}`,
+            label: (
+                <span className="text-[10px]">
+                    {t(`criteria.${criterion.field_name}`, criterion.field_name)} {criterion.operator} {criterion.value}
+                </span>
+            ),
+            checked: true,
+            disabled: true,
+            icon: <Check className="h-2 w-2 text-white" />,
+            checkClassName: "h-3 w-3 mt-0.5", // Reduced from h-5 w-5
+            iconClassName: "h-2 w-2" // Reduced from h-3.5 w-3.5
+        }));
 
-                {/* Header Section */}
-                <div className="mb-4">
-                    <div className="text-sm font-bold text-black mb-0">{t('policy.demo_co', 'Demo Insurance Co')}</div>
-                    <h3 className="text-2xl font-bold text-black tracking-tight mb-1">
-                        {t(`policy.${policy.name.toLowerCase().replace(/ /g, '_')}`, policy.name)}
-                    </h3>
+        const allItems = [
+            // Criteria Section
+            {
+                id: 'header-criteria',
+                label: "Eligibility criteria",
+                isSectionHeader: true
+            },
+            ...criteriaItems,
 
-                    {/* Star Rating */}
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium">4.8 {t('premium_policies.client_rating', 'Client Rating')}</span>
-                        <div className="flex gap-0.5 text-black">
-                            {Array(5).fill(0).map((_, i) => (
-                                <svg key={i} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-black">
-                                    <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
-                                </svg>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="text-sm font-bold text-black">{t('premium_policies.excess', 'Excess')}: {formatPrice(policy.excess)}</div>
-                </div>
+            // Services Section
+            {
+                id: 'header-services',
+                label: "Included services",
+                isSectionHeader: true
+            },
+            ...serviceItems
+        ];
 
-                {/* Features List */}
-                <div className="space-y-4 mb-8 flex-1">
-                    {/* Included Services */}
-                    {policy.services && policy.services.length > 0 && (
-                        <div>
-                            <h4 className="font-bold text-sm mb-2 text-black">{t('premium_policies.included_services', 'Included Services')}</h4>
-                            <div className="space-y-2">
-                                {policy.services.map((service) => (
-                                    <div key={service.id} className="flex items-start gap-3">
-                                        <div className="mt-0.5 min-w-[20px]">
-                                            <div className="h-5 w-5 rounded-full bg-[#1b5e63] flex items-center justify-center">
-                                                <Check className="h-3 w-3 text-white stroke-[3]" />
-                                            </div>
-                                        </div>
-                                        <span className="text-[15px] text-gray-800 leading-tight">
-                                            {language === 'fr' && service.name_fr ? service.name_fr : service.name_en}
-                                        </span>
+        // Calculate Total Premium: Base Price + Sum of all included services
+        const servicesTotal = (policy.services || []).reduce((sum, service) => sum + Number(service.default_price || 0), 0);
+        const totalPremium = Number(policy.price || 0) + servicesTotal;
+
+        return (
+            <div className="h-full relative group">
+                <UniversalEntityCard
+                    header={{
+                        title: t(`policy.${policy.name.toLowerCase().replace(/ /g, '_')}`, policy.name),
+                        customContent: (
+                            <div className="flex flex-col items-center justify-center text-center w-full mb-2">
+                                {/* Policy Name - Larger and Bolder */}
+                                <h3 className="text-sm font-extrabold text-slate-800 uppercase tracking-wide mb-1">
+                                    {t(`policy.${policy.name.toLowerCase().replace(/ /g, '_')}`, policy.name)}
+                                </h3>
+
+                                {/* Rating - Smaller */}
+                                <div className="flex items-center gap-1 mb-1">
+                                    <span className="text-[10px] font-black text-[#00539F]">4.8</span>
+                                    <div className="flex gap-0.5 text-[#00539F]">
+                                        {Array(5).fill(0).map((_, i) => (
+                                            <svg key={i} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-2.5 h-2.5">
+                                                <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
+                                            </svg>
+                                        ))}
                                     </div>
-                                ))}
+                                </div>
                             </div>
+                        )
+                    }}
+                    items={allItems}
+                    financials={[
+                        {
+                            label: <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('premium_policies.cover_amount', 'Cover amount')}:</span>,
+                            amount: <FormattedCurrency amount={totalPremium} className="text-sm font-black text-[#00539F] ml-2" />,
+                            isTotal: false
+                        }
+                    ]}
+                    actions={
+                        <div className="flex gap-2 w-full">
+                            <Button
+                                variant="outline"
+                                className="flex-1"
+                                onClick={() => handleEdit(policy)}
+                            >
+                                <Pencil className="mr-2 h-4 w-4" />
+                                {t('common.edit', 'Edit')}
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                size="icon"
+                                onClick={() => handleDelete(policy)}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
                         </div>
-                    )}
-
-                    {/* Eligibility Criteria */}
-                    {policy.criteria && policy.criteria.length > 0 && (
-                        <div>
-                            <h4 className="font-bold text-sm mb-2 text-black">{t('premium_policies.eligibility', 'Eligibility Criteria')}</h4>
-                            <div className="space-y-2">
-                                {policy.criteria.map((criterion) => (
-                                    <div key={criterion.id} className="flex items-start gap-3">
-                                        <div className="mt-0.5 min-w-[20px]">
-                                            <div className="h-5 w-5 rounded-full bg-[#1b5e63] flex items-center justify-center">
-                                                <Check className="h-3 w-3 text-white stroke-[3]" />
-                                            </div>
-                                        </div>
-                                        <span className="text-[15px] text-gray-800 leading-tight">
-                                            {criterion.field_name} {criterion.operator} {criterion.value}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Price Footer */}
-                <div className="mt-auto text-center border-t border-transparent pt-4">
-                    <div className="flex flex-col items-center justify-end mb-4">
-                        <span className="text-3xl font-extrabold text-black tracking-tight">
-                            {formatPrice(policy.price)}
-                        </span>
-                        <span className="text-lg font-bold text-black">{t('premium_policies.per_month', 'Per Month')}</span>
-                    </div>
-
-                    <div className="text-[10px] leading-tight text-gray-600 space-y-1">
-                        <p>
-                            {t('premium_policies.deposit_text')
-                                .replace('{0}', formatPrice(0))
-                                .replace('{1}', '12')
-                                .replace('{2}', formatPrice(policy.price))}
-                        </p>
-                        <p>
-                            {t('premium_policies.legal_note')
-                                .replace('{0}', formatPrice(53))
-                                .replace('{1}', formatPrice(policy.price * 12 + 53))}
-                        </p>
-                    </div>
-                </div>
+                    }
+                />
             </div>
-        </Card>
-    ), [handleEdit, handleDelete])
+        );
+    }, [handleEdit, handleDelete, t, language]);
 
     if (!mounted) return null
 

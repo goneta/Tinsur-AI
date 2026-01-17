@@ -103,6 +103,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     };
 
     const formatPrice = (amount: number): string => {
+        if (currency === 'XOF' || currency === 'FCFA') {
+            return new Intl.NumberFormat(language === 'fr' ? 'fr-FR' : 'en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount) + ' FCFA';
+        }
+
         return new Intl.NumberFormat(language === 'fr' ? 'fr-FR' : 'en-US', {
             style: 'currency',
             currency: currency,

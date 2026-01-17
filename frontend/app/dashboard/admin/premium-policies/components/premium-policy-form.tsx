@@ -214,11 +214,7 @@ export function PremiumPolicyForm({
                                         <Input type="number" {...register('price')} placeholder="50000" />
                                         {errors.price && <p className="text-sm text-red-500">{errors.price.message}</p>}
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label>Excess</Label>
-                                        <Input type="number" {...register('excess')} placeholder="0" />
-                                        {errors.excess && <p className="text-sm text-red-500">{errors.excess.message}</p>}
-                                    </div>
+                                    {/* Excess field removed */}
                                 </div>
 
                                 <div className="space-y-2">
