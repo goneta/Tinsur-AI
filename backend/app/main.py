@@ -37,22 +37,21 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Request logging middleware
-@app.middleware("http")
-async def log_requests(request, call_next):
-    logger.error(f"DEBUG_REQ: {request.method} {request.url}")
-    response = await call_next(request)
-    logger.error(f"DEBUG_RES: {request.method} {request.url} - {response.status_code}")
-    return response
-
-# Configure CORS
+# Configure CORS (MUST be before other middleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8000", "http://127.0.0.1:8000"] + settings.ALLOWED_ORIGINS,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ] + settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
 
 # Mount uploads directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

@@ -1,7 +1,7 @@
 """
 Client schemas.
 """
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, validator
 from typing import Optional, List, Dict, Any, Union
 from datetime import datetime, date
 import uuid
@@ -24,6 +24,8 @@ class ClientAutomobileBase(BaseModel):
     vehicle_color: Optional[str] = None
     country_of_registration: Optional[str] = None
     registration_document_url: Optional[str] = None
+    parked_location: Optional[str] = None
+    vehicle_image_url: Optional[str] = None
     parked_location: Optional[str] = None
     
     driver_name: Optional[str] = None
@@ -241,6 +243,8 @@ class ClientCreate(ClientBase):
     """Client creation schema."""
     company_id: Optional[uuid.UUID] = None
     created_by: Optional[uuid.UUID] = None
+    password: Optional[str] = None  # Required for self-registration
+    automobile_details: Optional[List[ClientAutomobileCreate]] = None
 
 
 class ClientUpdate(BaseModel):
@@ -286,13 +290,20 @@ class ClientUpdate(BaseModel):
 class ClientInDB(ClientBase):
     """Client in database schema."""
     id: uuid.UUID
-    company_id: uuid.UUID
+    # For backward compatibility, still provide primary company_id
+    company_id: Optional[uuid.UUID] = None 
+    company_ids: List[uuid.UUID] = []
     user_id: Optional[uuid.UUID] = None
     status: str = "active"
     created_by: Optional[uuid.UUID] = None
     created_at: datetime
     updated_at: datetime
     
+    @validator("company_ids", pre=True, always=True)
+    def set_company_ids(cls, v, values, **kwargs):
+        # This is tricky with from_attributes=True if it's a list of models
+        return v
+
     class Config:
         from_attributes = True
 

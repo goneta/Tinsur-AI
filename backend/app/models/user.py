@@ -15,7 +15,7 @@ class User(Base):
     __tablename__ = "users"
     
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), index=True)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), index=True, nullable=True)
     email = Column(String(255), nullable=False, unique=True, index=True)
     password_hash = Column(String(255), nullable=False)
     first_name = Column(String(100))

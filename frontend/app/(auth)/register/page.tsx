@@ -1,224 +1,75 @@
-/**
- * Registration page.
- */
 'use client';
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import Link from 'next/link';
-import { useAuth } from '@/lib/auth';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
-import { AuthHeader } from "@/components/layout/auth-header";
-import { useLanguage } from '@/contexts/language-context';
+import { Button } from "@/components/ui/button";
+import { Building2, UserCircle2 } from "lucide-react";
 
 export default function RegisterPage() {
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    const { register: registerUser } = useAuth();
-    const { t } = useLanguage();
-
-    const registerSchema = z.object({
-        email: z.string().email(t('Invalid email address')),
-        password: z.string().min(8, t('Password must be at least 8 characters')),
-        first_name: z.string().min(2, t('register.first_name', 'First name is required')),
-        last_name: z.string().min(2, t('register.last_name', 'Last name is required')),
-        phone: z.string().optional(),
-        company_name: z.string().min(2, t('register.company_name', 'Company name is required')),
-        company_subdomain: z
-            .string()
-            .min(3, t('Subdomain must be at least 3 characters'))
-            .regex(/^[a-z0-9-]+$/, t('Subdomain must contain only lowercase letters, numbers, and hyphens')),
-        address: z.string().optional(),
-        rccm_number: z.string().optional(),
-    });
-
-    type RegisterFormData = z.infer<typeof registerSchema>;
-
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm<RegisterFormData>({
-        resolver: zodResolver(registerSchema),
-    });
-
-    const onSubmit = async (data: RegisterFormData) => {
-        setError('');
-        setLoading(true);
-
-        try {
-            await registerUser(data);
-        } catch (err: any) {
-            console.error("Registration error:", err);
-            const detail = err.response?.data?.detail;
-            // Fallback to message or generic error
-            setError(detail || err.message || t('Registration failed. Please try again.'));
-        } finally {
-            setLoading(false);
-        }
-    };
-
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8 relative">
-            <AuthHeader />
-            <Card className="w-full max-w-2xl">
-                <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold text-center">{t('register.title', 'Create an Account')}</CardTitle>
-                    <CardDescription className="text-center">
-                        {t('register.subtitle', 'Register your insurance company and start managing policies')}
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                        {error && (
-                            <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
-                                {error}
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+            <div className="max-w-4xl w-full">
+                <div className="text-center mb-12">
+                    <h1 className="text-4xl font-black text-gray-900 mb-4">
+                        Join Tinsur.AI
+                    </h1>
+                    <p className="text-gray-500 text-lg">
+                        Choose how you would like to register
+                    </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                    {/* Client Registration Card */}
+                    <div className="bg-white rounded-[30px] p-8 border hover:border-blue-500 hover:shadow-xl transition-all group cursor-pointer relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <UserCircle2 className="w-32 h-32 text-blue-500" />
+                        </div>
+                        <div className="relative z-10 flex flex-col h-full">
+                            <div className="bg-blue-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-blue-600 group-hover:scale-110 transition-transform">
+                                <UserCircle2 className="w-8 h-8" />
                             </div>
-                        )}
-
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="first_name">{t('register.first_name', 'First Name')}</Label>
-                                <Input
-                                    id="first_name"
-                                    placeholder="John"
-                                    {...register('first_name')}
-                                    className={errors.first_name ? 'border-red-500' : ''}
-                                />
-                                {errors.first_name && (
-                                    <p className="text-sm text-red-600">{errors.first_name.message}</p>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="last_name">{t('register.last_name', 'Last Name')}</Label>
-                                <Input
-                                    id="last_name"
-                                    placeholder="Doe"
-                                    {...register('last_name')}
-                                    className={errors.last_name ? 'border-red-500' : ''}
-                                />
-                                {errors.last_name && (
-                                    <p className="text-sm text-red-600">{errors.last_name.message}</p>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="email">{t('register.email', 'Email')}</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="you@company.com"
-                                {...register('email')}
-                                className={errors.email ? 'border-red-500' : ''}
-                            />
-                            {errors.email && (
-                                <p className="text-sm text-red-600">{errors.email.message}</p>
-                            )}
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="password">{t('register.password', 'Password')}</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                placeholder="••••••••"
-                                {...register('password')}
-                                className={errors.password ? 'border-red-500' : ''}
-                            />
-                            {errors.password && (
-                                <p className="text-sm text-red-600">{errors.password.message}</p>
-                            )}
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="phone">{t('register.phone', 'Phone')} ({t('register.optional', 'Optional')})</Label>
-                            <Input
-                                id="phone"
-                                type="tel"
-                                placeholder="+225 07 00 00 00 00"
-                                {...register('phone')}
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="address">{t('register.address', 'Address')} ({t('register.optional', 'Optional')})</Label>
-                            <Input
-                                id="address"
-                                placeholder={t('123 Main St, City')}
-                                {...register('address')}
-                            />
-                        </div>
-
-                        <div className="border-t pt-4">
-                            <h3 className="mb-4 text-sm font-semibold">{t('register.company_info', 'Company Information')}</h3>
-
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="company_name">{t('register.company_name', 'Company Name')}</Label>
-                                    <Input
-                                        id="company_name"
-                                        placeholder="ABC Insurance Co."
-                                        {...register('company_name')}
-                                        className={errors.company_name ? 'border-red-500' : ''}
-                                    />
-                                    {errors.company_name && (
-                                        <p className="text-sm text-red-600">{errors.company_name.message}</p>
-                                    )}
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="rccm_number">{t('register.rccm', 'Company Number (N° RCCM)')} ({t('register.optional', 'Optional')})</Label>
-                                    <Input
-                                        id="rccm_number"
-                                        placeholder="RCCM-123456"
-                                        {...register('rccm_number')}
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="company_subdomain">{t('register.subdomain', 'Company Subdomain')}</Label>
-                                    <div className="flex">
-                                        <Input
-                                            id="company_subdomain"
-                                            placeholder="abc-insurance"
-                                            {...register('company_subdomain')}
-                                            className={errors.company_subdomain ? 'border-red-500' : ''}
-                                        />
-                                        <span className="ml-2 flex items-center text-sm text-gray-500">
-                                            .Tinsur.AI.com
-                                        </span>
-                                    </div>
-                                    {errors.company_subdomain && (
-                                        <p className="text-sm text-red-600">{errors.company_subdomain.message}</p>
-                                    )}
-                                    <p className="text-xs text-gray-500">
-                                        {t('register.subdomain_desc', 'This will be your unique company identifier')}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? t('Creating account...') : t('register.create_btn', 'Create Account')}
-                        </Button>
-
-                        <div className="text-center text-sm">
-                            <span className="text-gray-600">{t('register.already_have_account', 'Already have an account?')} </span>
-                            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                                {t('register.sign_in_link', 'Sign in')}
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Individual Client</h2>
+                            <p className="text-gray-500 mb-8 flex-grow">
+                                Join as an individual to manage your insurance policies, track claims, and get personalized coverage.
+                            </p>
+                            <Link href="/register/client" className="w-full">
+                                <Button className="w-full h-12 rounded-xl text-lg font-bold bg-blue-600 hover:bg-blue-700">
+                                    Register as Client
+                                </Button>
                             </Link>
                         </div>
-                    </form>
-                </CardContent>
-            </Card>
+                    </div>
+
+                    {/* Company Registration Card */}
+                    <div className="bg-white rounded-[30px] p-8 border hover:border-purple-500 hover:shadow-xl transition-all group cursor-pointer relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <Building2 className="w-32 h-32 text-purple-500" />
+                        </div>
+                        <div className="relative z-10 flex flex-col h-full">
+                            <div className="bg-purple-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-purple-600 group-hover:scale-110 transition-transform">
+                                <Building2 className="w-8 h-8" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Insurance Company</h2>
+                            <p className="text-gray-500 mb-8 flex-grow">
+                                Register your insurance company to manage clients, issue policies, and streamline your operations.
+                            </p>
+                            <Link href="/register/company" className="w-full">
+                                <Button className="w-full h-12 rounded-xl text-lg font-bold bg-white text-purple-600 border-2 border-purple-100 hover:bg-purple-50 hover:border-purple-200">
+                                    Register as Company
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="text-center mt-12">
+                    <p className="text-gray-500">
+                        Already have an account?{' '}
+                        <Link href="/login" className="text-blue-600 font-bold hover:underline">
+                            Login here
+                        </Link>
+                    </p>
+                </div>
+            </div>
         </div>
     );
 }

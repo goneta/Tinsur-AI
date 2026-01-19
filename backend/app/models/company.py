@@ -66,7 +66,7 @@ class Company(Base):
     
     # Relationships
     users = relationship("User", back_populates="company", cascade="all, delete-orphan")
-    clients = relationship("Client", back_populates="company", cascade="all, delete-orphan")
+    clients = relationship("Client", secondary="client_company", back_populates="companies")
     
     # Documents
     documents = relationship("Document", back_populates="company", cascade="all, delete-orphan")

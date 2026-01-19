@@ -22,9 +22,11 @@ interface UnifiedEntityFormProps {
     clientId?: string;
     onUpdate: () => void;
     onBack: () => void;
+    customSubmit?: (data: any) => void;
+    submitLabel?: string;
 }
 
-export function UnifiedEntityForm({ type, mode, entity, clientId, onUpdate, onBack }: UnifiedEntityFormProps) {
+export function UnifiedEntityForm({ type, mode, entity, clientId, onUpdate, onBack, customSubmit, submitLabel }: UnifiedEntityFormProps) {
     const { toast } = useToast();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
@@ -86,6 +88,11 @@ export function UnifiedEntityForm({ type, mode, entity, clientId, onUpdate, onBa
     const saveNewEntity = async () => {
         if (type === 'client' && (!formData.email || !formData.phone_number)) {
             toast({ title: "Error", description: "Email and Phone are required for clients.", variant: "destructive" });
+            return;
+        }
+
+        if (customSubmit) {
+            customSubmit(formData);
             return;
         }
 
@@ -374,7 +381,7 @@ export function UnifiedEntityForm({ type, mode, entity, clientId, onUpdate, onBa
                             className="bg-[#00539F] hover:bg-[#00438a] text-white rounded-xl px-12 h-12 text-lg font-bold shadow-lg shadow-blue-900/10"
                         >
                             {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
-                            Save New {type === 'client' ? 'Client' : 'Driver'}
+                            {submitLabel || `Save New ${type === 'client' ? 'Client' : 'Driver'}`}
                         </Button>
                     </div>
                 )}

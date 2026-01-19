@@ -2,7 +2,7 @@
 Client endpoints.
 """
 from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 import uuid
 import os
@@ -19,6 +19,7 @@ from app.schemas.client import (
     ClientDriverCreate, ClientDriverResponse, ClientDriverUpdate
 )
 from app.repositories.client_repository import ClientRepository
+from app.services.client_service import ClientService
 from app.models.client_details import ClientAutomobile, ClientHousing, ClientHealth, ClientLife, ClientDriver
 from app.models.client import Client
 from app.models.user import User
@@ -33,7 +34,10 @@ async def get_current_client(
     db: Session = Depends(get_db)
 ):
     """Get current client information based on logged in user."""
-    client = db.query(Client).filter(Client.user_id == current_user.id).first()
+    client = db.query(Client).options(
+        joinedload(Client.drivers),
+        joinedload(Client.automobile_details)
+    ).filter(Client.user_id == current_user.id).first()
     if not client:
         raise HTTPException(status_code=404, detail="Client record not found for this user")
     return client
@@ -62,23 +66,52 @@ async def create_client(
 ):
     """
     Create a new client.
-    Supports authenticated (Agent) and unauthenticated (Public/Lead) handling.
-    """
-    if current_user:
-        # Authenticated flow: use user's company and ID
-        client_data.company_id = current_user.company_id
-        if not client_data.created_by:
-            client_data.created_by = current_user.id
-    else:
-        # Unauthenticated flow: Require company_id in payload
-        if not client_data.company_id:
-            raise HTTPException(
-                status_code=400, 
-                detail="Authentication failed and no company_id provided. For public submissions, please include company_id."
-            )
     
-    repo = ClientRepository(db)
-    client = repo.create(client_data)
+    - If authenticated (admin/agent): Create Client for managed client
+    - If unauthenticated (self-registration): Create User + Client atomically
+    """
+    try:
+        if current_user:
+            # Authenticated flow: admin/agent creating a client
+            client_data.company_id = current_user.company_id
+            if not client_data.created_by:
+                client_data.created_by = current_user.id
+            
+            service = ClientService(db)
+            client = await service.create_client(client_data)
+        else:
+            # Unauthenticated self-registration flow
+            if not client_data.password:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Password required for client self-registration"
+                )
+            
+            # Check if email already exists
+            existing_user = db.query(User).filter(User.email == client_data.email).first()
+            if existing_user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email already registered"
+                )
+            
+            # 1. & 2. Create User and Client atomically via ClientService
+            service = ClientService(db)
+            client = await service.register_client(client_data)
+            
+            # 3. Commit transaction
+            db.commit()
+            db.refresh(client)
+    
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create client: {str(e)}"
+        )
     
     # Compliance & AML Agent Screening for Onboarding
     try:
@@ -166,7 +199,16 @@ async def get_client(
     """Get a specific client by ID."""
     repo = ClientRepository(db)
     # If unauth, we might restrict this later. For now, allow (demo purposes)
-    client = repo.get_by_id(client_id, current_user.company_id if current_user else None)
+    client = db.query(Client).options(
+        joinedload(Client.drivers),
+        joinedload(Client.automobile_details)
+    ).filter(Client.id == client_id)
+    
+    if current_user and current_user.company_id:
+         # Optionally filter by company if desired
+         pass
+         
+    client = client.first()
     
     if not client:
         raise HTTPException(
@@ -258,7 +300,9 @@ async def update_client_vehicle(
         client = db.query(Client).filter(Client.user_id == current_user.id).first()
         if not client or client.id != client_id:
              raise HTTPException(status_code=403, detail="Not authorized to update vehicles for this client")
-        company_id = client.company_id
+        # For multi-company clients, check if they belong to the current company if needed
+        # For now, if it's the client themselves, they have access to their own data
+        company_id = None # Repository will handle retrieval by client_id if company_id is None for non-agent
     else:
         # Verify agent has access to this client's company
         company_id = current_user.company_id
@@ -298,7 +342,7 @@ async def create_client_vehicle(
         client = db.query(Client).filter(Client.user_id == current_user.id).first()
         if not client or client.id != client_id:
              raise HTTPException(status_code=403, detail="Not authorized to add vehicles for this client")
-        company_id = client.company_id
+        company_id = None
     else:
         # Verify agent has access to this client's company
         company_id = current_user.company_id
@@ -328,7 +372,7 @@ async def create_client_driver(
         client = db.query(Client).filter(Client.user_id == current_user.id).first()
         if not client or client.id != client_id:
              raise HTTPException(status_code=403, detail="Not authorized to add drivers for this client")
-        company_id = client.company_id
+        company_id = None
     else:
         company_id = current_user.company_id
 
@@ -358,7 +402,7 @@ async def update_client_driver(
         client = db.query(Client).filter(Client.user_id == current_user.id).first()
         if not client or client.id != client_id:
              raise HTTPException(status_code=403, detail="Not authorized to update drivers for this client")
-        company_id = client.company_id
+        company_id = None
     else:
         # Verify agent has access to this client's company
         company_id = current_user.company_id
@@ -481,7 +525,15 @@ def upload_client_profile_picture(
     Upload a profile picture for a client.
     """
     repo = ClientRepository(db)
-    client = repo.get_by_id(client_id, current_user.company_id)
+    # Auth Check
+    if current_user.role == 'client':
+        if current_user.id != db.query(Client).filter(Client.id == client_id).first().user_id:
+             raise HTTPException(status_code=403, detail="Not authorized to update this client")
+        company_id = None
+    else:
+        company_id = current_user.company_id
+
+    client = repo.get_by_id(client_id, company_id)
     
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
@@ -523,7 +575,7 @@ def upload_driver_license(
         client = db.query(Client).filter(Client.user_id == current_user.id).first()
         if not client or client.id != client_id:
              raise HTTPException(status_code=403, detail="Not authorized to update drivers for this client")
-        company_id = client.company_id
+        company_id = None
     else:
         # Verify agent has access to this client's company
         company_id = current_user.company_id

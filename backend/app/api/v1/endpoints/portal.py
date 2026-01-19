@@ -63,9 +63,27 @@ async def register_client(
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    # Create Client
-    client = Client(
-        id=uuid.uuid4(),
+    # Create User account for the portal
+    user_id = uuid.uuid4()
+    user = User(
+        id=user_id,
+        company_id=company_id,
+        email=data["email"],
+        password_hash=get_password_hash(data["password"]),
+        first_name=data.get("first_name", ""),
+        last_name=data.get("last_name", ""),
+        role="client",
+        is_active=True
+    )
+    db.add(user)
+    # Note: User is added to session but not committed yet. 
+    # ClientService.create_client will commit the session.
+
+    # Create Client via Service
+    from app.services.client_service import ClientService
+    from app.schemas.client import ClientCreate
+    
+    client_data = ClientCreate(
         company_id=company_id,
         client_type=data.get("client_type", "individual"),
         first_name=data.get("first_name"),
@@ -76,26 +94,20 @@ async def register_client(
         date_of_birth=data.get("date_of_birth"),
         nationality=data.get("nationality"),
         id_number=data.get("id_number"),
-        kyc_status="pending"
+        kyc_status="pending",
+        
+        # Identity fields for Driver Card mapping
+        driving_licence_number=data.get("driving_licence_number"), 
+        # Note: If portal form sends 'license_number' we might need to map it. 
+        # Standardize on 'driving_licence_number' for Client model as per schema.
+        
+        address=data.get("address"),
+        city=data.get("city"),
+        country=data.get("country", "Côte d'Ivoire")
     )
-    db.add(client)
-    db.flush()
-
-    # Create User account for the portal
-    user = User(
-        id=uuid.uuid4(),
-        company_id=company_id,
-        email=data["email"],
-        password_hash=get_password_hash(data["password"]),
-        first_name=data.get("first_name", ""),
-        last_name=data.get("last_name", ""),
-        role="client",
-        is_active=True
-    )
-    db.add(user)
     
-    # Link user to client
-    client.user_id = user.id
+    service = ClientService(db)
+    client = await service.create_client(client_data, user_id=user_id)
     
     # Process referral if exists
     referral_code = data.get("referral_code")
@@ -111,8 +123,13 @@ async def register_client(
             # Plan says: "In process_payment, mark referral as converted and award points... on first payment"
             # So I'll just link the referred_client_id here.
             referral.converted_at = datetime.utcnow()
+            db.add(referral)
+            db.commit() # Commit referral changes if any
     
-    db.commit()
+    # Ensure all committed
+    # ClientService commits client (and users in session).
+    # If we added referral changes after, ensuring commit.
+    pass
     return {"message": "Registration successful", "client_id": str(client.id)}
 
 

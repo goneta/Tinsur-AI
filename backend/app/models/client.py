@@ -1,7 +1,7 @@
 """
 Client model for insurance clients.
 """
-from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Date, Text, Numeric, JSON, Integer
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Date, Text, Numeric, JSON, Integer, Table
 from sqlalchemy.orm import relationship
 import uuid
 from app.core.guid import GUID
@@ -10,13 +10,22 @@ from datetime import datetime
 from app.core.database import Base
 
 
+# Junction table for many-to-many relationship between clients and companies
+client_company = Table(
+    'client_company',
+    Base.metadata,
+    Column('client_id', GUID(), ForeignKey('clients.id', ondelete='CASCADE'), primary_key=True),
+    Column('company_id', GUID(), ForeignKey('companies.id', ondelete='CASCADE'), primary_key=True),
+    Column('created_at', DateTime, default=datetime.utcnow)
+)
+
+
 class Client(Base):
     """Client model."""
     __tablename__ = "clients"
     
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
-    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
-    user_id = Column(GUID(), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
     client_type = Column(String(50), nullable=False)  # 'individual', 'corporate'
     first_name = Column(String(100))
     last_name = Column(String(100))
@@ -70,7 +79,8 @@ class Client(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    company = relationship("Company", back_populates="clients")
+    # Many-to-many with companies via junction table
+    companies = relationship("Company", secondary="client_company", back_populates="clients")
     creator = relationship("User", foreign_keys=[created_by])
     
     # Detail Relationships (One-to-One)

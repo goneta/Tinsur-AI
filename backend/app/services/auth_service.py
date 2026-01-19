@@ -34,7 +34,10 @@ class AuthService:
         
         # If company details provided, create new company
         company_id = None
+        user_role = "client"  # Default role for self-registration
+        
         if request.company_name and request.company_subdomain:
+            # Company registration flow
             # Check if subdomain is available
             existing_company = self.db.query(Company).filter(
                 Company.subdomain == request.company_subdomain
@@ -66,11 +69,9 @@ class AuthService:
             company_id = company.id
             user_role = "company_admin"
         else:
-            # User must be assigned to existing company by admin
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Company information required for registration"
-            )
+            # Client self-registration flow (no company required)
+            company_id = None
+            user_role = "client"
         
         # Create user
         user = User(

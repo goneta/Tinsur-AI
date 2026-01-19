@@ -11,7 +11,7 @@ import { User, LoginRequest, RegisterRequest, LoginResponse } from '@/types/user
 interface AuthContextType {
     user: User | null;
     loading: boolean;
-    login: (data: LoginRequest) => Promise<void>;
+    login: (data: LoginRequest, redirectTo?: string) => Promise<void>;
     register: (data: RegisterRequest) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loadUser();
     }, []);
 
-    const login = async (data: LoginRequest) => {
+    const login = async (data: LoginRequest, redirectTo?: string) => {
         try {
             const response = await api.post<LoginResponse>('/auth/login', data);
             const { access_token, refresh_token, user: userData } = response.data;
@@ -95,7 +95,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(userData);
             refreshCredits();
 
-            if (userData.role === 'client') {
+            if (redirectTo) {
+                router.push(redirectTo);
+            } else if (userData.role === 'client') {
                 router.push('/portal');
             } else {
                 router.push('/dashboard');
