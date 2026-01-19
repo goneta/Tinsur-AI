@@ -1,7 +1,7 @@
 """
 Client repository for database operations.
 """
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 import uuid
 
@@ -25,7 +25,9 @@ class ClientRepository:
     
     def get_by_id(self, client_id: uuid.UUID, company_id: uuid.UUID) -> Optional[Client]:
         """Get client by ID (with company isolation)."""
-        return self.db.query(Client).filter(
+        return self.db.query(Client).options(
+            joinedload(Client.drivers)
+        ).filter(
             Client.id == client_id,
             Client.company_id == company_id
         ).first()

@@ -437,8 +437,31 @@ export function InsuranceDetailsTab({
                 drivingLicenseUrl: d.driving_license_url
             }));
 
+            let driversToSet = fetchedDrivers;
+            if (fetchedDrivers.length === 0 && clientData) {
+                // Fallback Logic to match page.tsx: Use Client as Main Driver if no explicit drivers exist
+                driversToSet = [{
+                    id: clientData.id,
+                    fullName: clientData.client_type === 'individual' ? `${clientData.last_name || ''} ${clientData.first_name || ''}`.trim() : clientData.business_name || 'Business',
+                    firstName: clientData.first_name,
+                    lastName: clientData.last_name,
+                    phoneNumber: clientData.phone || '',
+                    address: clientData.address || '',
+                    city: clientData.city || '',
+                    country: clientData.country || '',
+                    licenseNumber: clientData.driving_licence_number || 'PENDING',
+                    licenseIssueDate: '', // detailed license info might not be on client root
+                    employmentStatus: clientData.employment_status || '',
+                    maritalStatus: clientData.marital_status || '',
+                    numberOfChildren: clientData.life_details?.dependent_count || 0,
+                    photoUrl: clientData.profile_picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${clientData.first_name}`,
+                    dateOfBirth: clientData.date_of_birth ? new Date(clientData.date_of_birth).toISOString().split('T')[0] : '',
+                    clientId: clientData.id
+                }];
+            }
+
             setVehicles(fetchedVehicles);
-            setDrivers(fetchedDrivers);
+            setDrivers(driversToSet);
 
             // Map Quotes
             setQuotes(qs.quotes.map((q: BackendQuote) => ({
