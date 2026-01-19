@@ -21,7 +21,7 @@ class User(Base):
     first_name = Column(String(100))
     last_name = Column(String(100))
     phone = Column(String(50))
-    role = Column(String(50), nullable=False)  # 'super_admin', 'company_admin', 'manager', 'agent', 'client'
+    user_type = Column(String(50), nullable=False)  # 'super_admin', 'company_admin', 'manager', 'agent', 'client'
     pos_location_id = Column(GUID(), ForeignKey("pos_locations.id"), nullable=True)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
@@ -41,6 +41,16 @@ class User(Base):
     company = relationship("Company", back_populates="users")
     pos_location = relationship("POSLocation", back_populates="employees", foreign_keys=[pos_location_id])
     creator = relationship("User", remote_side=[id], foreign_keys=[created_by])
+    
+    @property
+    def role(self):
+        """Alias for user_type for backward compatibility."""
+        return self.user_type
+
+    @role.setter
+    def role(self, value):
+        """Setter for role that updates user_type."""
+        self.user_type = value
     
     def __repr__(self):
         return f"<User {self.email}>"

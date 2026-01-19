@@ -36,7 +36,7 @@ async def get_employees(
         joinedload(User.pos_location)
     ).where(
         User.company_id == current_user.company_id,
-        User.role.in_(['admin', 'manager', 'agent', 'receptionist']) # specific employee roles
+        User.user_type.in_(['admin', 'manager', 'agent', 'receptionist']) # specific employee roles
     ).offset(skip).limit(limit)
     
     employees = db.execute(query).scalars().all()

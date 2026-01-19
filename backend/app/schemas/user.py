@@ -44,6 +44,7 @@ class UserInDB(UserBase):
     created_by: Optional[uuid.UUID] = None
     created_at: datetime
     updated_at: datetime
+    role: Optional[str] = None
     
     # Branding info from company
     primary_color: Optional[str] = None
