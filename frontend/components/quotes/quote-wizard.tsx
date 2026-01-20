@@ -276,16 +276,17 @@ export function QuoteWizard() {
             setSelectedClient(client);
 
             // Fetch vehicles if any
-            if (client.automobile_details) {
+            if (client.automobile_details && client.automobile_details.length > 0) {
+                const vehicle = client.automobile_details[0];
                 setClientVehicles([{
-                    ...client.automobile_details,
-                    id: client.automobile_details.id || 'v1',
-                    make: client.automobile_details.vehicle_make,
-                    model: client.automobile_details.vehicle_model,
-                    registrationNumber: client.automobile_details.vehicle_registration,
+                    ...vehicle,
+                    id: vehicle.id || 'v1',
+                    make: vehicle.vehicle_make,
+                    model: vehicle.vehicle_model,
+                    registrationNumber: vehicle.vehicle_registration,
                     vehicleType: 'Manual', // Default
-                    usage: client.automobile_details.vehicle_usage || 'Domestic',
-                    mileage: client.automobile_details.vehicle_mileage?.toString() || '0',
+                    usage: vehicle.vehicle_usage || 'Domestic',
+                    mileage: vehicle.vehicle_mileage?.toString() || '0',
                     imageUrl: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=400' // Mock image
                 }]);
             } else {
@@ -1228,11 +1229,11 @@ export function QuoteWizard() {
                                                                     );
                                                                 })}
                                                                 {/* Display Dynamic Admin Fee if > 0 */}
-                                                                {calculatedValues?.adminFee > 0 && (
+                                                                {(calculatedValues?.adminFee ?? 0) > 0 && (
                                                                     <tr>
                                                                         <td className="px-6 py-4 font-bold text-slate-600 uppercase">COMPANY ADMIN FEE</td>
                                                                         <td className="px-6 py-4 font-bold text-slate-400 text-xs">Mandatory</td>
-                                                                        <td className="px-6 py-4 font-black text-slate-900 text-right">+{wrapperFormatCurrency(calculatedValues.adminFee)}</td>
+                                                                        <td className="px-6 py-4 font-black text-slate-900 text-right">+{wrapperFormatCurrency(calculatedValues?.adminFee || 0)}</td>
                                                                     </tr>
                                                                 )}
                                                                 {/* Display Dynamic Tax */}
@@ -1308,10 +1309,10 @@ export function QuoteWizard() {
                                                         <span className="font-medium text-blue-100/80">Fixed Fees & Extras</span>
                                                         <span className="font-black">+{wrapperFormatCurrency(calculatedValues?.totalFees || 0)}</span>
                                                     </div>
-                                                    {calculatedValues?.adminFee > 0 && (
+                                                    {(calculatedValues?.adminFee ?? 0) > 0 && (
                                                         <div className="flex justify-between items-center text-lg">
                                                             <span className="font-medium text-blue-100/80">Company Admin Fee</span>
-                                                            <span className="font-black">+{wrapperFormatCurrency(calculatedValues?.adminFee)}</span>
+                                                            <span className="font-black">+{wrapperFormatCurrency(calculatedValues?.adminFee || 0)}</span>
                                                         </div>
                                                     )}
                                                     <div className="flex justify-between items-center text-lg">

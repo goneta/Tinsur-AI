@@ -395,7 +395,7 @@ export default function SettingsPage() {
                             value={language}
                             onValueChange={(val) => {
                                 setLanguage(val);
-                                setContextLanguage(val as "en" | "fr" | "es");
+                                setContextLanguage(val as "en" | "fr");
                             }}
                             className="max-w-md"
                         >

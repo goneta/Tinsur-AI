@@ -29,7 +29,7 @@ export default function InsuranceDetailsPage() {
                 if (clientData.drivers && clientData.drivers.length > 0) {
                     setDrivers(clientData.drivers.map(d => ({
                         id: d.id,
-                        fullName: d.full_name,
+                        fullName: `${d.first_name || ''} ${d.last_name || ''}`.trim(),
                         phoneNumber: d.phone_number,
                         address: d.address,
                         licenseNumber: d.license_number,
@@ -37,7 +37,8 @@ export default function InsuranceDetailsPage() {
                         employmentStatus: d.employment_status,
                         maritalStatus: d.marital_status,
                         numberOfChildren: d.number_of_children,
-                        photoUrl: d.photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${d.full_name}`
+                        photoUrl: d.photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${d.id}`,
+                        dateOfBirth: d.date_of_birth || ''
                     })));
                 } else {
                     // Fallback to basic user info if no explicit drivers
@@ -51,7 +52,8 @@ export default function InsuranceDetailsPage() {
                         employmentStatus: clientData.employment_status || '',
                         maritalStatus: clientData.marital_status || '',
                         numberOfChildren: 0,
-                        photoUrl: clientData.profile_picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${clientData.first_name}`
+                        photoUrl: clientData.profile_picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${clientData.first_name}`,
+                        dateOfBirth: clientData.date_of_birth ? new Date(clientData.date_of_birth).toISOString().split('T')[0] : ''
                     }]);
                 }
 

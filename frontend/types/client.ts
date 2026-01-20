@@ -108,6 +108,7 @@ export interface ClientDriver {
     marital_status: string;
     number_of_children: number;
     photo_url?: string;
+    date_of_birth?: string;
     is_main_driver: boolean;
     license_type?: string;
     cars_in_household?: number;

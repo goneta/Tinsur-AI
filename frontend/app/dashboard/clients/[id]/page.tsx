@@ -74,7 +74,6 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
             employmentStatus: c.employment_status || '',
             maritalStatus: c.marital_status || '',
             numberOfChildren: c.life_details?.dependent_count || 0,
-            numberOfChildren: c.life_details?.dependent_count || 0,
             photoUrl: c.profile_picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.first_name}`,
             dateOfBirth: c.date_of_birth ? new Date(c.date_of_birth).toISOString().split('T')[0] : ''
         }];

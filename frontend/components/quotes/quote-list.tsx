@@ -11,6 +11,7 @@ interface QuoteListProps {
     onSend: (quote: Quote) => void
     onApprove: (quote: Quote) => void
     onReject: (quote: Quote) => void
+    onArchive: (quote: Quote) => void
 }
 
 export function QuoteList({
@@ -20,12 +21,13 @@ export function QuoteList({
     onDelete,
     onSend,
     onApprove,
-    onReject
+    onReject,
+    onArchive
 }: QuoteListProps) {
 
     const tableColumns = useMemo(() =>
-        columns(onView, onDelete, onSend, onApprove, onReject, policyTypes),
-        [onView, onDelete, onSend, onApprove, onReject, policyTypes]
+        columns(onView, onDelete, onSend, onApprove, onReject, onArchive, policyTypes),
+        [onView, onDelete, onSend, onApprove, onReject, onArchive, policyTypes]
     )
 
     return (

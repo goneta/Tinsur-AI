@@ -284,7 +284,7 @@ export function AiSubscriptionSettings() {
                                 <BarChart
                                     data={usageStats}
                                     onMouseMove={(state) => {
-                                        if (state.activeTooltipIndex !== undefined) {
+                                        if (typeof state.activeTooltipIndex === 'number') {
                                             setHoveredBar(state.activeTooltipIndex);
                                         }
                                     }}

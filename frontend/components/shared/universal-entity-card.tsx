@@ -37,6 +37,8 @@ export interface UniversalEntityCardProps {
         onCheckedChange?: (checked: boolean) => void
         checkClassName?: string
         iconClassName?: string
+        isSectionHeader?: boolean
+        priceClassName?: string
     }[]
     financials?: {
         label: React.ReactNode

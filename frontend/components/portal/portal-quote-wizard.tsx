@@ -284,7 +284,7 @@ export function PortalQuoteWizard({ open, onOpenChange, onSuccess }: PortalQuote
                                             )}
                                         />
 
-                                        <RiskFactorForm policyTypeCode={selectedPolicy.code} />
+                                        <RiskFactorForm policyTypeCode={selectedPolicy.code || ''} />
 
                                         {selectedPolicy.services && selectedPolicy.services.length > 0 && (
                                             <div className="space-y-6 pt-6 border-t">

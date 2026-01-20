@@ -208,6 +208,7 @@ export function InsuranceDetailsTab({
     const [editingVehicle, setEditingVehicle] = useState<PortalVehicle | null>(null);
     const [quoteWizardOpen, setQuoteWizardOpen] = useState(false);
     const [selectedVehicleForQuote, setSelectedVehicleForQuote] = useState<PortalVehicle | null>(null);
+    const [selectedPolicyForDocuments, setSelectedPolicyForDocuments] = useState<string | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editingDriver, setEditingDriver] = useState<PortalDriver | null>(null);
     const [isAddingDriver, setIsAddingDriver] = useState(false);
@@ -407,7 +408,8 @@ export function InsuranceDetailsTab({
                 vehicleType: 'Manual',
                 vehicleAge: 'N/A',
                 modified: false,
-                imageUrl: (v as Record<string, unknown>).vehicle_image_url as string || 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=400'
+                dateAcquired: v.created_at?.split('T')[0] || '',
+                imageUrl: (v as unknown as Record<string, unknown>).vehicle_image_url as string || 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=400'
             }));
 
             const fetchedDrivers: PortalDriver[] = (clientData.drivers || []).map((d: ClientDriver) => ({
@@ -787,7 +789,7 @@ export function InsuranceDetailsTab({
                     <VehicleDetailsTable
                         clientId={clientId || ''}
                         mode={isAddingVehicle ? 'create' : 'edit'}
-                        vehicle={isAddingVehicle ? {} : {
+                        vehicle={(isAddingVehicle || !editingVehicle) ? {} : {
                             ...editingVehicle,
                             id: editingVehicle.id,
                             vehicle_registration: editingVehicle.registrationNumber,

@@ -96,6 +96,7 @@ export function ServiceFormDialog({
             } else {
                 await policyServiceApi.create({
                     ...data,
+                    is_active: data.is_active ?? true,
                     company_id: companyId,
                 });
             }

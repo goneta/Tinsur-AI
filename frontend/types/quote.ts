@@ -22,7 +22,7 @@ export interface Quote {
     excess?: number;
     included_services?: any[];
     risk_score?: number;
-    status: 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'expired';
+    status: 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'expired' | 'sent' | 'accepted';
     details?: Record<string, any>;
     notes?: string;
     valid_until: string;
@@ -77,6 +77,7 @@ export interface QuoteCalculationRequest {
     premium_frequency: string;
     duration_months: number;
     risk_factors: Record<string, any>;
+    selected_services?: string[];
     financial_overrides?: Record<string, any>;
 }
 

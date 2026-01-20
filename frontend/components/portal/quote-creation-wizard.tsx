@@ -34,6 +34,8 @@ interface Vehicle {
     make: string;
     model: string;
     registrationNumber: string;
+    mileage: string;
+    vehicleAge: string;
 }
 
 interface QuoteCreationWizardProps {
@@ -155,6 +157,13 @@ export function QuoteCreationWizard({ open, onOpenChange, vehicle, drivers, onSu
         return policy.services.map((s: any) => s.id || s.code);
     };
 
+    const getServicesForLevel = (level: string) => {
+        const policy = realPolicies.find(p => p.name === level);
+        return getServicesForPolicy(policy);
+    };
+
+    const coverLevel = selectedPolicy?.name || 'Bronze';
+
     const calculateTotalPremium = (policy: any, additionalServices: string[]) => {
         if (!policy) return "0.00";
         const basePrice = parseFloat(policy.price) || 0;
@@ -202,11 +211,12 @@ export function QuoteCreationWizard({ open, onOpenChange, vehicle, drivers, onSu
             const allIncludedServices = Array.from(new Set([...defaultServices, ...selectedServices]));
 
             const quoteData = {
-                client_id: clientId,
+                client_id: clientId!,
                 policy_type_id: selectedPolicy.id,
                 coverage_amount: 1000000,
-                premium_frequency: paymentFrequency.toLowerCase(),
+                premium_frequency: paymentFrequency.toLowerCase() as any,
                 duration_months: 12,
+                discount_percent: 0,
                 details: {
                     vehicle_id: vehicle?.id,
                     cover_level: selectedPolicy.name,
@@ -214,9 +224,9 @@ export function QuoteCreationWizard({ open, onOpenChange, vehicle, drivers, onSu
                     additional_drivers: additionalDrivers,
                     ncd_protected: ncdProtected,
                     start_date: startDate,
-                    selected_services: allIncludedServices
+                    included_services: allIncludedServices
                 },
-                selected_services: allIncludedServices
+                included_services: allIncludedServices
             };
 
             const createdQuote = await QuoteAPI.create(quoteData as any);
@@ -604,7 +614,7 @@ export function QuoteCreationWizard({ open, onOpenChange, vehicle, drivers, onSu
                                             </div>
 
                                             <div className="space-y-3 pt-6 border-t border-gray-50 max-h-[200px] overflow-y-auto pr-1">
-                                                {(expandedTiers[policy.id] ? Object.keys(FEATURES_MAP) : (policy.services?.map((s: any) => s.id) || [])).map((serviceId, i) => (
+                                                {(expandedTiers[policy.id] ? Object.keys(FEATURES_MAP) : (policy.services?.map((s: any) => s.id) || [])).map((serviceId: string, i: number) => (
                                                     <div key={i} className="flex items-center gap-3">
                                                         <CheckCircle2 className={`h-4 w-4 flex-shrink-0 ${selectedPolicy?.id === policy.id ? 'text-[#00539F]' : 'text-gray-300'}`} />
                                                         <span className="text-xs font-bold text-gray-600 line-clamp-1">
@@ -702,7 +712,7 @@ export function QuoteCreationWizard({ open, onOpenChange, vehicle, drivers, onSu
                                         <p className="font-black text-blue-200 text-xs uppercase tracking-[0.2em]">{t('Monthly Premium')}</p>
                                         <p className="text-6xl font-black flex items-start">
                                             <span className="text-3xl mt-2">£</span>
-                                            {(parseFloat(calculateTotalPremium(coverLevel, selectedServices)) / 12).toFixed(2)}
+                                            {(parseFloat(calculateTotalPremium(selectedPolicy, selectedServices)) / 12).toFixed(2)}
                                         </p>
                                     </div>
                                     <div className="h-px w-full md:h-16 md:w-px bg-white/20" />
