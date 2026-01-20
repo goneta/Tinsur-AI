@@ -1,0 +1,112 @@
+﻿
+> tinsur-ai-frontend@0.1.0 build
+> next build
+
+node.exe : ÔÜá `eslint` configuration in next.config.ts is 
+no longer supported. See more info here: https://nextjs.org/d
+ocs/app/api-reference/cli/next#next-lint-options
+Au caractère Ligne:1 : 1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Users\user\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ÔÜá `eslint` co 
+   ...xt-lint-options:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ÔÜá Invalid next.config.ts options detected: 
+ÔÜá     Unrecognized key(s) in object: 'eslint'
+ÔÜá See more info here: 
+https://nextjs.org/docs/messages/invalid-next-config
+ÔÜá Warning: Next.js inferred your workspace root, but it 
+may not be correct.
+ We detected multiple lockfiles and selected the directory 
+of C:\Users\user\Desktop\Tinsur.AI\package-lock.json as the 
+root directory.
+ To silence this warning, set `turbopack.root` in your 
+Next.js config, or consider removing one of the lockfiles if 
+it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-
+config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * 
+C:\Users\user\Desktop\Tinsur.AI\frontend\package-lock.json
+
+Ôû▓ Next.js 16.1.4 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+Ô£ô Compiled successfully in 39.6s
+  Skipping validation of types
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/54) ...
+  Generating static pages using 7 workers (13/54) 
+  Generating static pages using 7 workers (26/54) 
+  Generating static pages using 7 workers (40/54) 
+Ô£ô Generating static pages using 7 workers (54/54) in 3.9s
+  Finalizing page optimization ...
+
+Route (app)
+Ôöî Ôùï /
+Ôö£ Ôùï /_not-found
+Ôö£ Ôùï /dashboard
+Ôö£ Ôùï /dashboard/admin
+Ôö£ Ôùï /dashboard/admin/permissions
+Ôö£ Ôùï /dashboard/admin/premium-policies
+Ôö£ Ôùï /dashboard/admin/services
+Ôö£ Ôùï /dashboard/admin/translations
+Ôö£ Ôùï /dashboard/ai-manager
+Ôö£ Ôùï /dashboard/analytics
+Ôö£ Ôùï /dashboard/claims
+Ôö£ Ôùï /dashboard/clients
+Ôö£ ãÆ /dashboard/clients/[id]
+Ôö£ Ôùï /dashboard/collaboration
+Ôö£ Ôùï /dashboard/commissions
+Ôö£ Ôùï /dashboard/communications
+Ôö£ Ôùï /dashboard/decisions
+Ôö£ Ôùï /dashboard/employees
+Ôö£ ãÆ /dashboard/employees/[id]
+Ôö£ Ôùï /dashboard/financials
+Ôö£ Ôùï /dashboard/financials/regulatory
+Ôö£ Ôùï /dashboard/import-export
+Ôö£ Ôùï /dashboard/loyalty
+Ôö£ Ôùï /dashboard/payments
+Ôö£ ãÆ /dashboard/payments/[id]
+Ôö£ Ôùï /dashboard/payments/new
+Ôö£ Ôùï /dashboard/payroll
+Ôö£ Ôùï /dashboard/policies
+Ôö£ ãÆ /dashboard/policies/[id]
+Ôö£ Ôùï /dashboard/policy-templates
+Ôö£ Ôùï /dashboard/policy-types
+Ôö£ Ôùï /dashboard/pos
+Ôö£ Ôùï /dashboard/quotes
+Ôö£ ãÆ /dashboard/quotes/[id]
+Ôö£ Ôùï /dashboard/quotes/new
+Ôö£ Ôùï /dashboard/settings
+Ôö£ Ôùï /dashboard/settings/company
+Ôö£ Ôùï /dashboard/settings/keys
+Ôö£ Ôùï /dashboard/settings/language-theme
+Ôö£ Ôùï /dashboard/settings/permissions
+Ôö£ Ôùï /dashboard/settings/regional
+Ôö£ Ôùï /dashboard/settings/share-code
+Ôö£ Ôùï /dashboard/support
+Ôö£ Ôùï /dashboard/support/cancellation-guide
+Ôö£ Ôùï /dashboard/telematics
+Ôö£ Ôùï /dashboard/translations
+Ôö£ Ôùï /login
+Ôö£ Ôùï /portal
+Ôö£ Ôùï /portal/claims
+Ôö£ Ôùï /portal/insurance-details
+Ôö£ Ôùï /portal/quotes/create
+Ôö£ Ôùï /portal/referrals
+Ôö£ Ôùï /portal/register
+Ôö£ Ôùï /portal/support
+Ôö£ Ôùï /portal/support/cancellation-guide
+Ôö£ Ôùï /register
+Ôö£ Ôùï /register/client
+Ôöö ãÆ /verify/[token]
+
+
+Ôùï  (Static)   prerendered as static content
+ãÆ  (Dynamic)  server-rendered on demand
+

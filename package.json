@@ -8,9 +8,5 @@
     },
     "workspaces": [
         "frontend"
-    ],
-    "optionalDependencies": {
-        "lightningcss-linux-x64-gnu": "*",
-        "lightningcss-linux-x64-musl": "*"
-    }
+    ]
 }
