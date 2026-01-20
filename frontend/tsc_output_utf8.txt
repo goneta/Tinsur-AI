@@ -1,0 +1,57 @@
+﻿app/dashboard/settings/page.tsx(398,52): error TS2345: Argument of type '"fr" | "en" | "es"' is not assignable to parameter of type 'Language'.
+  Type '"es"' is not assignable to type 'Language'.
+app/portal/insurance-details/page.tsx(30,32): error TS2345: Argument of type '{ id: string; fullName: any; phoneNumber: string; address: string; licenseNumber: string; licenseIssueDate: string; employmentStatus: string; maritalStatus: string; numberOfChildren: number; photoUrl: string; }[]' is not assignable to parameter of type 'SetStateAction<PortalDriver[]>'.
+  Type '{ id: string; fullName: any; phoneNumber: string; address: string; licenseNumber: string; licenseIssueDate: string; employmentStatus: string; maritalStatus: string; numberOfChildren: number; photoUrl: string; }[]' is not assignable to type 'PortalDriver[]'.
+    Property 'dateOfBirth' is missing in type '{ id: string; fullName: any; phoneNumber: string; address: string; licenseNumber: string; licenseIssueDate: string; employmentStatus: string; maritalStatus: string; numberOfChildren: number; photoUrl: string; }' but required in type 'PortalDriver'.
+app/portal/insurance-details/page.tsx(32,37): error TS2339: Property 'full_name' does not exist on type 'ClientDriver'.
+app/portal/insurance-details/page.tsx(40,103): error TS2339: Property 'full_name' does not exist on type 'ClientDriver'.
+app/portal/insurance-details/page.tsx(44,33): error TS2741: Property 'dateOfBirth' is missing in type '{ id: string; fullName: string; phoneNumber: string; address: string; licenseNumber: string; licenseIssueDate: string; employmentStatus: string; maritalStatus: string; numberOfChildren: number; photoUrl: string; }' but required in type 'PortalDriver'.
+components/policies/policy-service-form-dialog.tsx(97,47): error TS2345: Argument of type '{ company_id: string; name_en: string; default_price: number; description?: string | undefined; is_active?: boolean | undefined; name_fr?: string | undefined; }' is not assignable to parameter of type 'PolicyServiceCreate'.
+  Types of property 'is_active' are incompatible.
+    Type 'boolean | undefined' is not assignable to type 'boolean'.
+      Type 'undefined' is not assignable to type 'boolean'.
+components/portal/insurance-details-tab.tsx(396,19): error TS2322: Type '{ id: string; make: string; model: string; registrationNumber: string; mileage: string; transmission: string; usage: "Taxi" | "Delivery" | "Domestic" | "For Work"; dateOfPurchase: string; ... 5 more ...; imageUrl: string; }[]' is not assignable to type 'PortalVehicle[]'.
+  Property 'dateAcquired' is missing in type '{ id: string; make: string; model: string; registrationNumber: string; mileage: string; transmission: string; usage: "Taxi" | "Delivery" | "Domestic" | "For Work"; dateOfPurchase: string; ... 5 more ...; imageUrl: string; }' but required in type 'PortalVehicle'.
+components/portal/insurance-details-tab.tsx(410,28): error TS2352: Conversion of type 'ClientAutomobile' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Index signature for type 'string' is missing in type 'ClientAutomobile'.
+components/portal/insurance-details-tab.tsx(535,9): error TS2304: Cannot find name 'setSelectedPolicyForDocuments'.
+components/portal/insurance-details-tab.tsx(792,33): error TS18047: 'editingVehicle' is possibly 'null'.
+components/portal/insurance-details-tab.tsx(793,51): error TS18047: 'editingVehicle' is possibly 'null'.
+components/portal/insurance-details-tab.tsx(794,43): error TS18047: 'editingVehicle' is possibly 'null'.
+components/portal/insurance-details-tab.tsx(795,44): error TS18047: 'editingVehicle' is possibly 'null'.
+components/portal/insurance-details-tab.tsx(796,50): error TS18047: 'editingVehicle' is possibly 'null'.
+components/portal/insurance-details-tab.tsx(796,132): error TS18047: 'editingVehicle' is possibly 'null'.
+components/portal/insurance-details-tab.tsx(798,53): error TS18047: 'editingVehicle' is possibly 'null'.
+components/portal/insurance-details-tab.tsx(800,44): error TS18047: 'editingVehicle' is possibly 'null'.
+components/portal/insurance-details-tab.tsx(803,44): error TS18047: 'editingVehicle' is possibly 'null'.
+components/portal/insurance-details-tab.tsx(804,46): error TS18047: 'editingVehicle' is possibly 'null'.
+components/portal/insurance-details-tab.tsx(805,48): error TS18047: 'editingVehicle' is possibly 'null'.
+components/portal/portal-quote-wizard.tsx(287,57): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/portal/quote-creation-wizard.tsx(95,47): error TS2339: Property 'mileage' does not exist on type 'Vehicle'.
+components/portal/quote-creation-wizard.tsx(97,52): error TS2339: Property 'vehicleAge' does not exist on type 'Vehicle'.
+components/portal/quote-creation-wizard.tsx(607,159): error TS7006: Parameter 'serviceId' implicitly has an 'any' type.
+components/portal/quote-creation-wizard.tsx(607,170): error TS7006: Parameter 'i' implicitly has an 'any' type.
+components/portal/quote-creation-wizard.tsx(656,74): error TS2304: Cannot find name 'getServicesForLevel'.
+components/portal/quote-creation-wizard.tsx(656,94): error TS2304: Cannot find name 'coverLevel'.
+components/portal/quote-creation-wizard.tsx(705,80): error TS2304: Cannot find name 'coverLevel'.
+components/portal/quote-creation-wizard.tsx(724,76): error TS2304: Cannot find name 'coverLevel'.
+components/quotes/quote-details.tsx(108,23): error TS2367: This comparison appears to be unintentional because the types '"submitted" | "under_review" | "approved" | "rejected" | "expired" | "draft"' and '"sent"' have no overlap.
+components/quotes/quote-details.tsx(108,50): error TS2367: This comparison appears to be unintentional because the types '"submitted" | "under_review" | "approved" | "rejected" | "expired" | "draft"' and '"accepted"' have no overlap.
+components/quotes/quote-list.tsx(27,9): error TS2554: Expected 7 arguments, but got 6.
+components/quotes/quote-wizard.tsx(282,51): error TS2339: Property 'id' does not exist on type 'ClientAutomobile[]'.
+components/quotes/quote-wizard.tsx(283,53): error TS2339: Property 'vehicle_make' does not exist on type 'ClientAutomobile[]'.
+components/quotes/quote-wizard.tsx(284,54): error TS2339: Property 'vehicle_model' does not exist on type 'ClientAutomobile[]'.
+components/quotes/quote-wizard.tsx(285,67): error TS2339: Property 'vehicle_registration' does not exist on type 'ClientAutomobile[]'.
+components/quotes/quote-wizard.tsx(287,54): error TS2339: Property 'vehicle_usage' does not exist on type 'ClientAutomobile[]'.
+components/quotes/quote-wizard.tsx(288,56): error TS2339: Property 'vehicle_mileage' does not exist on type 'ClientAutomobile[]'.
+components/quotes/quote-wizard.tsx(358,17): error TS2353: Object literal may only specify known properties, and 'selected_services' does not exist in type 'QuoteCalculationRequest'.
+components/quotes/quote-wizard.tsx(1231,66): error TS18048: 'calculatedValues.adminFee' is possibly 'undefined'.
+components/quotes/quote-wizard.tsx(1235,160): error TS18047: 'calculatedValues' is possibly 'null'.
+components/quotes/quote-wizard.tsx(1311,54): error TS18048: 'calculatedValues.adminFee' is possibly 'undefined'.
+components/quotes/quote-wizard.tsx(1314,114): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+components/settings/ai-subscription-settings.tsx(288,59): error TS2345: Argument of type 'number | TooltipIndex' is not assignable to parameter of type 'SetStateAction<number | null>'.
+  Type 'string' is not assignable to type 'SetStateAction<number | null>'.
+components/shared/universal-entity-card.tsx(142,34): error TS2339: Property 'isSectionHeader' does not exist on type '{ id: string; label: ReactNode; price?: number | undefined; checked?: boolean | undefined; disabled?: boolean | undefined; onCheckedChange?: ((checked: boolean) => void) | undefined; checkClassName?: string | undefined; iconClassName?: string | undefined; }'.
+components/shared/universal-entity-card.tsx(173,99): error TS2551: Property 'priceClassName' does not exist on type '{ id: string; label: ReactNode; price?: number | undefined; checked?: boolean | undefined; disabled?: boolean | undefined; onCheckedChange?: ((checked: boolean) => void) | undefined; checkClassName?: string | undefined; iconClassName?: string | undefined; }'. Did you mean 'iconClassName'?

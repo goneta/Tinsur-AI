@@ -1,0 +1,568 @@
+
+> build
+> npm run build --workspace=tinsur-ai-frontend
+
+
+> tinsur-ai-frontend@0.1.0 build
+> next build
+
+▲ Next.js 16.1.4 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 18 errors:
+./frontend/app/globals.css
+Error evaluating Node.js code
+Error: It looks like you're trying to use `tailwindcss` directly as a PostCSS plugin. The PostCSS plugin has moved to a separate package, so to continue using Tailwind CSS with PostCSS you'll need to install `@tailwindcss/postcss` and update your PostCSS configuration.
+    [at lt (C:\Users\user\Desktop\Tinsur.AI\frontend\node_modules\tailwindcss\dist\lib.js:38:1643)]
+    at turbopack:///[turbopack-node]/transforms/postcss.ts:56:14 [C:\Users\user\Desktop\Tinsur.AI\frontend\.next\build\chunks\[root-of-the-server]__188e9cb8._.js:140:20]
+    [at <anonymous>]
+    at Module.init (turbopack:///[turbopack-node]/transforms/postcss.ts:43:33) [C:\Users\user\Desktop\Tinsur.AI\frontend\.next\build\chunks\[root-of-the-server]__188e9cb8._.js:130:35]
+    at run (turbopack:///[turbopack-node]/ipc/evaluate.ts:77:20) [C:\Users\user\Desktop\Tinsur.AI\frontend\.next\build\chunks\[root-of-the-server]__3b54a99d._.js:429:26]
+    [at process.processTicksAndRejections (node:internal/process/task_queues:103:5)]
+
+Import trace:
+  Client Component Browser:
+    ./frontend/app/globals.css [Client Component Browser]
+    ./frontend/app/layout.tsx [Server Component]
+
+
+./frontend/node_modules/react-day-picker/dist/esm/classes/DateLib.js:1:1
+Module not found: Can't resolve '@date-fns/tz'
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { [33mTZDate[39m } [36mfrom[39m [32m"@date-fns/tz"[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { addDays[33m,[39m addMonths[33m,[39m addWeeks[33m,[39m addYears[33m,[39m differenceInCalendarDays[33m,[39m differenceInCalendarMonths[33m,[39m eachMonthOfInterval[33m,[39m eachYearOfInterval[33m,[39m endOfISOWeek[33m,[39m endOfMonth[33m,[39m endOfWeek[33m,[39m endOfYear[33m,[39m format[33m,[39m getISOWeek[33m,[39m getMonth[33m,[39m getWeek[33m,[39m getYear[33m,[39m isAfter[33m,[39m isBefore[33m,[39m isDate[33m,[39m isSameDay[33m,[39m isSameMonth[33m,[39m isSameYear[33m,[39m max[33m,[39m min[33m,[39m setMonth[33m,[39m setYear[33m,[39m startOfDay[33m,[39m startOfISOWeek[33m,[39m startOfMonth[33m,[39m startOfWeek[33m,[39m startOfYear[33m,[39m } [36mfrom[39m [32m"date-fns"[39m[33m;[39m
+ [90m 3 |[39m [36mimport[39m { endOfBroadcastWeek } [36mfrom[39m [32m"../helpers/endOfBroadcastWeek.js"[39m[33m;[39m
+ [90m 4 |[39m [36mimport[39m { startOfBroadcastWeek } [36mfrom[39m [32m"../helpers/startOfBroadcastWeek.js"[39m[33m;[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/react-day-picker/dist/esm/classes/DateLib.js [Client Component Browser]
+    ./frontend/node_modules/react-day-picker/dist/esm/DayPicker.js [Client Component Browser]
+    ./frontend/components/ui/calendar.tsx [Client Component Browser]
+    ./frontend/app/dashboard/employees/components/profile/advanced-filter.tsx [Client Component Browser]
+    ./frontend/app/dashboard/employees/[id]/page.tsx [Client Component Browser]
+    ./frontend/app/dashboard/employees/[id]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/react-day-picker/dist/esm/classes/DateLib.js [Client Component SSR]
+    ./frontend/node_modules/react-day-picker/dist/esm/DayPicker.js [Client Component SSR]
+    ./frontend/components/ui/calendar.tsx [Client Component SSR]
+    ./frontend/app/dashboard/employees/components/profile/advanced-filter.tsx [Client Component SSR]
+    ./frontend/app/dashboard/employees/[id]/page.tsx [Client Component SSR]
+    ./frontend/app/dashboard/employees/[id]/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./frontend/node_modules/react-day-picker/dist/esm/noonDateLib.js:1:1
+Module not found: Can't resolve '@date-fns/tz'
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { [33mTZDate[39m } [36mfrom[39m [32m"@date-fns/tz"[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { differenceInCalendarDays [36mas[39m differenceInCalendarDaysFn[33m,[39m differenceInCalendarMonths [36mas[39m differenceInCalendarMonthsFn[33m,[39m getISOWeek [36mas[39m getISOWeekFn[33m,[39m getWeek [36mas[39m getWeekFn[33m,[39m } [36mfrom[39m [32m"date-fns"[39m[33m;[39m
+ [90m 3 |[39m [90m/**[39m
+ [90m 4 |[39m [90m * Creates `dateLib` overrides that keep all calendar math at noon in the target[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/react-day-picker/dist/esm/noonDateLib.js [Client Component Browser]
+    ./frontend/node_modules/react-day-picker/dist/esm/DayPicker.js [Client Component Browser]
+    ./frontend/components/ui/calendar.tsx [Client Component Browser]
+    ./frontend/components/analytics/unified-filter.tsx [Client Component Browser]
+    ./frontend/app/dashboard/analytics/page.tsx [Client Component Browser]
+    ./frontend/app/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/react-day-picker/dist/esm/noonDateLib.js [Client Component SSR]
+    ./frontend/node_modules/react-day-picker/dist/esm/DayPicker.js [Client Component SSR]
+    ./frontend/components/ui/calendar.tsx [Client Component SSR]
+    ./frontend/components/analytics/unified-filter.tsx [Client Component SSR]
+    ./frontend/app/dashboard/analytics/page.tsx [Client Component SSR]
+    ./frontend/app/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./frontend/node_modules/react-day-picker/dist/esm/utils/convertMatchersToTimeZone.js:1:1
+Module not found: Can't resolve '@date-fns/tz'
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { [33mTZDate[39m } [36mfrom[39m [32m"@date-fns/tz"[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { toTimeZone } [36mfrom[39m [32m"./toTimeZone.js"[39m[33m;[39m
+ [90m 3 |[39m [36mimport[39m { isDateAfterType[33m,[39m isDateBeforeType[33m,[39m isDateInterval[33m,[39m isDateRange[33m,[39m } [36mfrom[39m [32m"./typeguards.js"[39m[33m;[39m
+ [90m 4 |[39m [36mfunction[39m toZoneNoon(date[33m,[39m timeZone[33m,[39m noonSafe) {[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/react-day-picker/dist/esm/utils/convertMatchersToTimeZone.js [Client Component Browser]
+    ./frontend/node_modules/react-day-picker/dist/esm/DayPicker.js [Client Component Browser]
+    ./frontend/components/ui/calendar.tsx [Client Component Browser]
+    ./frontend/components/analytics/unified-filter.tsx [Client Component Browser]
+    ./frontend/app/dashboard/analytics/page.tsx [Client Component Browser]
+    ./frontend/app/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/react-day-picker/dist/esm/utils/convertMatchersToTimeZone.js [Client Component SSR]
+    ./frontend/node_modules/react-day-picker/dist/esm/DayPicker.js [Client Component SSR]
+    ./frontend/components/ui/calendar.tsx [Client Component SSR]
+    ./frontend/components/analytics/unified-filter.tsx [Client Component SSR]
+    ./frontend/app/dashboard/analytics/page.tsx [Client Component SSR]
+    ./frontend/app/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./frontend/node_modules/react-day-picker/dist/esm/utils/toTimeZone.js:1:1
+Module not found: Can't resolve '@date-fns/tz'
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { [33mTZDate[39m } [36mfrom[39m [32m"@date-fns/tz"[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [90m/**[39m
+ [90m 3 |[39m [90m * Convert a {@link Date} or {@link TZDate} instance to the given time zone.[39m
+ [90m 4 |[39m [90m * Reuses the same instance when it is already a {@link TZDate} using the target[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/react-day-picker/dist/esm/utils/toTimeZone.js [Client Component Browser]
+    ./frontend/node_modules/react-day-picker/dist/esm/DayPicker.js [Client Component Browser]
+    ./frontend/components/ui/calendar.tsx [Client Component Browser]
+    ./frontend/components/analytics/unified-filter.tsx [Client Component Browser]
+    ./frontend/app/dashboard/analytics/page.tsx [Client Component Browser]
+    ./frontend/app/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/react-day-picker/dist/esm/utils/toTimeZone.js [Client Component SSR]
+    ./frontend/node_modules/react-day-picker/dist/esm/DayPicker.js [Client Component SSR]
+    ./frontend/components/ui/calendar.tsx [Client Component SSR]
+    ./frontend/components/analytics/unified-filter.tsx [Client Component SSR]
+    ./frontend/app/dashboard/analytics/page.tsx [Client Component SSR]
+    ./frontend/app/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./frontend/node_modules/mdast-util-to-hast/lib/footer.js:65:1
+Module not found: Can't resolve '@ungap/structured-clone'
+[0m [90m 63 |[39m [90m */[39m
+ [90m 64 |[39m
+[31m[1m>[22m[39m[90m 65 |[39m [36mimport[39m structuredClone [36mfrom[39m [32m'@ungap/structured-clone'[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 66 |[39m [36mimport[39m {normalizeUri} [36mfrom[39m [32m'micromark-util-sanitize-uri'[39m
+ [90m 67 |[39m
+ [90m 68 |[39m [90m/**[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/mdast-util-to-hast/lib/footer.js [Client Component Browser]
+    ./frontend/node_modules/mdast-util-to-hast/lib/index.js [Client Component Browser]
+    ./frontend/node_modules/remark-rehype/lib/index.js [Client Component Browser]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component Browser]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/mdast-util-to-hast/lib/footer.js [Client Component SSR]
+    ./frontend/node_modules/mdast-util-to-hast/lib/index.js [Client Component SSR]
+    ./frontend/node_modules/remark-rehype/lib/index.js [Client Component SSR]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component SSR]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./frontend/node_modules/mdast-util-to-hast/lib/state.js:178:1
+Module not found: Can't resolve '@ungap/structured-clone'
+[0m [90m 176 |[39m [90m */[39m
+ [90m 177 |[39m
+[31m[1m>[22m[39m[90m 178 |[39m [36mimport[39m structuredClone [36mfrom[39m [32m'@ungap/structured-clone'[39m
+ [90m     |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 179 |[39m [36mimport[39m {visit} [36mfrom[39m [32m'unist-util-visit'[39m
+ [90m 180 |[39m [36mimport[39m {position} [36mfrom[39m [32m'unist-util-position'[39m
+ [90m 181 |[39m [36mimport[39m {handlers [36mas[39m defaultHandlers} [36mfrom[39m [32m'./handlers/index.js'[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/mdast-util-to-hast/lib/state.js [Client Component Browser]
+    ./frontend/node_modules/mdast-util-to-hast/lib/index.js [Client Component Browser]
+    ./frontend/node_modules/remark-rehype/lib/index.js [Client Component Browser]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component Browser]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/mdast-util-to-hast/lib/state.js [Client Component SSR]
+    ./frontend/node_modules/mdast-util-to-hast/lib/index.js [Client Component SSR]
+    ./frontend/node_modules/remark-rehype/lib/index.js [Client Component SSR]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component SSR]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./frontend/node_modules/unified/lib/index.js:349:1
+Module not found: Can't resolve 'bail'
+[0m [90m 347 |[39m [90m */[39m
+ [90m 348 |[39m
+[31m[1m>[22m[39m[90m 349 |[39m [36mimport[39m {bail} [36mfrom[39m [32m'bail'[39m
+ [90m     |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 350 |[39m [36mimport[39m extend [36mfrom[39m [32m'extend'[39m
+ [90m 351 |[39m [36mimport[39m {ok [36mas[39m assert} [36mfrom[39m [32m'devlop'[39m
+ [90m 352 |[39m [36mimport[39m isPlainObj [36mfrom[39m [32m'is-plain-obj'[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/unified/lib/index.js [Client Component Browser]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component Browser]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/unified/lib/index.js [Client Component SSR]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component SSR]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./frontend/node_modules/mdast-util-from-markdown/lib/index.js:47:1
+Module not found: Can't resolve 'decode-named-character-reference'
+[0m [90m 45 |[39m [36mimport[39m { decodeString } [36mfrom[39m [32m'micromark-util-decode-string'[39m[33m;[39m
+ [90m 46 |[39m [36mimport[39m { normalizeIdentifier } [36mfrom[39m [32m'micromark-util-normalize-identifier'[39m[33m;[39m
+[31m[1m>[22m[39m[90m 47 |[39m [36mimport[39m { decodeNamedCharacterReference } [36mfrom[39m [32m'decode-named-character-reference'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 48 |[39m [36mimport[39m { stringifyPosition } [36mfrom[39m [32m'unist-util-stringify-position'[39m[33m;[39m
+ [90m 49 |[39m [36mconst[39m own [33m=[39m {}[33m.[39mhasOwnProperty[33m;[39m
+ [90m 50 |[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/mdast-util-from-markdown/lib/index.js [Client Component Browser]
+    ./frontend/node_modules/remark-parse/lib/index.js [Client Component Browser]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component Browser]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/mdast-util-from-markdown/lib/index.js [Client Component SSR]
+    ./frontend/node_modules/remark-parse/lib/index.js [Client Component SSR]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component SSR]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./frontend/node_modules/micromark-core-commonmark/lib/character-reference.js:11:1
+Module not found: Can't resolve 'decode-named-character-reference'
+[0m [90m  9 |[39m [90m */[39m
+ [90m 10 |[39m
+[31m[1m>[22m[39m[90m 11 |[39m [36mimport[39m { decodeNamedCharacterReference } [36mfrom[39m [32m'decode-named-character-reference'[39m[33m;[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 12 |[39m [36mimport[39m { asciiAlphanumeric[33m,[39m asciiDigit[33m,[39m asciiHexDigit } [36mfrom[39m [32m'micromark-util-character'[39m[33m;[39m
+ [90m 13 |[39m [90m/** @type {Construct} */[39m
+ [90m 14 |[39m [36mexport[39m [36mconst[39m characterReference [33m=[39m {[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/micromark-core-commonmark/lib/character-reference.js [Client Component Browser]
+    ./frontend/node_modules/micromark/lib/constructs.js [Client Component Browser]
+    ./frontend/node_modules/micromark/lib/parse.js [Client Component Browser]
+    ./frontend/node_modules/mdast-util-from-markdown/lib/index.js [Client Component Browser]
+    ./frontend/node_modules/remark-parse/lib/index.js [Client Component Browser]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component Browser]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/micromark-core-commonmark/lib/character-reference.js [Client Component SSR]
+    ./frontend/node_modules/micromark/lib/constructs.js [Client Component SSR]
+    ./frontend/node_modules/micromark/lib/parse.js [Client Component SSR]
+    ./frontend/node_modules/mdast-util-from-markdown/lib/index.js [Client Component SSR]
+    ./frontend/node_modules/remark-parse/lib/index.js [Client Component SSR]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component SSR]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./frontend/node_modules/micromark-util-decode-string/index.js:1:1
+Module not found: Can't resolve 'decode-named-character-reference'
+[0m[31m[1m>[22m[39m[90m 1 |[39m [36mimport[39m { decodeNamedCharacterReference } [36mfrom[39m [32m'decode-named-character-reference'[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 2 |[39m [36mimport[39m { decodeNumericCharacterReference } [36mfrom[39m [32m'micromark-util-decode-numeric-character-reference'[39m[33m;[39m
+ [90m 3 |[39m [36mconst[39m characterEscapeOrReference [33m=[39m [35m/\\([!-/:-@[-`{-~])|&(#(?:\d{1,7}|x[\da-f]{1,6})|[\da-z]{1,31});/gi[39m[33m;[39m
+ [90m 4 |[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/micromark-util-decode-string/index.js [Client Component Browser]
+    ./frontend/node_modules/mdast-util-from-markdown/lib/index.js [Client Component Browser]
+    ./frontend/node_modules/remark-parse/lib/index.js [Client Component Browser]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component Browser]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/micromark-util-decode-string/index.js [Client Component SSR]
+    ./frontend/node_modules/mdast-util-from-markdown/lib/index.js [Client Component SSR]
+    ./frontend/node_modules/remark-parse/lib/index.js [Client Component SSR]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component SSR]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./frontend/node_modules/mdast-util-to-hast/lib/index.js:7:1
+Module not found: Can't resolve 'devlop'
+[0m [90m  5 |[39m [90m */[39m
+ [90m  6 |[39m
+[31m[1m>[22m[39m[90m  7 |[39m [36mimport[39m {ok [36mas[39m assert} [36mfrom[39m [32m'devlop'[39m
+ [90m    |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m  8 |[39m [36mimport[39m {footer} [36mfrom[39m [32m'./footer.js'[39m
+ [90m  9 |[39m [36mimport[39m {createState} [36mfrom[39m [32m'./state.js'[39m
+ [90m 10 |[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/mdast-util-to-hast/lib/index.js [Client Component Browser]
+    ./frontend/node_modules/remark-rehype/lib/index.js [Client Component Browser]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component Browser]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/mdast-util-to-hast/lib/index.js [Client Component SSR]
+    ./frontend/node_modules/remark-rehype/lib/index.js [Client Component SSR]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component SSR]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./frontend/node_modules/react-markdown/lib/index.js:106:1
+Module not found: Can't resolve 'devlop'
+[0m [90m 104 |[39m [90m */[39m
+ [90m 105 |[39m
+[31m[1m>[22m[39m[90m 106 |[39m [36mimport[39m {unreachable} [36mfrom[39m [32m'devlop'[39m
+ [90m     |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 107 |[39m [36mimport[39m {toJsxRuntime} [36mfrom[39m [32m'hast-util-to-jsx-runtime'[39m
+ [90m 108 |[39m [36mimport[39m {urlAttributes} [36mfrom[39m [32m'html-url-attributes'[39m
+ [90m 109 |[39m [36mimport[39m {[33mFragment[39m[33m,[39m jsx[33m,[39m jsxs} [36mfrom[39m [32m'react/jsx-runtime'[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component Browser]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component SSR]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./frontend/node_modules/unified/lib/index.js:351:1
+Module not found: Can't resolve 'devlop'
+[0m [90m 349 |[39m [36mimport[39m {bail} [36mfrom[39m [32m'bail'[39m
+ [90m 350 |[39m [36mimport[39m extend [36mfrom[39m [32m'extend'[39m
+[31m[1m>[22m[39m[90m 351 |[39m [36mimport[39m {ok [36mas[39m assert} [36mfrom[39m [32m'devlop'[39m
+ [90m     |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 352 |[39m [36mimport[39m isPlainObj [36mfrom[39m [32m'is-plain-obj'[39m
+ [90m 353 |[39m [36mimport[39m {trough} [36mfrom[39m [32m'trough'[39m
+ [90m 354 |[39m [36mimport[39m {[33mVFile[39m} [36mfrom[39m [32m'vfile'[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/unified/lib/index.js [Client Component Browser]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component Browser]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/unified/lib/index.js [Client Component SSR]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component SSR]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./frontend/node_modules/unified/lib/index.js:350:1
+Module not found: Can't resolve 'extend'
+[0m [90m 348 |[39m
+ [90m 349 |[39m [36mimport[39m {bail} [36mfrom[39m [32m'bail'[39m
+[31m[1m>[22m[39m[90m 350 |[39m [36mimport[39m extend [36mfrom[39m [32m'extend'[39m
+ [90m     |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 351 |[39m [36mimport[39m {ok [36mas[39m assert} [36mfrom[39m [32m'devlop'[39m
+ [90m 352 |[39m [36mimport[39m isPlainObj [36mfrom[39m [32m'is-plain-obj'[39m
+ [90m 353 |[39m [36mimport[39m {trough} [36mfrom[39m [32m'trough'[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/unified/lib/index.js [Client Component Browser]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component Browser]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/unified/lib/index.js [Client Component SSR]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component SSR]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./frontend/node_modules/react-markdown/lib/index.js:107:1
+Module not found: Can't resolve 'hast-util-to-jsx-runtime'
+[0m [90m 105 |[39m
+ [90m 106 |[39m [36mimport[39m {unreachable} [36mfrom[39m [32m'devlop'[39m
+[31m[1m>[22m[39m[90m 107 |[39m [36mimport[39m {toJsxRuntime} [36mfrom[39m [32m'hast-util-to-jsx-runtime'[39m
+ [90m     |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 108 |[39m [36mimport[39m {urlAttributes} [36mfrom[39m [32m'html-url-attributes'[39m
+ [90m 109 |[39m [36mimport[39m {[33mFragment[39m[33m,[39m jsx[33m,[39m jsxs} [36mfrom[39m [32m'react/jsx-runtime'[39m
+ [90m 110 |[39m [36mimport[39m {useEffect[33m,[39m useState} [36mfrom[39m [32m'react'[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component Browser]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component SSR]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./frontend/node_modules/react-markdown/lib/index.js:108:1
+Module not found: Can't resolve 'html-url-attributes'
+[0m [90m 106 |[39m [36mimport[39m {unreachable} [36mfrom[39m [32m'devlop'[39m
+ [90m 107 |[39m [36mimport[39m {toJsxRuntime} [36mfrom[39m [32m'hast-util-to-jsx-runtime'[39m
+[31m[1m>[22m[39m[90m 108 |[39m [36mimport[39m {urlAttributes} [36mfrom[39m [32m'html-url-attributes'[39m
+ [90m     |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 109 |[39m [36mimport[39m {[33mFragment[39m[33m,[39m jsx[33m,[39m jsxs} [36mfrom[39m [32m'react/jsx-runtime'[39m
+ [90m 110 |[39m [36mimport[39m {useEffect[33m,[39m useState} [36mfrom[39m [32m'react'[39m
+ [90m 111 |[39m [36mimport[39m remarkParse [36mfrom[39m [32m'remark-parse'[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component Browser]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component SSR]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./frontend/node_modules/unified/lib/index.js:352:1
+Module not found: Can't resolve 'is-plain-obj'
+[0m [90m 350 |[39m [36mimport[39m extend [36mfrom[39m [32m'extend'[39m
+ [90m 351 |[39m [36mimport[39m {ok [36mas[39m assert} [36mfrom[39m [32m'devlop'[39m
+[31m[1m>[22m[39m[90m 352 |[39m [36mimport[39m isPlainObj [36mfrom[39m [32m'is-plain-obj'[39m
+ [90m     |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 353 |[39m [36mimport[39m {trough} [36mfrom[39m [32m'trough'[39m
+ [90m 354 |[39m [36mimport[39m {[33mVFile[39m} [36mfrom[39m [32m'vfile'[39m
+ [90m 355 |[39m [36mimport[39m {[33mCallableInstance[39m} [36mfrom[39m [32m'./callable-instance.js'[39m[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./frontend/node_modules/unified/lib/index.js [Client Component Browser]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component Browser]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Client Component Browser]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./frontend/node_modules/unified/lib/index.js [Client Component SSR]
+    ./frontend/node_modules/react-markdown/lib/index.js [Client Component SSR]
+    ./frontend/components/support/support-chat-widget.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Client Component SSR]
+    ./frontend/app/portal/support/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at Module.init (turbopack:///[turbopack-node]/transforms/postcss.ts:43:33) [C:\Users\user\Desktop\Tinsur.AI\frontend\.next\build\chunks\[root-of-the-server]__188e9cb8._.js:130:35])
+    at run (turbopack:///[turbopack-node]/ipc/evaluate.ts:77:20) [C:\Users\user\Desktop\Tinsur.AI\frontend\.next\build\chunks\[root-of-the-server]__3b54a99d._.js:429:26])
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    ... collapsed 16 duplicate lines matching above 1 lines 16 times...
+npm error Lifecycle script `build` failed with error:
+npm error code 1
+npm error path C:\Users\user\Desktop\Tinsur.AI\frontend
+npm error workspace tinsur-ai-frontend@0.1.0
+npm error location C:\Users\user\Desktop\Tinsur.AI\frontend
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c next build

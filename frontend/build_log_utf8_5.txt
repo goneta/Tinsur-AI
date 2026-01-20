@@ -1,0 +1,88 @@
+﻿
+> tinsur-ai-frontend@0.1.0 build
+> next build
+
+Ôû▓ Next.js 16.1.4 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+Ô£ô Compiled successfully in 59s
+  Running TypeScript ...
+node.exe : Failed to compile.
+Au caractère Ligne:1 : 1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Users\user\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpec 
+   ified: (Failed to compile.:String  
+  ) [], RemoteException
+    + FullyQualifiedErrorId : NativeC 
+   ommandError
+ 
+
+./components/quotes/quote-wizard.tsx:1
+312:54
+Type error: 
+'calculatedValues.adminFee' is 
+possibly 'undefined'.
+
+[0m [90m 1310 |[39m                
+                                      
+   [33m<[39m[33mspan[39m className
+[33m=[39m[32m"font-black"[39m[33m
+>[39m[33m+[39m{wrapperFormatCurrenc
+y(calculatedValues[33m?[39m[33m.[3
+9mtotalFees [33m||[39m [35m0[39m)}
+[33m<[39m[33m/[39m[33mspan[39m[
+33m>[39m
+ [90m 1311 |[39m                    
+                                 [33m
+<[39m[33m/[39m[33mdiv[39m[33m>[
+39m
+[31m[1m>[22m[39m[90m 1312 |[39m 
+                                      
+              {calculatedValues[33m?
+[39m[33m.[39madminFee [33m>[39m 
+[35m0[39m [33m&&[39m (
+ [90m      |[39m                    
+                                  
+[31m[1m^[22m[39m
+ [90m 1313 |[39m                    
+                                     
+[33m<[39m[33mdiv[39m 
+className[33m=[39m[32m"flex 
+justify-between items-center 
+text-lg"[39m[33m>[39m
+ [90m 1314 |[39m                    
+                                      
+   [33m<[39m[33mspan[39m 
+className[33m=[39m[32m"font-medium 
+text-blue-100/80"[39m[33m>[39m[33m
+Company[39m [33mAdmin[39m [33mFee
+[39m[33m<[39m[33m/[39m[33mspan[3
+9m[33m>[39m
+ [90m 1315 |[39m                    
+                                      
+   [33m<[39m[33mspan[39m className
+[33m=[39m[32m"font-black"[39m[33m
+>[39m[33m+[39m{wrapperFormatCurrenc
+y(calculatedValues[33m?[39m[33m.[3
+9madminFee)}[33m<[39m[33m/[39m[33
+mspan[39m[33m>[39m[0m
+Next.js build worker exited with 
+code: 1 and signal: null
+npm error Lifecycle script `build` 
+failed with error:
+npm error code 1
+npm error path C:\Users\user\Desktop\T
+insur.AI\frontend
+npm error workspace 
+tinsur-ai-frontend@0.1.0
+npm error location C:\Users\user\Deskt
+op\Tinsur.AI\frontend
+npm error command failed
+npm error command 
+C:\WINDOWS\system32\cmd.exe /d /s /c 
+next build
