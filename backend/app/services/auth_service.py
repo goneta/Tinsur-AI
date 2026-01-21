@@ -164,7 +164,7 @@ class AuthService:
             "sub": str(user.id),
             "email": user.email,
             "role": user.role,
-            "company_id": str(user.company_id)
+            "company_id": str(user.company_id) if user.company_id else None
         }
         
         access_token = create_access_token(token_data)
@@ -200,7 +200,7 @@ class AuthService:
                     "first_name": user.first_name,
                     "last_name": user.last_name,
                     "role": user.role,
-                    "company_id": str(user.company_id),
+                    "company_id": str(user.company_id) if user.company_id else None,
                     "is_active": user.is_active,
                     "is_verified": user.is_verified,
                     "mfa_enabled": user.mfa_enabled,

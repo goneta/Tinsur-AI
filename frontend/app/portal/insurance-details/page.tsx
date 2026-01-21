@@ -23,6 +23,7 @@ export default function InsuranceDetailsPage() {
         const loadData = async () => {
             try {
                 const clientData = await clientApi.getMyClient();
+                console.log("DEBUG: insurance-details/page.tsx - clientData:", clientData);
                 setClient(clientData);
 
                 // Map Drivers
@@ -41,6 +42,7 @@ export default function InsuranceDetailsPage() {
                         dateOfBirth: d.date_of_birth || ''
                     })));
                 } else {
+                    console.log("DEBUG: insurance-details/page.tsx - No drivers found, applying fallback logic");
                     // Fallback to basic user info if no explicit drivers
                     setDrivers([{
                         id: clientData.id,

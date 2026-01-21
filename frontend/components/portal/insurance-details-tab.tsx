@@ -393,6 +393,7 @@ export function InsuranceDetailsTab({
                 paymentApi.getPayments({ client_id: clientId, page: 1, page_size: 100 }),
                 clientApi.getClient(clientId)
             ]);
+            console.log("DEBUG: insurance-details-tab refreshData - clientData:", clientData);
 
             const fetchedVehicles: PortalVehicle[] = (clientData.automobile_details || []).map((v: ClientAutomobile) => ({
                 id: v.id,
@@ -441,6 +442,7 @@ export function InsuranceDetailsTab({
 
             let driversToSet = fetchedDrivers;
             if (fetchedDrivers.length === 0 && clientData) {
+                console.log("DEBUG: insurance-details-tab refreshData - No drivers found, applying fallback logic");
                 // Fallback Logic to match page.tsx: Use Client as Main Driver if no explicit drivers exist
                 driversToSet = [{
                     id: clientData.id,
