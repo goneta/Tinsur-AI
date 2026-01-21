@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlalchemy.orm import Session
 from typing import List
 import uuid
+from datetime import datetime
 import os
 import shutil
 from pathlib import Path
@@ -76,10 +77,26 @@ async def update_user_settings(
 
 @router.get("/company", response_model=CompanyResponse)
 async def get_company_settings(
-    current_user: User = Depends(require_role(["admin"])),
+    current_user: User = Depends(require_role(["super_admin", "company_admin", "admin", "manager", "agent", "client"])),
     db: Session = Depends(get_db)
 ):
     """Get company settings (admin only)."""
+    if not current_user.company_id:
+        # Return default platform settings for independent users
+        return Company(
+            id=uuid.UUID(int=0),  # Null UUID
+            name="Tinsur AI",
+            subdomain="portal",
+            email="support@tinsur.ai",
+            currency="USD",
+            timezone="UTC",
+            is_active=True,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+            primary_color="#00539F", # Default brand color
+            secondary_color="#002D58" # Default brand darker
+        )
+
     company = db.query(Company).filter(Company.id == current_user.company_id).first()
     
     if not company:
