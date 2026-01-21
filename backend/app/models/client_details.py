@@ -2,19 +2,19 @@
 Policy-specific client detail models.
 """
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Numeric, Date, Float, Boolean, Text
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
 
 from app.core.database import Base
+from app.core.guid import GUID
 
 class ClientAutomobile(Base):
     """Automobile specific details for a client's vehicle."""
     __tablename__ = "client_automobile"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    client_id = Column(GUID(), ForeignKey("clients.id", ondelete="CASCADE"))
     
     # Vehicle Details
     vehicle_registration = Column(String(50), nullable=True)
@@ -60,8 +60,8 @@ class ClientHousing(Base):
     """Housing specific details for a client."""
     __tablename__ = "client_housing"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"), unique=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    client_id = Column(GUID(), ForeignKey("clients.id", ondelete="CASCADE"), unique=True)
     
     # Property Details
     property_type = Column(String(50)) # house, apartment, villa, commercial
@@ -98,8 +98,8 @@ class ClientHealth(Base):
     """Health specific details for a client."""
     __tablename__ = "client_health"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"), unique=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    client_id = Column(GUID(), ForeignKey("clients.id", ondelete="CASCADE"), unique=True)
     
     # Personal Health
     height_cm = Column(Float)
@@ -131,8 +131,8 @@ class ClientLife(Base):
     """Life insurance specific details for a client."""
     __tablename__ = "client_life"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"), unique=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    client_id = Column(GUID(), ForeignKey("clients.id", ondelete="CASCADE"), unique=True)
     
     # Personal & Financial extended
     dependent_count = Column(Integer, default=0)
@@ -159,8 +159,8 @@ class ClientDriver(Base):
     """Driver details associated with a client account."""
     __tablename__ = "client_drivers"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    client_id = Column(GUID(), ForeignKey("clients.id", ondelete="CASCADE"))
     
     first_name = Column(String(50))
     last_name = Column(String(50))

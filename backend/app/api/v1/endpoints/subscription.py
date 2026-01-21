@@ -68,6 +68,15 @@ async def get_subscription_status(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    if not current_user.company_id:
+        # Default status for individual users not linked to a company
+        return SubscriptionStatus(
+            plan="PERSONAL",
+            credits=0.0,
+            has_custom_key=False,
+            company_id="individual"
+        )
+        
     company = db.query(Company).filter(Company.id == current_user.company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")

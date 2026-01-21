@@ -100,8 +100,10 @@ async def create_client(
             client = await service.register_client(client_data)
             
             # 3. Commit transaction
+            print(f"DEBUG: Committing registration for client {client.id}")
             db.commit()
             db.refresh(client)
+            print(f"DEBUG: Registration committed for client {client.id}. Drivers count: {len(client.drivers) if client.drivers else 0}")
     
     except HTTPException:
         db.rollback()

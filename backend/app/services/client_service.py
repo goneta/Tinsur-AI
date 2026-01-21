@@ -38,14 +38,17 @@ class ClientService:
             
         # 2. Automatic Driver Card Generation
         if client.client_type == 'individual' or (client.first_name and client.last_name):
+            print(f"DEBUG_CLIENT_SERVICE: Triggering _create_automatic_driver for client_id: {client.id}")
             self._create_automatic_driver(client)
+        else:
+            print(f"DEBUG_CLIENT_SERVICE: Skipping _create_automatic_driver for client_id: {client.id} (type: {client.client_type}, name: {client.first_name} {client.last_name})")
             
-        self.db.flush()
-
         # 3. Create Vehicles if provided
         if client_data.automobile_details:
+            print(f"DEBUG_CLIENT_SERVICE: Creating automobiles for client_id: {client.id}")
             self._create_automobiles(client, client_data.automobile_details)
-        
+
+        self.db.flush()
         return client
 
     async def register_client(self, client_data: ClientCreate) -> Client:
@@ -77,52 +80,59 @@ class ClientService:
         """
         Create a ClientDriver record based on Client details.
         """
-        # Check if driver already exists for this client (unlikely for new client, but good practice)
-        existing_driver = self.db.query(ClientDriver).filter(
-            ClientDriver.client_id == client.id,
-            ClientDriver.is_main_driver == True
-        ).first()
+        try:
+            # Check if driver already exists for this client
+            existing_driver = self.db.query(ClientDriver).filter(
+                ClientDriver.client_id == client.id,
+                ClientDriver.is_main_driver == True
+            ).first()
 
-        if existing_driver:
-            return
+            if existing_driver:
+                print(f"DEBUG_CLIENT_SERVICE: Automatic driver already exists for client_id: {client.id}")
+                return
 
-        # Map Client fields to Driver fields
-        driver = ClientDriver(
-            id=uuid.uuid4(),
-            client_id=client.id,
-            is_main_driver=True,
-            first_name=client.first_name,
-            last_name=client.last_name,
-            phone_number=client.phone,
-            address=client.address,
-            city=client.city,
-            country=client.country,
-            # Map license number. Note: Client model has 'driving_licence_number', Driver has 'license_number'
-            # Also checking 'id_number' as fallback or other identity fields if needed? No, purely license.
-            license_number=client.driving_licence_number, 
-            date_of_birth=client.date_of_birth,
+            # Map Client fields to Driver fields
+            print(f"DEBUG_CLIENT_SERVICE: Mapping fields for automatic driver. Client Name: {client.first_name} {client.last_name}")
+            driver = ClientDriver(
+                id=uuid.uuid4(),
+                client_id=client.id,
+                is_main_driver=True,
+                first_name=client.first_name,
+                last_name=client.last_name,
+                phone_number=client.phone,
+                address=client.address,
+                city=client.city,
+                country=client.country,
+                license_number=client.driving_licence_number, 
+                date_of_birth=client.date_of_birth,
+                
+                # Initialize defaults
+                accident_count=client.accident_count or 0,
+                no_claims_years=client.no_claims_years or 0,
+                driving_license_years=client.driving_license_years or 0,
+                driving_license_url=client.driving_license_url
+            )
             
-            # Initialize defaults
-            accident_count=client.accident_count or 0,
-            no_claims_years=client.no_claims_years or 0,
-            driving_license_years=client.driving_license_years or 0,
-            driving_license_url=client.driving_license_url
-        )
-        
-        self.db.add(driver)
-        self.db.flush()
+            self.db.add(driver)
+            self.db.flush()
+            print(f"DEBUG_CLIENT_SERVICE: Successfully created automatic driver for client_id: {client.id}")
+        except Exception as e:
+            print(f"ERROR_CLIENT_SERVICE: Failed to create automatic driver for client_id: {client.id}. Error: {str(e)}")
+            # Don't raise, allowing registration to continue but logging failure
 
     def _create_automobiles(self, client: Client, vehicles_data: list) -> None:
         """
         Create ClientAutomobile records from provided data.
         """
-        for vehicle_data in vehicles_data:
-            vehicle = ClientAutomobile(
-                id=uuid.uuid4(),
-                client_id=client.id,
-                **vehicle_data.dict(exclude_unset=True)
-            )
-            self.db.add(vehicle)
-        
-        self.db.commit()
-        # No need to refresh unless we return it
+        try:
+            for vehicle_data in vehicles_data:
+                vehicle = ClientAutomobile(
+                    id=uuid.uuid4(),
+                    client_id=client.id,
+                    **vehicle_data.dict(exclude_unset=True)
+                )
+                self.db.add(vehicle)
+            self.db.flush()
+            print(f"DEBUG_CLIENT_SERVICE: Successfully created {len(vehicles_data)} automobiles for client_id: {client.id}")
+        except Exception as e:
+            print(f"ERROR_CLIENT_SERVICE: Failed to create automobiles for client_id: {client.id}. Error: {str(e)}")

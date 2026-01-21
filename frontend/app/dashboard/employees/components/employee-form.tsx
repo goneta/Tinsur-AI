@@ -50,7 +50,7 @@ export function EmployeeForm({ onSuccess, initialData, mode = 'create' }: Employ
     const [posLocations, setPosLocations] = useState<any[]>([]);
     const { toast } = useToast();
 
-    const form = useForm({
+    const form = useForm<EmployeeFormValues>({
         resolver: zodResolver(employeeSchema),
         defaultValues: {
             first_name: initialData?.first_name || "",
