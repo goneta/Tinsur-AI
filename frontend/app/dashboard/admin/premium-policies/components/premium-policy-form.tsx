@@ -65,7 +65,7 @@ export function PremiumPolicyForm({
         watch,
         reset,
         formState: { errors },
-    } = useForm({
+    } = useForm<PolicyTypeFormData>({
         resolver: zodResolver(policyTypeSchema),
         defaultValues: {
             name: '',

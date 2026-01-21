@@ -17,7 +17,7 @@ interface PayrollFormProps {
 
 export function PayrollForm({ employee, onSuccess }: PayrollFormProps) {
     const [loading, setLoading] = useState(false);
-    const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm({
+    const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<any>({
         defaultValues: {
             employee_id: employee.id,
             amount: employee.employee_profile?.base_salary || '',
