@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AuthHeader } from "@/components/layout/auth-header";
+import { SocialAuth } from "@/components/auth/social-auth";
 
 
 type LoginFormData = z.infer<typeof baseSchema>;
@@ -29,6 +30,7 @@ const baseSchema = z.object({
 export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showEmailForm, setShowEmailForm] = useState(false);
     const { login } = useAuth();
     const { t } = useLanguage();
 
@@ -73,52 +75,82 @@ export default function LoginPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                        {error && (
-                            <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
-                                {error}
+                    {!showEmailForm ? (
+                        <div className="space-y-6">
+                            <SocialAuth
+                                onEmailClick={() => setShowEmailForm(true)}
+                                isLoading={loading}
+                            />
+
+                            <div className="text-center text-xs text-gray-400 font-medium px-4">
+                                By continuing, you agree to our <a href="#" className="underline">Terms of Service</a> and <a href="#" className="underline">Privacy Policy</a>.
                             </div>
-                        )}
 
-                        <div className="space-y-2">
-                            <Label htmlFor="email">{t('login.email', 'Email')}</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="you@example.com"
-                                {...register('email')}
-                                className={errors.email ? 'border-red-500' : ''}
-                            />
-                            {errors.email && (
-                                <p className="text-sm text-red-600">{errors.email.message}</p>
+                            <div className="text-center text-sm pt-2">
+                                <span className="text-gray-600">{t('login.no_account', "Don't have an account?")} </span>
+                                <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+                                    {t('login.register_link', 'Register now')}
+                                </Link>
+                            </div>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                            {error && (
+                                <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+                                    {error}
+                                </div>
                             )}
-                        </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="password">{t('login.password', 'Password')}</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                placeholder="••••••••"
-                                {...register('password')}
-                                className={errors.password ? 'border-red-500' : ''}
-                            />
-                            {errors.password && (
-                                <p className="text-sm text-red-600">{errors.password.message}</p>
-                            )}
-                        </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="email">{t('login.email', 'Email')}</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    placeholder="you@example.com"
+                                    {...register('email')}
+                                    className={errors.email ? 'border-red-500' : ''}
+                                />
+                                {errors.email && (
+                                    <p className="text-sm text-red-600">{errors.email.message}</p>
+                                )}
+                            </div>
 
-                        <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? t('Signing in...') : t('login.sign_in_btn', 'Sign In')}
-                        </Button>
+                            <div className="space-y-2">
+                                <Label htmlFor="password">{t('login.password', 'Password')}</Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    {...register('password')}
+                                    className={errors.password ? 'border-red-500' : ''}
+                                />
+                                {errors.password && (
+                                    <p className="text-sm text-red-600">{errors.password.message}</p>
+                                )}
+                            </div>
 
-                        <div className="text-center text-sm">
-                            <span className="text-gray-600">{t('login.no_account', "Don't have an account?")} </span>
-                            <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
-                                {t('login.register_link', 'Register now')}
-                            </Link>
-                        </div>
-                    </form>
+                            <Button type="submit" className="w-full" disabled={loading}>
+                                {loading ? t('Signing in...') : t('login.sign_in_btn', 'Sign In')}
+                            </Button>
+
+                            <div className="flex flex-col gap-4 text-center text-sm">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEmailForm(false)}
+                                    className="text-gray-500 hover:text-gray-700"
+                                >
+                                    ← Back to social options
+                                </button>
+
+                                <div>
+                                    <span className="text-gray-600">{t('login.no_account', "Don't have an account?")} </span>
+                                    <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+                                        {t('login.register_link', 'Register now')}
+                                    </Link>
+                                </div>
+                            </div>
+                        </form>
+                    )}
                 </CardContent>
             </Card>
         </div>

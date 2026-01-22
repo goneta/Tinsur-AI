@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -15,12 +16,14 @@ import { TinsurLogo } from "@/components/ui/tinsur-logo";
 import { LanguageSwitcher } from "@/components/language-switcher";
 
 import { useLanguage } from '@/contexts/language-context';
+import { SocialAuth } from "@/components/auth/social-auth";
 
 export default function ClientRegistrationPage() {
     const { t } = useLanguage();
     const router = useRouter();
     const { login } = useAuth();
     const [loading, setLoading] = useState(false);
+    const [showEmailForm, setShowEmailForm] = useState(false);
     const [formData, setFormData] = useState({
         first_name: '',
         last_name: '',
@@ -145,124 +148,154 @@ export default function ClientRegistrationPage() {
                 </div>
 
                 <Card className="p-8">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-2">
-                            <Label htmlFor="sex" className="text-slate-600 font-semibold">{t("register.sex", "Sex")} *</Label>
-                            <select
-                                id="sex"
-                                value={formData.sex}
-                                onChange={(e) => handleChange('sex', e.target.value)}
-                                className="w-full flex h-11 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-1 focus:ring-slate-300 transition-all font-medium text-slate-600"
+                    {!showEmailForm ? (
+                        <div className="space-y-6">
+                            <SocialAuth
+                                onEmailClick={() => setShowEmailForm(true)}
+                                isLoading={loading}
+                            />
+
+                            <div className="text-center text-xs text-gray-400 font-medium px-4">
+                                By continuing, you agree to our <a href="#" className="underline">Terms of Service</a> and <a href="#" className="underline">Privacy Policy</a>.
+                            </div>
+
+                            <div className="text-center text-sm pt-2">
+                                <span className="text-gray-600">{t("register_home.already_have_account")}{" "}</span>
+                                <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+                                    {t("register_home.login")}
+                                </Link>
+                            </div>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="sex" className="text-slate-600 font-semibold">{t("register.sex", "Sex")} *</Label>
+                                <select
+                                    id="sex"
+                                    value={formData.sex}
+                                    onChange={(e) => handleChange('sex', e.target.value)}
+                                    className="w-full flex h-11 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-1 focus:ring-slate-300 transition-all font-medium text-slate-600"
+                                >
+                                    <option value="man">{t("register.man", "Man")}</option>
+                                    <option value="woman">{t("register.woman", "Woman")}</option>
+                                </select>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="first_name">{t("register.first_name", "First Name")} *</Label>
+                                    <Input
+                                        id="first_name"
+                                        value={formData.first_name}
+                                        onChange={(e) => handleChange('first_name', e.target.value)}
+                                        placeholder={t("register.placeholders.first_name", "John")}
+                                        className={errors.first_name ? 'border-red-500' : ''}
+                                    />
+                                    {errors.first_name && (
+                                        <p className="text-sm text-red-500">{errors.first_name}</p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="last_name">{t("register.last_name", "Last Name")} *</Label>
+                                    <Input
+                                        id="last_name"
+                                        value={formData.last_name}
+                                        onChange={(e) => handleChange('last_name', e.target.value)}
+                                        placeholder={t("register.placeholders.last_name", "Doe")}
+                                        className={errors.last_name ? 'border-red-500' : ''}
+                                    />
+                                    {errors.last_name && (
+                                        <p className="text-sm text-red-500">{errors.last_name}</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="email">{t("register.email", "Email")} *</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={(e) => handleChange('email', e.target.value)}
+                                    placeholder={t("register.placeholders.email", "john.doe@example.com")}
+                                    className={errors.email ? 'border-red-500' : ''}
+                                />
+                                {errors.email && (
+                                    <p className="text-sm text-red-500">{errors.email}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="phone">{t("register.phone", "Phone Number")} *</Label>
+                                <Input
+                                    id="phone"
+                                    type="tel"
+                                    value={formData.phone}
+                                    onChange={(e) => handleChange('phone', e.target.value)}
+                                    placeholder={t("register.placeholders.phone", "+33 6 12 34 56 78")}
+                                    className={errors.phone ? 'border-red-500' : ''}
+                                />
+                                {errors.phone && (
+                                    <p className="text-sm text-red-500">{errors.phone}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="password">{t("register.password", "Password")} *</Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    value={formData.password}
+                                    onChange={(e) => handleChange('password', e.target.value)}
+                                    placeholder="••••••••"
+                                    className={errors.password ? 'border-red-500' : ''}
+                                />
+                                {errors.password && (
+                                    <p className="text-sm text-red-500">{errors.password}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="confirm_password">{t("register.confirm_password", "Confirm Password")} *</Label>
+                                <Input
+                                    id="confirm_password"
+                                    type="password"
+                                    value={formData.confirm_password}
+                                    onChange={(e) => handleChange('confirm_password', e.target.value)}
+                                    placeholder="••••••••"
+                                    className={errors.confirm_password ? 'border-red-500' : ''}
+                                />
+                                {errors.confirm_password && (
+                                    <p className="text-sm text-red-500">{errors.confirm_password}</p>
+                                )}
+                            </div>
+
+                            <Button
+                                type="submit"
+                                className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold"
+                                disabled={loading}
                             >
-                                <option value="man">{t("register.man", "Man")}</option>
-                                <option value="woman">{t("register.woman", "Woman")}</option>
-                            </select>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="first_name">{t("register.first_name", "First Name")} *</Label>
-                                <Input
-                                    id="first_name"
-                                    value={formData.first_name}
-                                    onChange={(e) => handleChange('first_name', e.target.value)}
-                                    placeholder={t("register.placeholders.first_name", "John")}
-                                    className={errors.first_name ? 'border-red-500' : ''}
-                                />
-                                {errors.first_name && (
-                                    <p className="text-sm text-red-500">{errors.first_name}</p>
-                                )}
+                                {loading ? t("register.loading", "Creating Account...") : t("register.create_btn", "Create Account")}
+                            </Button>
+
+                            <div className="flex flex-col gap-4 text-center text-sm">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEmailForm(false)}
+                                    className="text-gray-500 hover:text-gray-700"
+                                >
+                                    ← Back to social options
+                                </button>
+
+                                <div>
+                                    <span className="text-gray-600">{t("register_home.already_have_account")}{" "}</span>
+                                    <Link href="/login" className="text-blue-600 hover:underline font-medium">
+                                        {t("register_home.login")}
+                                    </Link>
+                                </div>
                             </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="last_name">{t("register.last_name", "Last Name")} *</Label>
-                                <Input
-                                    id="last_name"
-                                    value={formData.last_name}
-                                    onChange={(e) => handleChange('last_name', e.target.value)}
-                                    placeholder={t("register.placeholders.last_name", "Doe")}
-                                    className={errors.last_name ? 'border-red-500' : ''}
-                                />
-                                {errors.last_name && (
-                                    <p className="text-sm text-red-500">{errors.last_name}</p>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="email">{t("register.email", "Email")} *</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                value={formData.email}
-                                onChange={(e) => handleChange('email', e.target.value)}
-                                placeholder={t("register.placeholders.email", "john.doe@example.com")}
-                                className={errors.email ? 'border-red-500' : ''}
-                            />
-                            {errors.email && (
-                                <p className="text-sm text-red-500">{errors.email}</p>
-                            )}
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="phone">{t("register.phone", "Phone Number")} *</Label>
-                            <Input
-                                id="phone"
-                                type="tel"
-                                value={formData.phone}
-                                onChange={(e) => handleChange('phone', e.target.value)}
-                                placeholder={t("register.placeholders.phone", "+33 6 12 34 56 78")}
-                                className={errors.phone ? 'border-red-500' : ''}
-                            />
-                            {errors.phone && (
-                                <p className="text-sm text-red-500">{errors.phone}</p>
-                            )}
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="password">{t("register.password", "Password")} *</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                value={formData.password}
-                                onChange={(e) => handleChange('password', e.target.value)}
-                                placeholder="••••••••"
-                                className={errors.password ? 'border-red-500' : ''}
-                            />
-                            {errors.password && (
-                                <p className="text-sm text-red-500">{errors.password}</p>
-                            )}
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="confirm_password">{t("register.confirm_password", "Confirm Password")} *</Label>
-                            <Input
-                                id="confirm_password"
-                                type="password"
-                                value={formData.confirm_password}
-                                onChange={(e) => handleChange('confirm_password', e.target.value)}
-                                placeholder="••••••••"
-                                className={errors.confirm_password ? 'border-red-500' : ''}
-                            />
-                            {errors.confirm_password && (
-                                <p className="text-sm text-red-500">{errors.confirm_password}</p>
-                            )}
-                        </div>
-
-                        <Button
-                            type="submit"
-                            className="w-full"
-                            disabled={loading}
-                        >
-                            {loading ? t("register.loading", "Creating Account...") : t("register.create_btn", "Create Account")}
-                        </Button>
-
-                        <p className="text-sm text-center text-gray-600">
-                            {t("register_home.already_have_account")}{" "}
-                            <a href="/login" className="text-blue-600 hover:underline font-medium">
-                                {t("register_home.login")}
-                            </a>
-                        </p>
-                    </form>
+                        </form>
+                    )}
                 </Card>
             </div>
         </div>

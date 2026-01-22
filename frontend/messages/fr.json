@@ -97,6 +97,85 @@
         "settings": "Paramètres",
         "services": "Services de police"
     },
+    "login": {
+        "title": "Bon retour",
+        "subtitle": "Connectez-vous à votre compte Tinsur.AI",
+        "email": "Email",
+        "password": "Mot de passe",
+        "login_btn": "Se connecter",
+        "forgot_password": "Mot de passe oublié ?",
+        "no_account": "Vous n'avez pas de compte ?",
+        "register": "S'inscrire",
+        "welcome": "Bon retour",
+        "sign_in_btn": "Se connecter",
+        "register_link": "Inscrivez-vous maintenant"
+    },
+    "register": {
+        "client": {
+            "title": "Créez votre compte",
+            "subtitle": "Rejoignez-nous pour commencer avec votre assurance"
+        },
+        "company": {
+            "title": "Créer un compte",
+            "subtitle": "Enregistrez votre compagnie d'assurance et commencez à gérer les polices"
+        },
+        "first_name": "Prénom",
+        "last_name": "Nom",
+        "email": "E-mail",
+        "phone": "Téléphone",
+        "password": "Mot de passe",
+        "confirm_password": "Confirmer le mot de passe",
+        "create_btn": "Créer un compte",
+        "loading": "Création du compte...",
+        "sex": "Sexe",
+        "man": "Homme",
+        "woman": "Femme",
+        "placeholders": {
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "admin@demoinsurance.com",
+            "phone": "+225 07 00 00 00 00",
+            "address": "123 Rue Principale, Ville",
+            "company_name": "ABC Assurance Co.",
+            "rccm": "RCCM-123456",
+            "subdomain": "abc-assurance"
+        },
+        "title": "Créer un Compte",
+        "subtitle": "Inscrivez votre compagnie d'assurance et commencez à gérer les polices",
+        "validation_error": "Erreur de validation",
+        "validation_error_desc": "Veuillez corriger les erreurs dans le formulaire",
+        "address": "Adresse (Optionnel)",
+        "company_info": "Informations sur l'entreprise",
+        "company_name": "Nom de l'entreprise",
+        "rccm": "Numéro d'entreprise (N° RCCM) (Optionnel)",
+        "subdomain": "Sous-domaine de l'entreprise",
+        "subdomain_desc": "Ce sera l'identifiant unique de votre entreprise",
+        "phone_optional": "Téléphone (Optionnel)",
+        "validation": {
+            "first_name_required": "Le prénom est requis",
+            "last_name_required": "Le nom est requis",
+            "email_required": "L'email est requis",
+            "email_invalid": "Format d'email invalide",
+            "phone_required": "Le numéro de téléphone est requis",
+            "password_required": "Le mot de passe est requis",
+            "password_min_length": "Le mot de passe doit comporter au moins 8 caractères",
+            "password_mismatch": "Les mots de passe ne correspondent pas",
+            "company_name_required": "Le nom de l'entreprise est requis",
+            "rccm_required": "Le numéro RCCM est requis",
+            "subdomain_required": "Le sous-domaine est requis",
+            "subdomain_invalid": "Format de sous-domaine invalide"
+        },
+        "success": {
+            "title": "Inscription réussie !",
+            "desc": "Bienvenue ! Redirection vers votre profil..."
+        },
+        "error": {
+            "title": "Échec de l'inscription",
+            "validation_title": "Erreur de validation",
+            "validation_desc": "Veuillez corriger les erreurs dans le formulaire",
+            "generic": "L'inscription a échoué. Veuillez réessayer."
+        }
+    },
     "common": {
         "no_results": "Aucun résultat trouvé.",
         "columns": "Colonnes",
@@ -569,72 +648,6 @@
             }
         }
     },
-    "register": {
-        "title": "Créer un Compte",
-        "subtitle": "Inscrivez votre compagnie d'assurance et commencez à gérer les polices",
-        "first_name": "Prénom",
-        "last_name": "Nom",
-        "email": "E-mail",
-        "password": "Mot de passe",
-        "confirm_password": "Confirmer le mot de passe",
-        "phone": "Téléphone",
-        "loading": "Création du compte...",
-        "create_btn": "Créer un compte",
-        "validation_error": "Erreur de validation",
-        "validation_error_desc": "Veuillez corriger les erreurs dans le formulaire",
-        "client": {
-            "title": "Créez votre compte",
-            "subtitle": "Rejoignez-nous pour commencer avec votre assurance"
-        },
-        "company": {
-            "title": "Créer un compte",
-            "subtitle": "Enregistrez votre compagnie d'assurance et commencez à gérer les polices"
-        },
-        "placeholders": {
-            "first_name": "John",
-            "last_name": "Doe",
-            "email": "admin@demoinsurance.com",
-            "phone": "+225 07 00 00 00 00",
-            "address": "123 Rue Principale, Ville",
-            "company_name": "ABC Assurance Co.",
-            "rccm": "RCCM-123456",
-            "subdomain": "abc-assurance"
-        },
-        "address": "Adresse (Optionnel)",
-        "company_info": "Informations sur l'entreprise",
-        "company_name": "Nom de l'entreprise",
-        "rccm": "Numéro d'entreprise (N° RCCM) (Optionnel)",
-        "subdomain": "Sous-domaine de l'entreprise",
-        "subdomain_desc": "Ce sera l'identifiant unique de votre entreprise",
-        "phone_optional": "Téléphone (Optionnel)",
-        "validation": {
-            "first_name_required": "Le prénom est requis",
-            "last_name_required": "Le nom est requis",
-            "email_required": "L'email est requis",
-            "email_invalid": "Format d'email invalide",
-            "phone_required": "Le numéro de téléphone est requis",
-            "password_required": "Le mot de passe est requis",
-            "password_min_length": "Le mot de passe doit comporter au moins 8 caractères",
-            "password_mismatch": "Les mots de passe ne correspondent pas",
-            "company_name_required": "Le nom de l'entreprise est requis",
-            "rccm_required": "Le numéro RCCM est requis",
-            "subdomain_required": "Le sous-domaine est requis",
-            "subdomain_invalid": "Format de sous-domaine invalide"
-        },
-        "success": {
-            "title": "Inscription réussie !",
-            "desc": "Bienvenue ! Redirection vers votre profil..."
-        },
-        "sex": "Sexe",
-        "man": "Homme",
-        "woman": "Femme",
-        "error": {
-            "title": "Échec de l'inscription",
-            "validation_title": "Erreur de validation",
-            "validation_desc": "Veuillez corriger les erreurs dans le formulaire",
-            "generic": "L'inscription a échoué. Veuillez réessayer."
-        }
-    },
     "register_home": {
         "title": "Rejoignez Tinsur.AI",
         "subtitle": "Choisissez comment vous souhaitez vous inscrire",
@@ -652,15 +665,6 @@
         "company_feat_3": "Tableau de Bord Ventes & Agents",
         "already_have_account": "Vous avez déjà un compte ?",
         "login": "Connectez-vous ici"
-    },
-    "login": {
-        "welcome": "Bon retour",
-        "subtitle": "Connectez-vous à votre compte Tinsur.AI",
-        "email": "Email",
-        "password": "Mot de passe",
-        "sign_in_btn": "Se connecter",
-        "no_account": "Vous n'avez pas de compte ?",
-        "register_link": "Inscrivez-vous maintenant"
     },
     "employees": {
         "title": "Employés",
@@ -1024,5 +1028,14 @@
         "select_policy": "Sélectionner Police",
         "no_policy_selected": "Aucune Police Sélectionnée",
         "select_policy_desc": "Sélectionnez une police d'assurance véhicule pour voir les données télématiques et les scores de sécurité."
+    },
+    "auth": {
+        "social": {
+            "google": "Continuer avec Google",
+            "facebook": "Continuer avec Facebook",
+            "apple": "Continuer avec Apple",
+            "email": "Continuer avec Email",
+            "or": "OU"
+        }
     }
 }

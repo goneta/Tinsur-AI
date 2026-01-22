@@ -979,5 +979,14 @@
         "select_policy": "Select Policy",
         "no_policy_selected": "No Policy Selected",
         "select_policy_desc": "Select a vehicle insurance policy to view telematics data and safety scores."
+    },
+    "auth": {
+        "social": {
+            "google": "Continue with Google",
+            "facebook": "Continue with Facebook",
+            "apple": "Continue with Apple",
+            "email": "Continue with Email",
+            "or": "OR"
+        }
     }
 }
