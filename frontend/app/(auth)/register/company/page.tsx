@@ -28,7 +28,8 @@ export default function CompanyRegistrationPage() {
         company_name: '',
         rccm: '',
         subdomain: '',
-        sex: 'man'
+        sex: 'man',
+        address: ''
     });
     const [errors, setErrors] = useState<Record<string, string>>({});
 
