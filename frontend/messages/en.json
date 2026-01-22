@@ -543,9 +543,87 @@
         }
     },
     "register": {
+        "title": "Create Account",
         "first_name": "First Name",
         "last_name": "Last Name",
-        "phone": "Phone Number"
+        "email": "Email",
+        "password": "Password",
+        "confirm_password": "Confirm Password",
+        "phone": "Phone Number",
+        "loading": "Creating Account...",
+        "create_btn": "Create Account",
+        "validation_error": "Validation Error",
+        "validation_error_desc": "Please fix the errors in the form",
+        "client": {
+            "title": "Create Your Account",
+            "subtitle": "Join us to get started with your insurance"
+        },
+        "company": {
+            "title": "Create an Account",
+            "subtitle": "Register your insurance company and start managing policies"
+        },
+        "placeholders": {
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "admin@demoinsurance.com",
+            "phone": "+225 07 00 00 00 00",
+            "address": "123 Main St, City",
+            "company_name": "ABC Insurance Co.",
+            "rccm": "RCCM-123456",
+            "subdomain": "abc-insurance"
+        },
+        "address": "Address (Optional)",
+        "company_info": "Company Information",
+        "company_name": "Company Name",
+        "rccm": "Company Number (N° RCCM) (Optional)",
+        "subdomain": "Company Subdomain",
+        "subdomain_desc": "This will be your unique company identifier",
+        "phone_optional": "Phone (Optional)",
+        "validation": {
+            "first_name_required": "First name is required",
+            "last_name_required": "Last name is required",
+            "email_required": "Email is required",
+            "email_invalid": "Invalid email format",
+            "phone_required": "Phone number is required",
+            "password_required": "Password is required",
+            "password_min_length": "Password must be at least 8 characters",
+            "password_mismatch": "Passwords do not match",
+            "company_name_required": "Company name is required",
+            "rccm_required": "RCCM number is required",
+            "subdomain_required": "Subdomain is required",
+            "subdomain_invalid": "Invalid subdomain format"
+        },
+        "success": {
+            "title": "Registration Successful!",
+            "desc": "Welcome! Redirecting to your profile..."
+        },
+        "sex": "Sex",
+        "man": "Man",
+        "woman": "Woman",
+        "error": {
+            "title": "Registration Failed",
+            "validation_title": "Validation Error",
+            "validation_desc": "Please fix the errors in the form",
+            "generic": "Registration failed. Please try again."
+        }
+    },
+    "register_home": {
+        "title": "Join Tinsur.AI",
+        "subtitle": "Choose how you would like to register",
+        "client_title": "Individual Client",
+        "client_desc": "Looking for car insurance, home insurance, health insurance, or life insurance? Sign up here to compare offers and find the insurance that fits your needs.",
+        "client_btn": "Register as Client",
+        "client_feat_1": "Compare Best Rates",
+        "client_feat_2": "Instant ID Verification",
+        "client_feat_3": "Digital Claims",
+        "company_title": "Insurance Company",
+        "company_desc": "Are you an insurance company looking to acquire new clients and manage your existing customers? Sign up here to access powerful tools for client management, quotes, and policies.",
+        "company_btn": "Register as Company",
+        "company_feat_1": "Digital Policy Management",
+        "company_feat_2": "AI-Powered Underwriting",
+        "company_feat_3": "Sales & Agent Dashboard",
+        "already_have_account": "Already have an account?",
+        "login": "Login here"
     },
     "employees": {
         "title": "Employees",
