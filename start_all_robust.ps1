@@ -43,7 +43,7 @@ function Kill-Port {
 }
 
 function Wait-For-Port {
-    param([int]$Port, [int]$TimeoutSeconds = 10)
+    param([int]$Port, [int]$TimeoutSeconds = 30)
     $Start = Get-Date
     while (((Get-Date) - $Start).TotalSeconds -lt $TimeoutSeconds) {
         if (Test-NetConnection -ComputerName localhost -Port $Port -InformationLevel Quiet) {

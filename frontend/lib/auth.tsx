@@ -12,6 +12,7 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     login: (data: LoginRequest, redirectTo?: string) => Promise<void>;
+    loginWithGoogle: (token: string, userType: string) => Promise<void>;
     register: (data: RegisterRequest) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
@@ -98,13 +99,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (redirectTo) {
                 router.push(redirectTo);
             } else if (userData.role === 'client') {
-                router.push('/portal');
+                router.push('/portal/insurance-details');
             } else {
                 router.push('/dashboard');
             }
         } catch (error: any) {
             console.error('Login failed:', error);
             throw error;
+        }
+    };
+
+    const loginWithGoogle = async (token: string, userType: string) => {
+        try {
+            setLoading(true);
+            const response = await api.post<LoginResponse>('/auth/social/google', {
+                token: token,
+                user_type: userType
+            });
+            const { access_token, refresh_token, user: userData } = response.data;
+
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('access_token', access_token);
+                localStorage.setItem('refresh_token', refresh_token);
+            }
+            setUser(userData);
+            refreshCredits();
+
+            if (userData.role === 'client') {
+                router.push('/portal/insurance-details');
+            } else {
+                router.push('/dashboard');
+            }
+        } catch (error: any) {
+            console.error('Google login failed:', error);
+            throw error;
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -133,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         loading,
         login,
+        loginWithGoogle,
         register,
         logout,
         isAuthenticated: !!user,

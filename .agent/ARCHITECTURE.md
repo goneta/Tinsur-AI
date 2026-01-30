@@ -8,7 +8,7 @@
 
 Antigravity Kit is a modular system consisting of:
 - **16 Specialist Agents** - Role-based AI personas
-- **40 Skills** - Domain-specific knowledge modules
+- **42 Skills** - Domain-specific knowledge modules
 - **11 Workflows** - Slash command procedures
 
 ---
@@ -19,7 +19,7 @@ Antigravity Kit is a modular system consisting of:
 .agent/
 ├── ARCHITECTURE.md          # This file
 ├── agents/                  # 16 Specialist Agents
-├── skills/                  # 40 Skills
+├── skills/                  # 42 Skills
 ├── workflows/               # 11 Slash Commands
 ├── rules/                   # Global Rules
 └── .shared/                 # Shared Resources
@@ -52,7 +52,7 @@ Specialist AI personas for different domains.
 
 ---
 
-## 🧠 Skills (40)
+## 🧠 Skills (42)
 
 Domain-specific knowledge modules. Skills are loaded on-demand based on task context.
 
@@ -72,6 +72,7 @@ Domain-specific knowledge modules. Skills are loaded on-demand based on task con
 | `nestjs-expert` | NestJS modules, DI, decorators |
 | `nodejs-best-practices` | Node.js async, modules |
 | `python-patterns` | Python standards, FastAPI |
+| `driver-card-management` | Automatic driver generation, idempotency |
 
 ### Database
 | Skill | Description |
@@ -147,6 +148,7 @@ Domain-specific knowledge modules. Skills are loaded on-demand based on task con
 | `i18n-localization` | Internationalization |
 | `performance-profiling` | Web Vitals, optimization |
 | `systematic-debugging` | Troubleshooting |
+| `language_translation` | Multi-language translation management |
 
 ---
 
@@ -205,7 +207,7 @@ skill-name/
 | Metric | Value |
 |--------|-------|
 | **Total Agents** | 16 |
-| **Total Skills** | 40 |
+| **Total Skills** | 42 |
 | **Total Workflows** | 11 |
 | **Coverage** | ~90% web/mobile development |
 

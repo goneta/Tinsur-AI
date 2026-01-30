@@ -39,7 +39,7 @@ class ClientService:
         # 2. Automatic Driver Card Generation
         if client.client_type == 'individual' or (client.first_name and client.last_name):
             print(f"DEBUG_CLIENT_SERVICE: Triggering _create_automatic_driver for client_id: {client.id}")
-            self._create_automatic_driver(client)
+            self._create_automatic_driver(client, company_id=client_data.company_id)
         else:
             print(f"DEBUG_CLIENT_SERVICE: Skipping _create_automatic_driver for client_id: {client.id} (type: {client.client_type}, name: {client.first_name} {client.last_name})")
             
@@ -63,7 +63,7 @@ class ClientService:
             last_name=client_data.last_name,
             phone=client_data.phone,
             user_type="client",
-            company_id=client_data.company_id,
+            company_id=None,
             is_active=True,
             is_verified=False
         )
@@ -76,9 +76,10 @@ class ClientService:
         self.db.commit()
         return client
 
-    def _create_automatic_driver(self, client: Client) -> None:
+    def _create_automatic_driver(self, client: Client, company_id: Optional[uuid.UUID] = None) -> None:
         """
         Create a ClientDriver record based on Client details.
+        Also establishes many-to-many linkage with the company.
         """
         try:
             # Check if driver already exists for this client
@@ -103,21 +104,34 @@ class ClientService:
                 address=client.address,
                 city=client.city,
                 country=client.country,
-                license_number=client.driving_licence_number, 
-                date_of_birth=client.date_of_birth,
+                license_number=getattr(client, 'driving_licence_number', None), 
+                date_of_birth=getattr(client, 'date_of_birth', None),
                 
                 # Initialize defaults
-                accident_count=client.accident_count or 0,
-                no_claims_years=client.no_claims_years or 0,
-                driving_license_years=client.driving_license_years or 0,
-                driving_license_url=client.driving_license_url
+                accident_count=getattr(client, 'accident_count', 0) or 0,
+                no_claims_years=getattr(client, 'no_claims_years', 0) or 0,
+                driving_license_years=getattr(client, 'driving_license_years', 0) or 0,
+                driving_license_url=getattr(client, 'driving_license_url', None)
             )
             
             self.db.add(driver)
+            
+            # Establish many-to-many linkage with the company
+            if company_id:
+                from app.models.company import Company
+                company = self.db.query(Company).filter(Company.id == company_id).first()
+                if company and company not in client.companies:
+                    print(f"DEBUG_CLIENT_SERVICE: Linking client {client.id} to company {company_id} via M2M")
+                    client.companies.append(company)
+                else:
+                    print(f"DEBUG_CLIENT_SERVICE: Skipping linkage. Company found? {bool(company)}, Already linked? {company in client.companies if company else False}")
+
             self.db.flush()
             print(f"DEBUG_CLIENT_SERVICE: Successfully created automatic driver for client_id: {client.id}")
         except Exception as e:
             print(f"ERROR_CLIENT_SERVICE: Failed to create automatic driver for client_id: {client.id}. Error: {str(e)}")
+            import traceback
+            traceback.print_exc()
             # Don't raise, allowing registration to continue but logging failure
 
     def _create_automobiles(self, client: Client, vehicles_data: list) -> None:

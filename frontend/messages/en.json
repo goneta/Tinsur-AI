@@ -986,7 +986,9 @@
             "facebook": "Continue with Facebook",
             "apple": "Continue with Apple",
             "email": "Continue with Email",
-            "or": "OR"
+            "or": "OR",
+            "register_google": "Sign up with Google",
+            "register_email": "Sign up with Email"
         }
     }
 }

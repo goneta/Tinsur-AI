@@ -1035,7 +1035,9 @@
             "facebook": "Continuer avec Facebook",
             "apple": "Continuer avec Apple",
             "email": "Continuer avec Email",
-            "or": "OU"
+            "or": "OU",
+            "register_google": "S'inscrire avec Google",
+            "register_email": "S'inscrire avec Email"
         }
     }
 }

@@ -56,7 +56,9 @@ async def register_client(
                 company_id = company.id
     
     if not company_id:
-        raise HTTPException(status_code=400, detail="Company identifier required")
+        # Fallback to Thunderfam Group LTD
+        print("DEBUG_PORTAL_REGISTER: No company context provided. Falling back to Thunderfam.")
+        company_id = uuid.UUID("325d944d-1dc2-4541-9a77-835763b58f98")
 
     # Check if email exists
     existing_user = db.query(User).filter(User.email == data["email"]).first()
@@ -108,6 +110,7 @@ async def register_client(
     
     service = ClientService(db)
     client = await service.create_client(client_data, user_id=user_id)
+    db.commit()
     
     # Process referral if exists
     referral_code = data.get("referral_code")
