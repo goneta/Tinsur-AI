@@ -36,10 +36,17 @@ export function VehicleDetailsTable({ clientId, mode, vehicle, onUpdate, onBack 
     const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
-        if (vehicle) {
+        // Only update formData from props if:
+        // 1. We are in edit mode (vehicle has an ID) AND the ID is different from current form data
+        // 2. Or if we are switching from no vehicle to some vehicle (rare in this flow)
+        // This prevents resetting to empty object {} when parent re-renders during creation
+        if (mode === 'edit' && vehicle?.id && vehicle.id !== formData.id) {
+            setFormData(vehicle);
+        } else if (mode === 'create' && Object.keys(formData).length === 0 && Object.keys(vehicle || {}).length > 0) {
+            // Optional: if we ever wanted to seed create data
             setFormData(vehicle);
         }
-    }, [vehicle]);
+    }, [vehicle, mode, formData.id]);
 
     const handleInputChange = (field: string, value: any) => {
         setFormData((prev: any) => ({ ...prev, [field]: value }));

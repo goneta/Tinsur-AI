@@ -51,7 +51,17 @@ async def refresh_token(
         )
         
     # Validate user exists and is active
-    user_id = payload.get("sub")
+    user_id_str = payload.get("sub")
+    try:
+        user_id = uuid.UUID(user_id_str) if user_id_str else None
+    except (ValueError, AttributeError):
+        user_id = None
+        
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user ID in token"
+        )
     user = db.query(User).filter(User.id == user_id).first()
     if not user or not user.is_active:
         raise HTTPException(

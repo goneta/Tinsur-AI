@@ -45,10 +45,10 @@ async def get_current_user(
             raise credentials_exception
         
         token_data = TokenData(
-            user_id=uuid.UUID(user_id),
+            user_id=user_id,
             email=payload.get("email"),
             role=payload.get("role"),
-            company_id=uuid.UUID(payload.get("company_id")) if payload.get("company_id") else None
+            company_id=payload.get("company_id")
         )
     except (JWTError, ValidationError, ValueError) as e:
         msg = f"DEBUG: Token validation exception: {type(e).__name__}: {e}"
@@ -61,7 +61,18 @@ async def get_current_user(
         raise credentials_exception
     
     from sqlalchemy.orm import joinedload
-    user = db.query(User).options(joinedload(User.company)).filter(User.id == token_data.user_id).first()
+    
+    # Safe UUID conversion for DB lookup
+    try:
+        db_user_id = uuid.UUID(token_data.user_id) if token_data.user_id else None
+    except (ValueError, AttributeError):
+        db_user_id = None
+        
+    if not db_user_id:
+        print(f"DEBUG: Invalid UUID format for user_id: {token_data.user_id}")
+        raise credentials_exception
+
+    user = db.query(User).options(joinedload(User.company)).filter(User.id == db_user_id).first()
     if user is None:
         msg = f"DEBUG: User not found for ID {token_data.user_id}"
         print(msg)
@@ -106,16 +117,26 @@ async def get_optional_user(
             return None
         
         token_data = TokenData(
-            user_id=uuid.UUID(user_id),
+            user_id=user_id,
             email=payload.get("email"),
             role=payload.get("role"),
-            company_id=uuid.UUID(payload.get("company_id")) if payload.get("company_id") else None
+            company_id=payload.get("company_id")
         )
     except (JWTError, ValidationError, ValueError):
         return None
     
     from sqlalchemy.orm import joinedload
-    user = db.query(User).options(joinedload(User.company)).filter(User.id == token_data.user_id).first()
+    
+    # Safe UUID conversion
+    try:
+        db_user_id = uuid.UUID(token_data.user_id) if token_data.user_id else None
+    except (ValueError, AttributeError):
+        return None
+        
+    if not db_user_id:
+        return None
+
+    user = db.query(User).options(joinedload(User.company)).filter(User.id == db_user_id).first()
     
     if user and user.is_active:
         return user

@@ -34,15 +34,6 @@ class ClientRepository:
         client = Client(**client_dict)
         self.db.add(client)
         
-        # Link to company if provided
-        if client_data.company_id:
-            # We use the junction table directly or via relationship
-            # Link via relationship is cleaner
-            from app.models.company import Company
-            company = self.db.query(Company).filter(Company.id == client_data.company_id).first()
-            if company:
-                client.companies.append(company)
-        
         self.db.flush()
         self.db.refresh(client)
         return client

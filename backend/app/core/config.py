@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     A2A_INTERNAL_API_KEY: str = "super-secret-a2a-key"
     GOOGLE_API_KEY: str = ""
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
 
     
     # CORS
@@ -56,7 +58,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     
     class Config:
-        # env_file = ".env" # Disabled to force SQLite
+        env_file = ".env"
         case_sensitive = True
         extra = "ignore"
 

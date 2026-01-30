@@ -52,7 +52,8 @@ from app.api.v1.endpoints import (
     policy_services,
     quote_elements,
     translations,
-    import_export
+    import_export,
+    social_auth
 )
 
 api_router = APIRouter()
@@ -109,4 +110,5 @@ api_router.include_router(policy_services.router, prefix="/policy-services", tag
 api_router.include_router(quote_elements.router, prefix="/quote-elements", tags=["Quote Elements"])
 api_router.include_router(translations.router, prefix="/translations", tags=["Translations"])
 api_router.include_router(import_export.router, prefix="/import-export", tags=["Import / Export Data"])
+api_router.include_router(social_auth.router, prefix="/auth/social", tags=["Social Authentication"])
 

@@ -32,10 +32,10 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     """Token data schema."""
-    user_id: Optional[uuid.UUID] = None
+    user_id: Optional[str] = None
     email: Optional[str] = None
     role: Optional[str] = None
-    company_id: Optional[uuid.UUID] = None
+    company_id: Optional[str] = None
 
 
 class RegisterRequest(BaseModel):
@@ -54,3 +54,9 @@ class RegisterRequest(BaseModel):
 class RefreshTokenRequest(BaseModel):
     """Refresh token request schema."""
     refresh_token: str
+
+
+class GoogleLoginRequest(BaseModel):
+    """Google login/register request schema."""
+    token: str
+    user_type: str # 'client' or 'company'
