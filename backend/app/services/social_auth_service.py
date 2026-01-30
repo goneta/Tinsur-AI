@@ -8,7 +8,7 @@ from app.models.client import Client
 from app.models.company import Company
 from app.services.auth_service import AuthService
 from app.services.client_service import ClientService
-from app.schemas.auth import GoogleLoginRequest, Token
+from app.schemas.auth import GoogleLoginRequest, FacebookLoginRequest, Token
 from app.schemas.client import ClientCreate
 from app.core.security import get_password_hash
 import uuid
