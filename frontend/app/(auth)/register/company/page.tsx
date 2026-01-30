@@ -152,6 +152,7 @@ export default function CompanyRegistrationPage() {
                             <SocialAuth
                                 onEmailClick={() => setShowEmailForm(true)}
                                 isLoading={loading}
+                                userType="company"
                             />
 
                             <div className="text-center text-xs text-gray-400 font-medium px-4">

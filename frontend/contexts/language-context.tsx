@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import { translationApi } from '@/lib/translation-api';
 import enTranslations from '@/messages/en.json';
 import frTranslations from '@/messages/fr.json';
@@ -34,17 +34,18 @@ function flattenMessages(nestedMessages: Record<string, any>, prefix = ''): Reco
     }, {});
 }
 
-const LOCAL_TRANSLATIONS: Record<Language, Record<string, string>> = {
-    'en': flattenMessages(enTranslations),
-    'fr': flattenMessages(frTranslations),
-};
-
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
+    // Memoize local translations to avoid repeated flattening on every re-render
+    const localTranslations = useMemo(() => ({
+        'en': flattenMessages(enTranslations),
+        'fr': flattenMessages(frTranslations),
+    }), []);
+
     const [language, setLanguageState] = useState<Language>('fr'); // Default to server-match
     // Initialize with local files to prevent flicker
-    const [translations, setTranslations] = useState<Record<string, string>>(LOCAL_TRANSLATIONS['fr']);
+    const [translations, setTranslations] = useState<Record<string, string>>(localTranslations['fr']);
     const [loading, setLoading] = useState(false); // No need to load if we have local
 
     // Hydrate from localStorage only on client mount
@@ -52,7 +53,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         const savedLang = localStorage.getItem('app_language') as Language;
         if (savedLang && (savedLang === 'en' || savedLang === 'fr') && savedLang !== language) {
             setLanguageState(savedLang);
-            setTranslations(LOCAL_TRANSLATIONS[savedLang]);
+            setTranslations(localTranslations[savedLang]);
         }
     }, []);
 
@@ -60,7 +61,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         // Reset to local immediately when language changes
         setTranslations(prev => ({
-            ...LOCAL_TRANSLATIONS[language],
+            ...localTranslations[language],
             ...prev
         }));
 
@@ -69,7 +70,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
                 const map = await translationApi.getMap(language);
                 // Merge backend keys over local keys
                 setTranslations(prev => ({
-                    ...LOCAL_TRANSLATIONS[language],
+                    ...localTranslations[language],
                     ...map
                 }));
             } catch (e) {

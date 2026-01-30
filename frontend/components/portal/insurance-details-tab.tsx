@@ -249,7 +249,12 @@ export function InsuranceDetailsTab({
                     admin_fee: Number(settings.admin_fee || 0)
                 });
             } catch (error) {
-                console.error("Failed to load company settings:", error);
+                console.error("Failed to load company settings (using defaults):", error);
+                // Fallback defaults so the UI doesn't break
+                setCompanySettings({
+                    government_tax_percent: 20, // Default 20%
+                    admin_fee: 10 // Default £10
+                });
             }
         };
         loadSettings();
@@ -429,7 +434,7 @@ export function InsuranceDetailsTab({
                 maritalStatus: d.marital_status,
                 numberOfChildren: d.number_of_children,
                 photoUrl: d.photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${d.id}`,
-                dateOfBirth: '', // Need DOB handling if available
+                dateOfBirth: d.date_of_birth ? new Date(d.date_of_birth).toISOString().split('T')[0] : '',
                 clientId: d.client_id,
                 licenseType: d.license_type,
                 carsInHousehold: d.cars_in_household,

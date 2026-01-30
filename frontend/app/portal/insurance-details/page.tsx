@@ -27,35 +27,43 @@ export default function InsuranceDetailsPage() {
                 setClient(clientData);
 
                 // Map Drivers
+                // Map Drivers
                 if (clientData.drivers && clientData.drivers.length > 0) {
                     setDrivers(clientData.drivers.map(d => ({
                         id: d.id,
                         fullName: `${d.first_name || ''} ${d.last_name || ''}`.trim(),
-                        phoneNumber: d.phone_number,
-                        address: d.address,
-                        licenseNumber: d.license_number,
-                        licenseIssueDate: d.license_issue_date,
-                        employmentStatus: d.employment_status,
-                        maritalStatus: d.marital_status,
-                        numberOfChildren: d.number_of_children,
+                        phoneNumber: d.phone_number || '',
+                        address: d.address || '',
+                        licenseNumber: d.license_number || 'PENDING',
+                        licenseIssueDate: d.license_issue_date || '',
+                        employmentStatus: d.employment_status || '',
+                        maritalStatus: d.marital_status || '',
+                        numberOfChildren: d.number_of_children || 0,
                         photoUrl: d.photo_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${d.id}`,
-                        dateOfBirth: d.date_of_birth || ''
+                        dateOfBirth: d.date_of_birth ? new Date(d.date_of_birth).toISOString().split('T')[0] : ''
                     })));
                 } else {
                     console.log("DEBUG: insurance-details/page.tsx - No drivers found, applying fallback logic");
                     // Fallback to basic user info if no explicit drivers
+                    const dob = clientData.date_of_birth ? new Date(clientData.date_of_birth) : null;
+                    const dobString = (dob && !isNaN(dob.getTime())) ? dob.toISOString().split('T')[0] : '';
+
                     setDrivers([{
                         id: clientData.id,
-                        fullName: `${clientData.first_name} ${clientData.last_name}`,
-                        phoneNumber: clientData.phone,
+                        fullName: `${clientData.first_name || ''} ${clientData.last_name || ''}`.trim(),
+                        phoneNumber: clientData.phone || '',
                         address: clientData.address || '',
+                        city: clientData.city || '',
+                        country: clientData.country || '',
+                        postalCode: '',
                         licenseNumber: clientData.driving_licence_number || 'PENDING',
                         licenseIssueDate: '',
                         employmentStatus: clientData.employment_status || '',
                         maritalStatus: clientData.marital_status || '',
                         numberOfChildren: 0,
                         photoUrl: clientData.profile_picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${clientData.first_name}`,
-                        dateOfBirth: clientData.date_of_birth ? new Date(clientData.date_of_birth).toISOString().split('T')[0] : ''
+                        dateOfBirth: dobString,
+                        clientId: clientData.id,
                     }]);
                 }
 
@@ -81,7 +89,22 @@ export default function InsuranceDetailsPage() {
                     setVehicles(portalVehicles);
                 }
 
-                const defaultVehicle = portalVehicles[0] || { make: 'Unknown', model: 'Unknown', registrationNumber: 'Unknown' };
+                const defaultVehicle: PortalVehicle = portalVehicles[0] || {
+                    id: 'default-mock-id',
+                    make: 'Unknown',
+                    model: 'Unknown',
+                    registrationNumber: 'Unknown',
+                    mileage: '0',
+                    colour: 'Unknown',
+                    modified: false,
+                    dateAcquired: new Date().toISOString().split('T')[0],
+                    vehicleType: 'Manual',
+                    usage: 'Domestic',
+                    dateOfPurchase: new Date().toISOString().split('T')[0],
+                    vehicleAge: 'N/A',
+                    parkedLocation: 'Driveway',
+                    imageUrl: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=400'
+                };
 
                 // Fetch Other Data
                 const [qs, ps, cs, pays] = await Promise.all([
@@ -100,7 +123,9 @@ export default function InsuranceDetailsPage() {
                     coverType: 'Comprehensive',
                     basePremium: `£${q.final_premium}`,
                     premium: `£${q.final_premium}`,
-                    expiresAt: new Date(new Date(q.created_at).setMonth(new Date(q.created_at).getMonth() + 1)).toISOString().split('T')[0],
+                    expiresAt: (q.created_at && !isNaN(new Date(q.created_at).getTime()))
+                        ? new Date(new Date(q.created_at).setMonth(new Date(q.created_at).getMonth() + 1)).toISOString().split('T')[0]
+                        : new Date().toISOString().split('T')[0],
                     drivers: [`${clientData.first_name} ${clientData.last_name}`],
                     usage: 'Social, Domestic & Pleasure',
                     status: q.status,

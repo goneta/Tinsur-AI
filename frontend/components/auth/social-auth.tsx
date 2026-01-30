@@ -4,14 +4,38 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Mail, Facebook, Apple } from "lucide-react";
 import { useLanguage } from '@/contexts/language-context';
+import { useGoogleLogin } from '@react-oauth/google';
+import { useAuth } from '@/lib/auth';
+import { toast } from 'sonner';
 
 interface SocialAuthProps {
     onEmailClick: () => void;
     isLoading?: boolean;
+    userType?: 'client' | 'company' | 'login';
 }
 
-export function SocialAuth({ onEmailClick, isLoading }: SocialAuthProps) {
+export function SocialAuth({ onEmailClick, isLoading, userType = 'login' }: SocialAuthProps) {
     const { t } = useLanguage();
+    const { loginWithGoogle } = useAuth();
+
+    const googleLogin = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            try {
+                // In mock mode, we just pass the access_token as the 'token'
+                await loginWithGoogle(tokenResponse.access_token, userType);
+                toast.success(t('Successfully authenticated with Google'));
+            } catch (error) {
+                console.error('Google login failed:', error);
+                toast.error(t('Failed to authenticate with Google'));
+            }
+        },
+        onError: () => {
+            toast.error(t('Google Login Failed'));
+        },
+    });
+
+    const labelPrefix = userType === 'login' ? 'auth.social.google' : 'auth.social.register_google';
+    const defaultLabel = userType === 'login' ? 'Continue with Google' : t('register.social_google', 'Sign up with Google');
 
     return (
         <div className="w-full space-y-4">
@@ -20,7 +44,7 @@ export function SocialAuth({ onEmailClick, isLoading }: SocialAuthProps) {
                 variant="default"
                 className="w-full h-14 rounded-full bg-[#1A1A1A] hover:bg-[#2A2A2A] text-white flex items-center justify-center gap-3 text-lg font-semibold transition-all"
                 disabled={isLoading}
-                onClick={() => console.log("Google Login")}
+                onClick={() => googleLogin()}
             >
                 <svg viewBox="0 0 24 24" className="w-6 h-6 shrink-0" role="presentation">
                     <path
@@ -40,7 +64,7 @@ export function SocialAuth({ onEmailClick, isLoading }: SocialAuthProps) {
                         fill="#EA4335"
                     />
                 </svg>
-                <span>{t("auth.social.google", "Continue with Google")}</span>
+                <span>{t(labelPrefix, defaultLabel)}</span>
             </Button>
 
             {/* Secondary: Facebook & Apple */}
@@ -49,7 +73,7 @@ export function SocialAuth({ onEmailClick, isLoading }: SocialAuthProps) {
                     variant="secondary"
                     className="h-14 rounded-[28px] bg-[#F1F3F5] hover:bg-[#E9ECEF] text-black flex items-center justify-center p-0 transition-all border-none"
                     disabled={isLoading}
-                    onClick={() => console.log("Facebook Login")}
+                    onClick={() => toast.info(t('Facebook login coming soon'))}
                 >
                     <Facebook className="w-7 h-7 text-[#1877F2] fill-[#1877F2]" />
                 </Button>
@@ -57,7 +81,7 @@ export function SocialAuth({ onEmailClick, isLoading }: SocialAuthProps) {
                     variant="secondary"
                     className="h-14 rounded-[28px] bg-[#F1F3F5] hover:bg-[#E9ECEF] text-black flex items-center justify-center p-0 transition-all border-none"
                     disabled={isLoading}
-                    onClick={() => console.log("Apple Login")}
+                    onClick={() => toast.info(t('Apple login coming soon'))}
                 >
                     <Apple className="w-7 h-7 fill-black" />
                 </Button>
@@ -80,8 +104,33 @@ export function SocialAuth({ onEmailClick, isLoading }: SocialAuthProps) {
                 <div className="bg-gray-300 p-1.5 rounded-lg">
                     <Mail className="w-5 h-5 text-gray-600 fill-gray-600" />
                 </div>
-                <span>{t("auth.social.email", "Continue with Email")}</span>
+                <span>{userType === 'login' ? t("auth.social.email", "Continue with Email") : t('register.social_email', 'Sign up with Email')}</span>
             </Button>
+
+            {/* MOCK LOGIN (Only if client_id is missing or for rapid testing) */}
+            {(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID === undefined ||
+                process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID === "" ||
+                process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID === "mock-client-id") && (
+                    <Button
+                        variant="outline"
+                        className="w-full h-12 rounded-full border-dashed border-2 border-orange-200 text-orange-600 hover:bg-orange-50 transition-all text-sm font-medium"
+                        onClick={async () => {
+                            const mockEmail = `mock-${userType}-${Math.floor(Math.random() * 1000)}@example.com`;
+                            toast.promise(loginWithGoogle(mockEmail, userType), {
+                                loading: 'Testing with Mock Google...',
+                                success: 'Mock Signup/Login Successful!',
+                                error: 'Mock Login Failed'
+                            });
+                        }}
+                    >
+                        <div className="bg-orange-100 p-1 rounded-full">
+                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-orange-500">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+                            </svg>
+                        </div>
+                        <span>{t('auth.social.mock', 'DEMO: Test registration workflow (Mock)')}</span>
+                    </Button>
+                )}
         </div>
     );
 }

@@ -1,19 +1,33 @@
-'use client';
+"use client";
 
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
-import { Building2, UserCircle2 } from "lucide-react";
+import { Building2, UserCircle2, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { useLanguage } from "@/contexts/language-context";
+import { TinsurLogo } from "@/components/ui/tinsur-logo";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export default function RegisterPage() {
+    const { t } = useLanguage();
+
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-            <div className="max-w-4xl w-full">
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 relative">
+            {/* Header with Logo and Language Switcher */}
+            <div className="absolute top-0 left-0 w-full p-6 flex justify-between items-center z-50">
+                <TinsurLogo className="ml-2" />
+                <div className="mr-2">
+                    <LanguageSwitcher />
+                </div>
+            </div>
+
+
+            <div className="max-w-4xl w-full pt-16">
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-black text-gray-900 mb-4">
-                        Join Tinsur.AI
+                        {t('register_home.title')}
                     </h1>
                     <p className="text-gray-500 text-lg">
-                        Choose how you would like to register
+                        {t('register_home.subtitle')}
                     </p>
                 </div>
 
@@ -27,13 +41,29 @@ export default function RegisterPage() {
                             <div className="bg-blue-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-blue-600 group-hover:scale-110 transition-transform">
                                 <UserCircle2 className="w-8 h-8" />
                             </div>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Individual Client</h2>
-                            <p className="text-gray-500 mb-8 flex-grow">
-                                Join as an individual to manage your insurance policies, track claims, and get personalized coverage.
-                            </p>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('register_home.client_title')}</h2>
+                            <div className="flex-grow">
+                                <p className="text-gray-500 mb-6">
+                                    {t('register_home.client_desc')}
+                                </p>
+                                <div className="space-y-3 mb-8">
+                                    <div className="flex items-center gap-3 text-gray-600">
+                                        <ShieldCheck className="w-5 h-5 text-blue-500" />
+                                        <span className="font-medium">{t('register_home.client_feat_1')}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-gray-600">
+                                        <ShieldCheck className="w-5 h-5 text-blue-500" />
+                                        <span className="font-medium">{t('register_home.client_feat_2')}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-gray-600">
+                                        <ShieldCheck className="w-5 h-5 text-blue-500" />
+                                        <span className="font-medium">{t('register_home.client_feat_3')}</span>
+                                    </div>
+                                </div>
+                            </div>
                             <Link href="/register/client" className="w-full">
                                 <Button className="w-full h-12 rounded-xl text-lg font-bold bg-blue-600 hover:bg-blue-700">
-                                    Register as Client
+                                    {t('register_home.client_btn')}
                                 </Button>
                             </Link>
                         </div>
@@ -48,13 +78,29 @@ export default function RegisterPage() {
                             <div className="bg-purple-50 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 text-purple-600 group-hover:scale-110 transition-transform">
                                 <Building2 className="w-8 h-8" />
                             </div>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Insurance Company</h2>
-                            <p className="text-gray-500 mb-8 flex-grow">
-                                Register your insurance company to manage clients, issue policies, and streamline your operations.
-                            </p>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('register_home.company_title')}</h2>
+                            <div className="flex-grow">
+                                <p className="text-gray-500 mb-6">
+                                    {t('register_home.company_desc')}
+                                </p>
+                                <div className="space-y-3 mb-8">
+                                    <div className="flex items-center gap-3 text-gray-600">
+                                        <CheckCircle2 className="w-5 h-5 text-purple-500" />
+                                        <span className="font-medium">{t('register_home.company_feat_1')}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-gray-600">
+                                        <CheckCircle2 className="w-5 h-5 text-purple-500" />
+                                        <span className="font-medium">{t('register_home.company_feat_2')}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-gray-600">
+                                        <CheckCircle2 className="w-5 h-5 text-purple-500" />
+                                        <span className="font-medium">{t('register_home.company_feat_3')}</span>
+                                    </div>
+                                </div>
+                            </div>
                             <Link href="/register/company" className="w-full">
                                 <Button className="w-full h-12 rounded-xl text-lg font-bold bg-white text-purple-600 border-2 border-purple-100 hover:bg-purple-50 hover:border-purple-200">
-                                    Register as Company
+                                    {t('register_home.company_btn')}
                                 </Button>
                             </Link>
                         </div>
@@ -63,9 +109,9 @@ export default function RegisterPage() {
 
                 <div className="text-center mt-12">
                     <p className="text-gray-500">
-                        Already have an account?{' '}
+                        {t('register_home.already_have_account')}{' '}
                         <Link href="/login" className="text-blue-600 font-bold hover:underline">
-                            Login here
+                            {t('register_home.login')}
                         </Link>
                     </p>
                 </div>
