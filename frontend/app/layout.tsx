@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description: "Modern insurance management platform for Côte d'Ivoire",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
