@@ -13,6 +13,7 @@ interface AuthContextType {
     loading: boolean;
     login: (data: LoginRequest, redirectTo?: string) => Promise<void>;
     loginWithGoogle: (token: string, userType: string) => Promise<void>;
+    loginWithFacebook: (token: string, userType: string) => Promise<void>;
     register: (data: RegisterRequest) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
@@ -138,6 +139,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const loginWithFacebook = async (token: string, userType: string) => {
+        try {
+            setLoading(true);
+            const response = await api.post<LoginResponse>('/auth/social/facebook', {
+                token: token,
+                user_type: userType
+            });
+            const { access_token, refresh_token, user: userData } = response.data;
+
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('access_token', access_token);
+                localStorage.setItem('refresh_token', refresh_token);
+            }
+            setUser(userData);
+            refreshCredits();
+
+            if (userData.role === 'client') {
+                router.push('/portal/insurance-details');
+            } else {
+                router.push('/dashboard');
+            }
+        } catch (error: any) {
+            console.error('Facebook login failed:', error);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const register = async (data: RegisterRequest) => {
         try {
             await api.post('/auth/register', data);
@@ -164,6 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         login,
         loginWithGoogle,
+        loginWithFacebook,
         register,
         logout,
         isAuthenticated: !!user,

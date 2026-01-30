@@ -60,3 +60,7 @@ class GoogleLoginRequest(BaseModel):
     """Google login/register request schema."""
     token: str
     user_type: str # 'client' or 'company'
+class FacebookLoginRequest(BaseModel):
+    """Facebook login/register request schema."""
+    token: str
+    user_type: str # 'client' or 'company'

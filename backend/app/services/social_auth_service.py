@@ -106,34 +106,97 @@ class SocialAuthService:
             "picture": None
         }
 
+    async def verify_facebook_token(self, token: str) -> dict:
+        """
+        Verify Facebook Access Token by calling the Graph API.
+        """
+        if not token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid Facebook token"
+            )
+
+        import httpx
+        try:
+            async with httpx.AsyncClient() as client:
+                # Call Facebook Graph API to get user info
+                # fields typically needed: id, email, first_name, last_name, name, picture
+                response = await client.get(
+                    "https://graph.facebook.com/v18.0/me",
+                    params={
+                        "fields": "id,name,email,first_name,last_name,picture",
+                        "access_token": token
+                    },
+                    timeout=10.0
+                )
+                
+                if response.status_code != 200:
+                    fb_error = response.json().get('error', {}).get('message', 'Failed to verify Facebook token')
+                    print(f"Facebook Graph API Error: {fb_error}")
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail=f"Facebook verification failed: {fb_error}"
+                    )
+                
+                fb_data = response.json()
+                # Facebook picture is nested: picture.data.url
+                picture_url = fb_data.get('picture', {}).get('data', {}).get('url')
+                
+                return {
+                    "sub": f"facebook_{fb_data['id']}",
+                    "email": fb_data.get('email'), # Note: Email might be null if not shared
+                    "first_name": fb_data.get('first_name') or fb_data.get('name', 'Facebook'),
+                    "last_name": fb_data.get('last_name') or '',
+                    "picture": picture_url
+                }
+        except HTTPException:
+            raise
+        except Exception as e:
+            print(f"Facebook Access Token Verification Error: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Token verification failed: {str(e)}"
+            )
+
     async def register_or_login_google(self, request: GoogleLoginRequest) -> dict:
         """
-        Process Google login. If user doesn't exist, create one based on user_type.
+        Process Google login.
         """
         payload = await self.verify_google_token(request.token)
-        email = payload["email"]
-        
+        return await self._process_social_login(payload, request.user_type, "Google")
+
+    async def register_or_login_facebook(self, request: FacebookLoginRequest) -> dict:
+        """
+        Process Facebook login.
+        """
+        payload = await self.verify_facebook_token(request.token)
+        return await self._process_social_login(payload, request.user_type, "Facebook")
+
+    async def _process_social_login(self, payload: dict, user_type: str, provider_name: str) -> dict:
+        """
+        Generic logic for social login/registration.
+        """
+        email = payload.get("email")
+        if not email:
+            # If email is not available from social provider (common on Facebook if not requested/provided)
+            # We use a fallback based on sub ID for tracking
+            email = f"{payload['sub']}@social.tinsur.ai"
+
         user = self.db.query(User).filter(User.email == email).first()
         
         if not user:
             # Automated registration logic
-            first_name = payload.get("first_name", "Google")
+            first_name = payload.get("first_name", provider_name)
             last_name = payload.get("last_name", "User")
             
             company_id = None
             user_role = "client"
             
-            if request.user_type == "company":
-                # Create a minimal company for this google user
-                # Ensure subdomain is unique
+            if user_type == "company":
+                # Create a minimal company for this social user
                 base_subdomain = f"corp-{uuid.uuid4().hex[:8]}"
                 subdomain = base_subdomain
                 
-                # Double check subdomain uniqueness
-                existing_company = self.db.query(Company).filter(Company.subdomain == subdomain).first()
-                if existing_company:
-                    subdomain = f"corp-{uuid.uuid4().hex[:12]}"
-
                 random_chars = ''.join(random.choices(string.ascii_uppercase + string.digits, k=14))
                 system_reg_num = f"COMP-{random_chars}"
                 
@@ -157,13 +220,13 @@ class SocialAuthService:
                 last_name=last_name,
                 role=user_role,
                 is_active=True,
-                is_verified=True, # Social accounts are pre-verified
-                password_hash=get_password_hash(uuid.uuid4().hex), # Random password for social users
+                is_verified=True,
+                password_hash=get_password_hash(uuid.uuid4().hex),
                 profile_picture=payload.get("picture")
             )
             self.db.add(user)
-            self.db.flush() # Flush to get user ID for client creation
-            print(f"DEBUG: Automatically registered new {user_role}: {email}")
+            self.db.flush()
+            print(f"DEBUG: Automatically registered new {user_role}: {email} via {provider_name}")
 
         # IDEMPOTENCY: If it's a client but missing a Client profile, create it now
         if user.role == "client":
@@ -174,23 +237,19 @@ class SocialAuthService:
                     default_company_id = uuid.UUID("325d944d-1dc2-4541-9a77-835763b58f98")
                     
                     client_data = ClientCreate(
-                        first_name=user.first_name or payload.get("first_name", "Google"),
-                        last_name=user.last_name or payload.get("last_name", "User"),
+                        first_name=user.first_name,
+                        last_name=user.last_name,
                         email=email,
                         client_type="individual",
                         status="active",
                         company_id=default_company_id
                     )
-                    # This will also trigger _create_automatic_driver (and linkage) inside ClientService
                     await self.client_service.create_client(client_data, user_id=user.id)
-                    print(f"DEBUG: Provisioned Missing Client and Driver for existing google user: {email}")
+                    print(f"DEBUG: Provisioned Missing Client and Driver for existing social user: {email}")
                 except Exception as e:
-                    print(f"ERROR: Failed to provision Missing Client/Driver for google user {email}: {str(e)}")
-                    # We don't want to fail the whole login if just the driver card fails
+                    print(f"ERROR: Failed to provision Missing Client/Driver for social user {email}: {str(e)}")
         
-        # Standard login flow once user exists and is provisioned
         self.db.commit()
-        
         return self.auth_service.login_manual_inject(user)
 
 # Add a helper to AuthService to handle the response dictionary construction without re-authenticating

@@ -16,7 +16,7 @@ interface SocialAuthProps {
 
 export function SocialAuth({ onEmailClick, isLoading, userType = 'login' }: SocialAuthProps) {
     const { t } = useLanguage();
-    const { loginWithGoogle } = useAuth();
+    const { loginWithGoogle, loginWithFacebook } = useAuth();
 
     const googleLogin = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
@@ -33,6 +33,46 @@ export function SocialAuth({ onEmailClick, isLoading, userType = 'login' }: Soci
             toast.error(t('Google Login Failed'));
         },
     });
+
+    const handleFacebookLogin = async () => {
+        try {
+            // Check if we should use mock or real
+            const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
+
+            if (!appId || appId === "mock-fb-id") {
+                const mockEmail = `mock-fb-${userType}-${Math.floor(Math.random() * 1000)}@social.tinsur.ai`;
+                toast.promise(loginWithFacebook(mockEmail, userType), {
+                    loading: 'Testing with Mock Facebook...',
+                    success: 'Mock Facebook Signup/Login Successful!',
+                    error: 'Mock Facebook Login Failed'
+                });
+                return;
+            }
+
+            // Real Facebook Login using global FB object (needs to be loaded in layout.tsx)
+            // @ts-ignore
+            if (window.FB) {
+                // @ts-ignore
+                window.FB.login((response: any) => {
+                    if (response.authResponse) {
+                        const token = response.authResponse.accessToken;
+                        toast.promise(loginWithFacebook(token, userType), {
+                            loading: t('Authenticating with Facebook...'),
+                            success: t('Successfully authenticated with Facebook'),
+                            error: t('Facebook authentication failed')
+                        });
+                    } else {
+                        toast.error(t('Facebook login cancelled or failed'));
+                    }
+                }, { scope: 'public_profile,email' });
+            } else {
+                toast.error(t('Facebook SDK not loaded. Check your connection or configuration.'));
+            }
+        } catch (error) {
+            console.error('Facebook login handler error:', error);
+            toast.error(t('An error occurred during Facebook login'));
+        }
+    };
 
     const labelPrefix = userType === 'login' ? 'auth.social.google' : 'auth.social.register_google';
     const defaultLabel = userType === 'login' ? 'Continue with Google' : t('register.social_google', 'Sign up with Google');
@@ -73,7 +113,7 @@ export function SocialAuth({ onEmailClick, isLoading, userType = 'login' }: Soci
                     variant="secondary"
                     className="h-14 rounded-[28px] bg-[#F1F3F5] hover:bg-[#E9ECEF] text-black flex items-center justify-center p-0 transition-all border-none"
                     disabled={isLoading}
-                    onClick={() => toast.info(t('Facebook login coming soon'))}
+                    onClick={handleFacebookLogin}
                 >
                     <Facebook className="w-7 h-7 text-[#1877F2] fill-[#1877F2]" />
                 </Button>
