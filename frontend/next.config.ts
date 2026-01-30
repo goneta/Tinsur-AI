@@ -6,5 +6,5 @@ const nextConfig: NextConfig = {
 
 export default nextConfig;
 
-// Forced update to clear Vercel build cache: 2026-01-30 03:25
+// Forced update to clear Vercel build cache: 2026-01-30 04:10
 
