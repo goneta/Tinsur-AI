@@ -2,12 +2,12 @@
 
 import { ReactNode } from "react";
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { ThemeProvider } from "@/components/theme-provider";
-import { LanguageProvider } from "@/contexts/language-context";
-import { QueryProvider } from "@/components/query-provider";
-import { AuthProvider } from "@/lib/auth";
-import { BrandingProvider } from "@/components/branding-provider";
-import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "./theme-provider";
+import { LanguageProvider } from "../contexts/language-context";
+import { QueryProvider } from "./query-provider";
+import { AuthProvider } from "../lib/auth";
+import { BrandingProvider } from "./branding-provider";
+import { Toaster } from "./ui/toaster";
 
 interface ProvidersProps {
     children: ReactNode;
