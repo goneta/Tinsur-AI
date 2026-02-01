@@ -54,6 +54,12 @@ export default function RootLayout({
             }}
           />
         )}
+        {/* Apple Sign In SDK */}
+        <Script
+          id="apple-sdk"
+          src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/auth/v1/appleid.auth.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

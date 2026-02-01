@@ -64,3 +64,9 @@ class FacebookLoginRequest(BaseModel):
     """Facebook login/register request schema."""
     token: str
     user_type: str # 'client' or 'company'
+class AppleLoginRequest(BaseModel):
+    """Apple login/register request schema."""
+    token: str
+    user_type: str  # 'client' or 'company'
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None

@@ -8,9 +8,10 @@ from app.models.client import Client
 from app.models.company import Company
 from app.services.auth_service import AuthService
 from app.services.client_service import ClientService
-from app.schemas.auth import GoogleLoginRequest, FacebookLoginRequest, Token
+from app.schemas.auth import GoogleLoginRequest, FacebookLoginRequest, AppleLoginRequest, Token
 from app.schemas.client import ClientCreate
 from app.core.security import get_password_hash
+from jose import jwt, jwk
 import uuid
 import string
 import random
@@ -191,6 +192,97 @@ class SocialAuthService:
         """
         payload = await self.verify_facebook_token(request.token)
         return await self._process_social_login(payload, request.user_type, "Facebook")
+
+    async def register_or_login_apple(self, request: AppleLoginRequest) -> dict:
+        """
+        Process Apple login.
+        """
+        payload = await self.verify_apple_token(request.token)
+        
+        # If frontend sent names (Apple only sends them on FIRST login), use them
+        if request.first_name:
+            payload["first_name"] = request.first_name
+        if request.last_name:
+            payload["last_name"] = request.last_name
+            
+        return await self._process_social_login(payload, request.user_type, "Apple")
+
+    async def verify_apple_token(self, token: str) -> dict:
+        """
+        Verify Apple Identity Token (JWT).
+        """
+        if not token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid Apple token"
+            )
+
+        if not settings.APPLE_CLIENT_ID:
+            print("WARNING: APPLE_CLIENT_ID not configured. Using MOCK verification.")
+            return self.verify_apple_token_mock(token)
+
+        import httpx
+        try:
+            # 1. Fetch Apple's public keys
+            async with httpx.AsyncClient() as client:
+                response = await client.get("https://appleid.apple.com/auth/keys")
+                if response.status_code != 200:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Failed to fetch Apple public keys"
+                    )
+                apple_keys = response.json().get("keys", [])
+
+            # 2. Extract key ID (kid) from token header
+            unverified_header = jwt.get_unverified_header(token)
+            kid = unverified_header.get("kid")
+            
+            # 3. Find the matching key
+            matched_key = next((key for key in apple_keys if key["kid"] == kid), None)
+            if not matched_key:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Apple public key not found"
+                )
+
+            # 4. Verify signature and claims
+            # Apple tokens are signed with RS256
+            payload = jwt.decode(
+                token,
+                matched_key,
+                algorithms=["RS256"],
+                audience=settings.APPLE_CLIENT_ID,
+                issuer="https://appleid.apple.com",
+                options={"verify_at_hash": False} # Apple doesn't always include this
+            )
+
+            return {
+                "sub": f"apple_{payload['sub']}",
+                "email": payload.get("email"),
+                "first_name": "Apple", # Default if not provided by frontend
+                "last_name": "User",
+                "picture": None # Apple doesn't provide profile pictures in the token
+            }
+
+        except Exception as e:
+            print(f"Apple Token Verification Error: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Apple token verification failed: {str(e)}"
+            )
+
+    def verify_apple_token_mock(self, token: str) -> dict:
+        """
+        Mock verification for Apple development.
+        """
+        email = token if "@" in token else f"apple_{token}@example.social.ai"
+        return {
+            "sub": f"apple_{token}",
+            "email": email,
+            "first_name": "Apple",
+            "last_name": "User",
+            "picture": None
+        }
 
     async def _process_social_login(self, payload: dict, user_type: str, provider_name: str) -> dict:
         """

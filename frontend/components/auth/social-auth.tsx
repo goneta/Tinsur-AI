@@ -74,6 +74,57 @@ export function SocialAuth({ onEmailClick, isLoading, userType = 'login' }: Soci
         }
     };
 
+    const handleAppleLogin = async () => {
+        try {
+            const clientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID;
+
+            if (!clientId || clientId === "mock-apple-id") {
+                const mockEmail = `mock-apple-${userType}-${Math.floor(Math.random() * 1000)}@social.tinsur.ai`;
+                toast.promise(loginWithApple(mockEmail, userType, "Apple", "User"), {
+                    loading: 'Testing with Mock Apple...',
+                    success: 'Mock Apple Signup/Login Successful!',
+                    error: 'Mock Apple Login Failed'
+                });
+                return;
+            }
+
+            // Real Apple Login logic using Apple JS SDK
+            // @ts-ignore
+            if (window.AppleID) {
+                // @ts-ignore
+                window.AppleID.auth.init({
+                    clientId: clientId,
+                    scope: 'name email',
+                    redirectURI: window.location.origin + '/login', // Required by Apple
+                    usePopup: true
+                });
+
+                try {
+                    // @ts-ignore
+                    const response = await window.AppleID.auth.signIn();
+                    if (response && response.authorization) {
+                        const token = response.authorization.id_token;
+                        const firstName = response.user?.name?.firstName;
+                        const lastName = response.user?.name?.lastName;
+
+                        toast.promise(loginWithApple(token, userType, firstName, lastName), {
+                            loading: t('Authenticating with Apple...'),
+                            success: t('Successfully authenticated with Apple'),
+                            error: t('Apple authentication failed')
+                        });
+                    }
+                } catch (error) {
+                    console.error('Apple login cancelled or failed:', error);
+                }
+            } else {
+                toast.error(t('Apple SDK not loaded. Check your connection or configuration.'));
+            }
+        } catch (error) {
+            console.error('Apple login handler error:', error);
+            toast.error(t('An error occurred during Apple login'));
+        }
+    };
+
     const labelPrefix = userType === 'login' ? 'auth.social.google' : 'auth.social.register_google';
     const defaultLabel = userType === 'login' ? 'Continue with Google' : t('register.social_google', 'Sign up with Google');
 
@@ -121,7 +172,7 @@ export function SocialAuth({ onEmailClick, isLoading, userType = 'login' }: Soci
                     variant="secondary"
                     className="h-14 rounded-[28px] bg-[#F1F3F5] hover:bg-[#E9ECEF] text-black flex items-center justify-center p-0 transition-all border-none"
                     disabled={isLoading}
-                    onClick={() => toast.info(t('Apple login coming soon'))}
+                    onClick={handleAppleLogin}
                 >
                     <Apple className="w-7 h-7 fill-black" />
                 </Button>

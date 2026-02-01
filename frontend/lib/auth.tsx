@@ -14,6 +14,7 @@ interface AuthContextType {
     login: (data: LoginRequest, redirectTo?: string) => Promise<void>;
     loginWithGoogle: (token: string, userType: string) => Promise<void>;
     loginWithFacebook: (token: string, userType: string) => Promise<void>;
+    loginWithApple: (token: string, userType: string, firstName?: string, lastName?: string) => Promise<void>;
     register: (data: RegisterRequest) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
@@ -168,6 +169,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const loginWithApple = async (token: string, userType: string, firstName?: string, lastName?: string) => {
+        try {
+            setLoading(true);
+            const response = await api.post<LoginResponse>('/auth/social/apple', {
+                token: token,
+                user_type: userType,
+                first_name: firstName,
+                last_name: lastName
+            });
+            const { access_token, refresh_token, user: userData } = response.data;
+
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('access_token', access_token);
+                localStorage.setItem('refresh_token', refresh_token);
+            }
+            setUser(userData);
+            refreshCredits();
+
+            if (userData.role === 'client') {
+                router.push('/portal/insurance-details');
+            } else {
+                router.push('/dashboard');
+            }
+        } catch (error: any) {
+            console.error('Apple login failed:', error);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const register = async (data: RegisterRequest) => {
         try {
             await api.post('/auth/register', data);
@@ -195,6 +227,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         loginWithGoogle,
         loginWithFacebook,
+        loginWithApple,
         register,
         logout,
         isAuthenticated: !!user,
