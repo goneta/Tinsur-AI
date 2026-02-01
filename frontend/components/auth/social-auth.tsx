@@ -91,15 +91,16 @@ export function SocialAuth({ onEmailClick, isLoading, userType = 'login' }: Soci
             // Real Apple Login logic using Apple JS SDK
             // @ts-ignore
             if (window.AppleID) {
-                // @ts-ignore
-                window.AppleID.auth.init({
-                    clientId: clientId,
-                    scope: 'name email',
-                    redirectURI: window.location.origin + '/login', // Required by Apple
-                    usePopup: true
-                });
-
                 try {
+                    // Initialize explicitly before signing in
+                    // @ts-ignore
+                    window.AppleID.auth.init({
+                        clientId: clientId,
+                        scope: 'name email',
+                        redirectURI: window.location.origin + '/login', // Required by Apple
+                        usePopup: true
+                    });
+
                     // @ts-ignore
                     const response = await window.AppleID.auth.signIn();
                     if (response && response.authorization) {
@@ -113,11 +114,19 @@ export function SocialAuth({ onEmailClick, isLoading, userType = 'login' }: Soci
                             error: t('Apple authentication failed')
                         });
                     }
-                } catch (error) {
+                } catch (error: any) {
                     console.error('Apple login cancelled or failed:', error);
+                    if (error?.error === 'popup_closed_by_user') {
+                        toast.error(t('Apple login window was closed'));
+                    } else if (error?.error === 'access_denied') {
+                        toast.error(t('Access denied for Apple login'));
+                    } else {
+                        toast.error(t('Apple login failed. Please try again.'));
+                    }
                 }
             } else {
-                toast.error(t('Apple SDK not loaded. Check your connection or configuration.'));
+                toast.error(t('Apple SDK not loaded yet. Please wait or refresh the page.'));
+                console.warn('window.AppleID not found');
             }
         } catch (error) {
             console.error('Apple login handler error:', error);
