@@ -116,6 +116,12 @@ class SocialAuthService:
                 detail="Invalid Facebook token"
             )
 
+        # Priority: If it's explicitly mock or not configured, use mock.
+        if not settings.FACEBOOK_APP_ID or settings.FACEBOOK_APP_ID == "mock-fb-id":
+            print(f"DEBUG: FACEBOOK_APP_ID ({settings.FACEBOOK_APP_ID}) is mock. Using MOCK verification.")
+            return self.verify_facebook_token_mock(token)
+
+        print(f"DEBUG: Verifying Facebook token with real Graph API (App ID: {settings.FACEBOOK_APP_ID})")
         import httpx
         try:
             async with httpx.AsyncClient() as client:
@@ -157,6 +163,20 @@ class SocialAuthService:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=f"Token verification failed: {str(e)}"
             )
+
+    def verify_facebook_token_mock(self, token: str) -> dict:
+        """
+        Mock verification for Facebook development.
+        """
+        email = token if "@" in token else f"fb_{token}@example.social.ai"
+        
+        return {
+            "sub": f"facebook_{token}",
+            "email": email,
+            "first_name": "Facebook",
+            "last_name": "User",
+            "picture": None
+        }
 
     async def register_or_login_google(self, request: GoogleLoginRequest) -> dict:
         """

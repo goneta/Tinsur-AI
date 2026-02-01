@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Providers } from "@/components/providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -13,6 +12,7 @@ export const metadata: Metadata = {
 };
 
 import Script from 'next/script';
+import { ClientProviders } from '@/components/client-providers';
 
 export default function RootLayout({
   children,
@@ -24,9 +24,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning translate="no" className="notranslate">
       <body className={`${inter.className} antialiased`}>
-        <Providers googleClientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "mock-client-id"}>
+        <ClientProviders googleClientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "mock-client-id"}>
           {children}
-        </Providers>
+        </ClientProviders>
 
         {/* Facebook SDK */}
         {fbAppId && fbAppId !== "mock-fb-id" && (

@@ -64,7 +64,7 @@ export function SocialAuth({ onEmailClick, isLoading, userType = 'login' }: Soci
                     } else {
                         toast.error(t('Facebook login cancelled or failed'));
                     }
-                }, { scope: 'public_profile,email' });
+                }, { scope: 'public_profile' });
             } else {
                 toast.error(t('Facebook SDK not loaded. Check your connection or configuration.'));
             }
