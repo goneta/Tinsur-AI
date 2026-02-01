@@ -16,7 +16,7 @@ interface SocialAuthProps {
 
 export function SocialAuth({ onEmailClick, isLoading, userType = 'login' }: SocialAuthProps) {
     const { t } = useLanguage();
-    const { loginWithGoogle, loginWithFacebook } = useAuth();
+    const { loginWithGoogle, loginWithFacebook, loginWithApple } = useAuth();
 
     const googleLogin = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
