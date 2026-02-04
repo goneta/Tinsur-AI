@@ -6,6 +6,7 @@ from uuid import UUID
 from decimal import Decimal
 from datetime import datetime, date, timedelta
 import random
+from app.core.time import utcnow
 
 from app.models.policy import Policy
 from app.models.quote import Quote
@@ -128,7 +129,7 @@ class PolicyService:
             company = company_repo.get_by_id(policy.company_id)
             
             if client and company:
-                document_service.generate_documents(policy, client, company)
+                document_service.generate_documents(self.policy_repo.db, policy, client, company)
         except Exception as e:
             print(f"Error generating documents for policy {policy.id}: {e}")
             # Non-blocking error, log and continue
@@ -228,7 +229,7 @@ class PolicyService:
             company = company_repo.get_by_id(created_policy.company_id)
             
             if client and company:
-                document_service.generate_documents(created_policy, client, company)
+                document_service.generate_documents(self.policy_repo.db, created_policy, client, company)
         except Exception as e:
             print(f"Error generating documents for policy {created_policy.id}: {e}")
 
@@ -365,7 +366,7 @@ class PolicyService:
         # 2. Update status and timestamp
         endorsement.status = 'active'
         endorsement.approved_by = approved_by
-        endorsement.approved_at = datetime.utcnow()
+        endorsement.approved_at = utcnow()
         self.endorsement_repo.update(endorsement)
         
         # 3. Update policy based on changes (generic application if keys match)

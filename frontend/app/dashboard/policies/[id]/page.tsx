@@ -72,6 +72,8 @@ export default function PolicyDetailsPage({ params }: { params: Promise<{ id: st
     const [isGenerating, setIsGenerating] = useState(false);
     const [showSchedule, setShowSchedule] = useState(false);
     const [isCancellationOpen, setIsCancellationOpen] = useState(false);
+    const [policyDocuments, setPolicyDocuments] = useState<string[]>([]);
+    const [docsLoading, setDocsLoading] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
@@ -103,6 +105,23 @@ export default function PolicyDetailsPage({ params }: { params: Promise<{ id: st
     useEffect(() => {
         loadData();
     }, [resolvedParams.id]);
+
+    useEffect(() => {
+        const loadDocuments = async () => {
+            if (!policy) return;
+            try {
+                setDocsLoading(true);
+                const docs = await policyApi.getPolicyDocuments(policy.id);
+                setPolicyDocuments(docs || []);
+            } catch (error) {
+                console.error("Failed to load policy documents", error);
+                setPolicyDocuments([]);
+            } finally {
+                setDocsLoading(false);
+            }
+        };
+        loadDocuments();
+    }, [policy?.id]);
 
     const handlePolicyUpdated = () => {
         setIsEditOpen(false);
@@ -367,6 +386,34 @@ export default function PolicyDetailsPage({ params }: { params: Promise<{ id: st
                                 )}
                                 {t('Payment Schedule.pdf', 'Payment Schedule.pdf')}
                             </Button>
+                            <div className="mt-4 border-t pt-3">
+                                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                                    {t('Generated Documents', 'Generated Documents')}
+                                </div>
+                                {docsLoading ? (
+                                    <div className="text-xs text-muted-foreground">{t('Loading...', 'Loading...')}</div>
+                                ) : policyDocuments.length === 0 ? (
+                                    <div className="text-xs text-muted-foreground">{t('No generated documents yet.', 'No generated documents yet.')}</div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {policyDocuments.map((docPath) => {
+                                            const fileName = docPath.split('/').pop() || 'Document';
+                                            return (
+                                                <a
+                                                    key={docPath}
+                                                    href={`/api/v1/documents/policy/${policy.id}/${fileName}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-2 text-sm text-slate-700 hover:text-slate-900"
+                                                >
+                                                    <Download className="h-4 w-4" />
+                                                    {fileName}
+                                                </a>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
 

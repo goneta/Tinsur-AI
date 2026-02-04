@@ -24,7 +24,9 @@ from app.models.loyalty import LoyaltyPoint
 from app.models.telematics import TelematicsData
 from app.models.ml_model import MLModel
 from app.models.document import Document
+from app.models.document_template import DocumentTemplate
 from app.models.claim import Claim
+from app.models.claim_activity import ClaimActivity
 from app.models.co_insurance import CoInsuranceShare
 from app.models.share_code import ShareCode
 from app.models.system_settings import SystemSettings, AiUsageLog
@@ -38,6 +40,9 @@ from app.models.payroll import PayrollTransaction
 from app.models.ledger import Account, JournalEntry, LedgerEntry
 from app.models.premium_policy import PremiumPolicyCriteria, PremiumPolicyType
 from app.models.quote_element import QuoteElement
+from app.models.sales import SalesTransaction, SalesTarget
+from app.models.task import Task
+from app.models.chat import ChatChannel, ChatMessage, ChatChannelMember
 
 __all__ = [
     "Company", 
@@ -64,7 +69,9 @@ __all__ = [
     "TelematicsData",
     "MLModel",
     "Document", 
+    "DocumentTemplate",
     "Claim", 
+    "ClaimActivity",
     "CoInsuranceShare",
     "ShareCode",
     "SystemSettings",
@@ -87,4 +94,10 @@ __all__ = [
     "PremiumPolicyType",
     "PolicyService",
     "QuoteElement",
+    "SalesTransaction",
+    "SalesTarget",
+    "Task",
+    "ChatChannel",
+    "ChatMessage",
+    "ChatChannelMember",
 ]

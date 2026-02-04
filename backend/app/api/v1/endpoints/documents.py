@@ -9,6 +9,7 @@ import os
 import shutil
 from datetime import datetime
 import logging
+from app.core.time import utcnow
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -18,7 +19,7 @@ from app.models.inter_company_share import InterCompanyShare
 from app.models.company import Company
 from app.repositories.policy_repository import PolicyRepository
 from app.services.document_service import document_service
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -34,9 +35,7 @@ class DocumentResponse(BaseModel):
     owner: str
     date: str
     scope: Optional[str] = None
-    
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ShareRequest(BaseModel):
     visibility: str # PUBLIC, PRIVATE
@@ -75,9 +74,9 @@ def format_doc(doc: Document, owner_name_override: str = None, scope: str = None
                 else:
                     date_str = doc.created_at.strftime("%Y-%m-%d")
             else:
-                date_str = datetime.utcnow().strftime("%Y-%m-%d")
+                date_str = utcnow().strftime("%Y-%m-%d")
         except:
-            date_str = datetime.utcnow().strftime("%Y-%m-%d")
+            date_str = utcnow().strftime("%Y-%m-%d")
         
         # Determine owner
         owner = owner_name_override
@@ -123,7 +122,7 @@ def format_doc(doc: Document, owner_name_override: str = None, scope: str = None
             "size": "0.00 MB",
             "visibility": "PRIVATE",
             "owner": "Unknown",
-            "date": datetime.utcnow().strftime("%Y-%m-%d"),
+            "date": utcnow().strftime("%Y-%m-%d"),
         }
 
 @router.post("/upload")
@@ -273,20 +272,21 @@ def list_policy_documents(
         
     # Access Control: Company or Client
     if policy.company_id != current_user.company_id:
-         # Check if client
-         if str(current_user.id) != str(policy.client_id):
+         # Check if client user owns the policy
+         if current_user.role == "client":
+             from app.models.client import Client
+             client = db.query(Client).filter(Client.user_id == current_user.id).first()
+             if not client or str(client.id) != str(policy.client_id):
+                 raise HTTPException(status_code=403, detail="Not authorized")
+         else:
              raise HTTPException(status_code=403, detail="Not authorized")
 
-    doc_dir = os.path.join(document_service.output_dir, str(policy_id))
-    if not os.path.exists(doc_dir):
-        return []
+    docs = db.query(Document).filter(
+        Document.policy_id == policy_id,
+        Document.company_id == policy.company_id
+    ).order_by(Document.created_at.asc()).all()
 
-    files = []
-    for f in os.listdir(doc_dir):
-        if f.endswith(".html") or f.endswith(".pdf"):
-            files.append(f"documents/{policy_id}/{f}")
-            
-    return files
+    return [doc.file_url for doc in docs if doc.file_url]
 
 @router.get("/policy/{policy_id}/{filename}")
 def get_policy_document(
@@ -304,11 +304,16 @@ def get_policy_document(
         raise HTTPException(status_code=404, detail="Policy not found")
 
     if policy.company_id != current_user.company_id:
-         if str(current_user.id) != str(policy.client_id):
+         if current_user.role == "client":
+             from app.models.client import Client
+             client = db.query(Client).filter(Client.user_id == current_user.id).first()
+             if not client or str(client.id) != str(policy.client_id):
+                 raise HTTPException(status_code=403, detail="Not authorized")
+         else:
              raise HTTPException(status_code=403, detail="Not authorized")
 
     safe_filename = os.path.basename(filename)
-    file_path = os.path.join(document_service.output_dir, str(policy_id), safe_filename)
+    file_path = os.path.join(str(document_service.output_dir), str(policy_id), safe_filename)
     
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Document not found")

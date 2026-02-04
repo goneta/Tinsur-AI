@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { clientApi } from '@/lib/client-api';
 import { Client } from '@/types/client';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit, Save, Plus, Camera, Car, Upload } from 'lucide-react';
+import { ArrowLeft, Edit, Save, Plus, Camera, Car, Upload, Scan, Download } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { ProfileUploader } from '@/components/shared/profile-uploader';
 import { IdVerificationCard } from '@/components/clients/id-verification-card';
+import { ocrApi, OCRResult } from '@/lib/ocr-api';
 
 import { quoteApi } from '@/lib/quote-api';
 import { policyApi } from '@/lib/policy-api';
@@ -37,6 +38,13 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
     const [policies, setPolicies] = useState<any[]>([]);
     const [claims, setClaims] = useState<any[]>([]);
     const [payments, setPayments] = useState<any[]>([]);
+    const [policyDocuments, setPolicyDocuments] = useState<Array<{ policyId: string; fileName: string; url: string }>>([]);
+    const [docsLoading, setDocsLoading] = useState(false);
+    const [docPolicyFilter, setDocPolicyFilter] = useState("");
+    const [ocrFile, setOcrFile] = useState<File | null>(null);
+    const [ocrDocType, setOcrDocType] = useState("identity_document");
+    const [ocrResult, setOcrResult] = useState<OCRResult | null>(null);
+    const [ocrLoading, setOcrLoading] = useState(false);
     // Map Client Data to Portal Data Structures
     const mapClientToDrivers = (c: Client): Driver[] => {
         if (c.drivers && Array.isArray(c.drivers) && c.drivers.length > 0) {
@@ -146,7 +154,30 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                 status: p.status,
                 premium: `£${p.premium_amount || 0}`,
                 included_services: ['comprehensive', 'windscreen'] // Mock
-            })));
+            })))
+
+            try {
+                setDocsLoading(true);
+                const docsByPolicy = await Promise.all(
+                    ps.policies.map(async (p) => {
+                        const docs = await policyApi.getPolicyDocuments(p.id);
+                        return docs.map((docPath: string) => {
+                            const fileName = docPath.split('/').pop() || 'Document';
+                            return {
+                                policyId: p.id,
+                                fileName,
+                                url: '/api/v1/documents/policy/' + p.id + '/' + fileName
+                            };
+                        });
+                    })
+                );
+                setPolicyDocuments(docsByPolicy.flat());
+            } catch (error) {
+                console.error('Failed to load policy documents', error);
+                setPolicyDocuments([]);
+            } finally {
+                setDocsLoading(false);
+            };
 
             // Map Claims
             setClaims(cs.filter(c => c.client_id === resolvedParams.id).map(c => ({
@@ -186,6 +217,50 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
     const handleProfilePictureUpload = async (path: string) => {
         if (!client) return;
         setClient({ ...client, profile_picture: path });
+    };
+
+    const handleOcrUpload = async () => {
+        if (!ocrFile || !client) return;
+        setOcrLoading(true);
+        try {
+            const result = await ocrApi.processDocument(ocrFile, ocrDocType);
+            setOcrResult(result);
+            toast({
+                title: t("OCR Completed"),
+                description: t("Document processed successfully."),
+            });
+        } catch (error) {
+            toast({
+                title: t("Error"),
+                description: t("Failed to process document with OCR."),
+                variant: "destructive",
+            });
+        } finally {
+            setOcrLoading(false);
+        }
+    };
+
+    const handleApplyOcrResults = async () => {
+        if (!client || !ocrResult) return;
+        try {
+            await clientApi.updateKycStatus(
+                client.id,
+                client.kyc_status || "pending",
+                client.kyc_notes || "",
+                ocrResult.extracted_fields || {}
+            );
+            await loadClient();
+            toast({
+                title: t("KYC Updated"),
+                description: t("OCR results saved to client KYC."),
+            });
+        } catch (error) {
+            toast({
+                title: t("Error"),
+                description: t("Failed to save OCR results to KYC."),
+                variant: "destructive",
+            });
+        }
     };
 
     if (loading) return <div className="p-8">{t('Loading...')}</div>;
@@ -234,8 +309,149 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
 
             <Separator className="bg-gray-200" />
 
-            {/* Reusing Portal Component directly */}
-            <InsuranceDetailsTab
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="border-slate-200 shadow-sm lg:col-span-2">
+                    <CardHeader className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Scan className="h-5 w-5 text-slate-600" />
+                            <div>
+                                <CardTitle className="text-lg">{t("OCR Document Processing")}</CardTitle>
+                                <CardDescription>{t("Upload a document to extract structured data.")}</CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="md:col-span-2 space-y-2">
+                                <Label>{t("Document File")}</Label>
+                                <Input
+                                    type="file"
+                                    onChange={(e) => setOcrFile(e.target.files?.[0] || null)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>{t("Document Type")}</Label>
+                                <select
+                                    className="w-full border rounded-md px-3 py-2 text-sm bg-white"
+                                    value={ocrDocType}
+                                    onChange={(e) => setOcrDocType(e.target.value)}
+                                >
+                                    <option value="identity_document">{t("Identity Document")}</option>
+                                    <option value="car_papers">{t("Car Papers")}</option>
+                                    <option value="driver_license">{t("Driver License")}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button onClick={handleOcrUpload} disabled={ocrLoading || !ocrFile}>
+                                {ocrLoading ? t("Processing...") : t("Run OCR")}
+                            </Button>
+                            <Button variant="outline" onClick={handleApplyOcrResults} disabled={!ocrResult}>
+                                {t("Save to KYC")}
+                            </Button>
+                        </div>
+
+                        {ocrResult ? (
+                            <div className="border rounded-lg p-4 bg-slate-50">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="text-sm font-semibold">{t("OCR Results")}</div>
+                                    <Badge variant="outline">{ocrResult.validation_status}</Badge>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {Object.entries(ocrResult.extracted_fields || {}).map(([key, value]) => (
+                                        <div key={key} className="bg-white rounded-md border p-3">
+                                            <div className="text-[10px] uppercase text-slate-500 font-bold">{key}</div>
+                                            <div className="text-sm text-slate-800 break-words">
+                                                {typeof value === "object" ? JSON.stringify(value) : String(value)}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-sm text-slate-500">{t("No OCR results yet.")}</div>
+                        )}
+                    </CardContent>
+                </Card>
+
+        <IdVerificationCard client={client} onStatusUpdate={loadClient} />
+        </div>
+
+        <Card className="border-slate-200 shadow-sm">
+            <CardHeader>
+                <CardTitle className="text-lg">{t("Documents", "Documents")}</CardTitle>
+                <CardDescription>{t("Generated policy documents for this client.")}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="flex flex-col md:flex-row md:items-center gap-3">
+                    <div className="flex-1">
+                        <Label>{t("Filter by Policy", "Filter by Policy")}</Label>
+                        <Input
+                            placeholder={t("Type policy number", "Type policy number")}
+                            value={docPolicyFilter}
+                            onChange={(e) => setDocPolicyFilter(e.target.value)}
+                        />
+                    </div>
+                </div>
+                {docsLoading ? (
+                    <div className="text-sm text-muted-foreground">{t("Loading...", "Loading...")}</div>
+                ) : policyDocuments.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">{t("No generated documents yet.", "No generated documents yet.")}</div>
+                ) : (
+                    policyDocuments
+                        .filter((doc) => {
+                            if (!docPolicyFilter.trim()) return true;
+                            const policyMatch = policies.find(p => p.id === doc.policyId);
+                            const policyNumber = (policyMatch?.policyNumber || "").toLowerCase();
+                            return policyNumber.includes(docPolicyFilter.trim().toLowerCase());
+                        })
+                        .reduce((acc: Array<{ policyId: string; docs: typeof policyDocuments }>, doc) => {
+                            const existing = acc.find(item => item.policyId === doc.policyId);
+                            if (existing) {
+                                existing.docs.push(doc);
+                            } else {
+                                acc.push({ policyId: doc.policyId, docs: [doc] });
+                            }
+                            return acc;
+                        }, [])
+                        .map((group) => {
+                            const policyMatch = policies.find(p => p.id === group.policyId);
+                            const policyLabel = policyMatch?.policyNumber || group.policyId;
+                            return (
+                                <div key={group.policyId} className="border rounded-lg p-3 bg-white">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="text-sm font-semibold">{t("Policy", "Policy")}: {policyLabel}</div>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => group.docs.forEach(doc => window.open(doc.url, "_blank"))}
+                                        >
+                                            {t("Download All", "Download All")}
+                                        </Button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {group.docs.map((doc) => (
+                                            <a
+                                                key={`${doc.policyId}-${doc.fileName}`}
+                                                href={doc.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-2 text-sm text-slate-700 hover:text-slate-900"
+                                            >
+                                                <Download className="h-4 w-4" />
+                                                {doc.fileName}
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })
+                )}
+            </CardContent>
+        </Card>
+
+        {/* Reusing Portal Component directly */}
+        <InsuranceDetailsTab
                 initialDrivers={mapClientToDrivers(client)}
                 initialVehicles={mapClientToVehicles(client)}
                 initialQuotes={quotes}

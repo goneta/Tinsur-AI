@@ -6,10 +6,12 @@ import hashlib
 import uuid
 from datetime import datetime
 from typing import Optional
+from app.core.time import utcnow
 
 from app.core.database import get_db
 from app.models.policy import Policy
 from app.models.company import Company
+from app.models.document import Document
 from app.core.config import settings
 
 router = APIRouter()
@@ -75,5 +77,34 @@ def verify_policy(
         "client_initials": initials,
         "expiry_date": policy.end_date.isoformat() if policy.end_date else None,
         "is_active": is_active,
-        "verified_at": datetime.utcnow().isoformat()
+        "verified_at": utcnow().isoformat()
+    }
+
+
+@router.get("/document/{code}", tags=["Public Verification"])
+def verify_document(
+    code: str,
+    db: Session = Depends(get_db)
+):
+    """Public endpoint to verify a document by its 16-character code."""
+    document = db.query(Document).filter(Document.verification_code == code).first()
+    if not document:
+        return {
+            "status": "INVALID",
+            "message": "Document verification failed. Code is invalid or not found."
+        }
+
+    policy = document.policy
+    client = document.client
+    company = document.company
+
+    return {
+        "status": "VERIFIED",
+        "document_name": document.name,
+        "policy_number": policy.policy_number if policy else None,
+        "policy_type": policy.policy_type.name if policy and policy.policy_type else "General",
+        "company_name": company.name if company else "Unknown",
+        "client_name": client.display_name if client else "Unknown",
+        "verification_code": document.verification_code,
+        "verified_at": utcnow().isoformat()
     }
