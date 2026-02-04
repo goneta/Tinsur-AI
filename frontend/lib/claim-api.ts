@@ -37,6 +37,15 @@ export interface Claim {
     };
 }
 
+export interface ClaimActivity {
+    id: string;
+    claim_id: string;
+    user_id?: string;
+    action: string;
+    notes?: string;
+    created_at: string;
+}
+
 export interface CreateClaimData {
     policy_id: string;
     incident_date: string;
@@ -106,6 +115,16 @@ export const claimApi = {
      */
     analyzeClaimFraud: async (id: string) => {
         const response = await api.post<any>(`/claims/${id}/analyze-fraud`);
+        return response.data;
+    },
+
+    getClaimActivity: async (id: string) => {
+        const response = await api.get<ClaimActivity[]>(`/claims/${id}/activity`);
+        return response.data;
+    },
+
+    addClaimActivity: async (id: string, data: { action: string; notes?: string }) => {
+        const response = await api.post<ClaimActivity>(`/claims/${id}/activity`, data);
         return response.data;
     },
 };

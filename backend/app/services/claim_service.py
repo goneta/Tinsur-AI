@@ -9,16 +9,19 @@ import random
 import string
 
 from app.models.claim import Claim
+from app.models.claim_activity import ClaimActivity
 from app.models.policy import Policy
 from app.models.co_insurance import CoInsuranceShare
 from app.models.inter_company_share import InterCompanyShare
 from app.repositories.claim_repository import ClaimRepository
 from app.services.reinsurance_service import ReinsuranceService
-from app.schemas.claim import ClaimCreate, ClaimUpdate, ClaimBase
+from app.schemas.claim import ClaimCreate, ClaimUpdate
 from app.core.agent_client import AgentClient
 from app.models.client import Client
 from decimal import Decimal
 import json
+from app.services.ai_service import AiService
+from app.core.time import utcnow
 
 class ClaimService:
     """Service for handling claim operations."""
@@ -27,6 +30,17 @@ class ClaimService:
         self.db = db
         self.repository = ClaimRepository(db)
         self.reinsurance_service = ReinsuranceService(db)
+        self.ai_service = AiService(db)
+
+    def _add_activity(self, claim_id: UUID, action: str, user_id: Optional[UUID] = None, notes: Optional[str] = None):
+        activity = ClaimActivity(
+            claim_id=claim_id,
+            user_id=user_id,
+            action=action,
+            notes=notes,
+        )
+        self.db.add(activity)
+        self.db.commit()
         
     def _generate_claim_number(self) -> str:
         """Generate a random claim number."""
@@ -69,7 +83,9 @@ class ClaimService:
             created_by=claim_data.created_by
         )
         
-        return self.repository.create(claim)
+        created = self.repository.create(claim)
+        self._add_activity(created.id, "submitted", claim_data.created_by)
+        return created
     
     def get_claim(self, claim_id: UUID) -> Optional[Claim]:
         """Get claim by ID."""
@@ -137,7 +153,12 @@ class ClaimService:
                                 
                                 # REJECT the payout status change
                                 claim.status = "flagged"
-                                claim.fraud_details = f"AML ALERT: Payout blocked by Compliance Agent. Reason: {compliance_data.get('notes')}"
+                                claim.fraud_details = {
+                                    "type": "aml_alert",
+                                    "message": "Payout blocked by Compliance Agent.",
+                                    "notes": compliance_data.get("notes"),
+                                    "at": utcnow().isoformat(),
+                                }
                                 self.repository.update(claim)
                                 return claim
                 except Exception as e:
@@ -145,6 +166,8 @@ class ClaimService:
                     pass
 
             claim.status = new_status
+            if old_status != new_status:
+                self._add_activity(claim.id, f"status_changed:{old_status}->{new_status}", user_id)
             
             # If claim is approved, handle co-insurance settlements and reinsurance recovery
             if claim.status == 'approved' and old_status != 'approved':
@@ -189,8 +212,6 @@ class ClaimService:
 
     async def analyze_claim_damage(self, claim_id: UUID, user_id: UUID) -> Dict[str, Any]:
         """Trigger AI analysis for claim evidence photos."""
-        from app.services.ai_service import AiService
-        
         claim = self.get_claim(claim_id)
         if not claim:
             raise ValueError("Claim not found")
@@ -198,18 +219,18 @@ class ClaimService:
         if not claim.evidence_files:
             return {"error": "No evidence files found for this claim"}
         
-        ai_service = AiService(self.db)
         # 1. Run Analysis
-        results = await ai_service.analyze_damage(str(claim.company_id), claim.evidence_files)
+        results = await self.ai_service.analyze_damage(str(claim.company_id), claim.evidence_files)
         
         if "error" in results:
             return results
             
         # 2. Update Claim with AI assessment
         claim.ai_assessment = results
+        self._add_activity(claim.id, "ai_damage_analysis", user_id)
         
         # 3. Log usage
-        ai_service.log_and_consume_usage(
+        self.ai_service.log_and_consume_usage(
             str(claim.company_id), 
             str(user_id), 
             "Damage_Vision_Agent",
@@ -235,6 +256,7 @@ class ClaimService:
         # 5. Automatically Run Fraud Detection
         try:
             await self.ai_service.detect_claim_fraud(claim.id)
+            self._add_activity(claim.id, "fraud_scan", user_id)
         except Exception as e:
             print(f"Failed to run automated fraud detection: {e}")
 
@@ -254,4 +276,6 @@ class ClaimService:
             cost=0.1 # Fraud analysis is more expensive
         )
         
-        return await self.ai_service.detect_claim_fraud(claim.id)
+        results = await self.ai_service.detect_claim_fraud(claim.id)
+        self._add_activity(claim.id, "fraud_scan_manual", user_id)
+        return results

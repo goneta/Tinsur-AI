@@ -10,8 +10,10 @@ from uuid import UUID
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, require_agent
 from app.schemas.claim import ClaimCreate, ClaimUpdate, ClaimResponse
+from app.schemas.claim_activity import ClaimActivityCreate, ClaimActivityResponse
 from app.services.claim_service import ClaimService
 from app.models.user import User
+from app.models.claim_activity import ClaimActivity
 
 router = APIRouter()
 
@@ -152,3 +154,43 @@ async def analyze_claim_fraud(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
+
+
+@router.get("/{claim_id}/activity", response_model=List[ClaimActivityResponse])
+async def list_claim_activity(
+    claim_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """List activity for a claim."""
+    service = ClaimService(db)
+    claim = service.get_claim(claim_id)
+    if not claim or claim.company_id != current_user.company_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Claim not found")
+
+    return db.query(ClaimActivity).filter(ClaimActivity.claim_id == claim_id).order_by(ClaimActivity.created_at.desc()).all()
+
+
+@router.post("/{claim_id}/activity", response_model=ClaimActivityResponse)
+async def add_claim_activity(
+    claim_id: UUID,
+    payload: ClaimActivityCreate,
+    current_user: User = Depends(require_agent),
+    db: Session = Depends(get_db),
+):
+    """Add activity to a claim."""
+    service = ClaimService(db)
+    claim = service.get_claim(claim_id)
+    if not claim or claim.company_id != current_user.company_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Claim not found")
+
+    activity = ClaimActivity(
+        claim_id=claim_id,
+        user_id=current_user.id,
+        action=payload.action,
+        notes=payload.notes,
+    )
+    db.add(activity)
+    db.commit()
+    db.refresh(activity)
+    return activity

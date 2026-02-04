@@ -49,11 +49,14 @@ from app.api.v1.endpoints import (
     recovery,
     archive,
     policy_services,
-    policy_services,
     quote_elements,
     translations,
     import_export,
-    social_auth
+    social_auth,
+    ocr,
+    tasks,
+    ai,
+    sales
 )
 
 api_router = APIRouter()
@@ -101,6 +104,9 @@ api_router.include_router(analytics.router, prefix="/analytics", tags=["Analytic
 api_router.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
 api_router.include_router(kyc.router, prefix="/kyc", tags=["KYC & Digital Identity"])
 api_router.include_router(premium_policies.router, prefix="/premium-policies", tags=["Premium Policies"])
+api_router.include_router(ocr.router, prefix="/ocr", tags=["OCR"])
+api_router.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
+api_router.include_router(ai.router, prefix="/ai", tags=["AI"])
 api_router.include_router(reinsurance.router, prefix="/reinsurance", tags=["Reinsurance Management"])
 api_router.include_router(regulatory.router, prefix="/regulatory", tags=["Regulatory & Compliance"])
 api_router.include_router(underwriting.router, prefix="/underwriting", tags=["Underwriting Management"])
@@ -111,4 +117,5 @@ api_router.include_router(quote_elements.router, prefix="/quote-elements", tags=
 api_router.include_router(translations.router, prefix="/translations", tags=["Translations"])
 api_router.include_router(import_export.router, prefix="/import-export", tags=["Import / Export Data"])
 api_router.include_router(social_auth.router, prefix="/auth/social", tags=["Social Authentication"])
+api_router.include_router(sales.router, prefix="/sales", tags=["Sales"])
 

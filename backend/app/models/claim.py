@@ -2,11 +2,10 @@
 Claim model for insurance claims.
 """
 from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Enum, JSON, Date, Numeric, Text
-from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Enum, JSON, Date, Numeric, Text
 from sqlalchemy.orm import relationship
 import uuid
 from app.core.guid import GUID
-from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -47,8 +46,8 @@ class Claim(Base):
     
     # Audit
     created_by = Column(GUID(), ForeignKey("users.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     # Relationships
     policy = relationship("Policy", back_populates="claims")
@@ -56,6 +55,7 @@ class Claim(Base):
     company = relationship("Company")
     adjuster = relationship("User", foreign_keys=[adjuster_id])
     creator = relationship("User", foreign_keys=[created_by])
+    activities = relationship("ClaimActivity", back_populates="claim", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Claim {self.claim_number}>"

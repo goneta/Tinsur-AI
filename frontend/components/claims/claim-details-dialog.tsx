@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { format } from "date-fns"
 import {
     Dialog,
@@ -13,7 +13,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Claim, claimApi } from "@/lib/claim-api"
+import { Input } from "@/components/ui/input"
+import { Claim, ClaimActivity, claimApi } from "@/lib/claim-api"
 import { ClaimStatusBadge } from "./claim-status-badge"
 import { Badge } from "@/components/ui/badge"
 import { ShieldAlert, AlertTriangle, CheckCircle2 } from "lucide-react"
@@ -35,6 +36,26 @@ export function ClaimDetailsDialog({
 }: ClaimDetailsDialogProps) {
     const { t } = useLanguage()
     const [isUpdating, setIsUpdating] = useState(false)
+    const [activity, setActivity] = useState<ClaimActivity[]>([])
+    const [activityLoading, setActivityLoading] = useState(false)
+    const [activityNote, setActivityNote] = useState("")
+    const [activityFilter, setActivityFilter] = useState<"all" | "notes" | "status">("all")
+
+    useEffect(() => {
+        if (!open) return
+        const loadActivity = async () => {
+            try {
+                setActivityLoading(true)
+                const data = await claimApi.getClaimActivity(claim.id)
+                setActivity(data)
+            } catch (error) {
+                console.error("Failed to load claim activity:", error)
+            } finally {
+                setActivityLoading(false)
+            }
+        }
+        loadActivity()
+    }, [open, claim.id])
 
     const handleStatusUpdate = async (newStatus: string) => {
         try {
@@ -47,6 +68,23 @@ export function ClaimDetailsDialog({
         } finally {
             setIsUpdating(false)
         }
+    }
+
+    const filteredActivity = activity.filter((item) => {
+        if (activityFilter === "notes") return item.action === "note"
+        if (activityFilter === "status") return item.action.startsWith("status_changed")
+        return true
+    })
+
+    const formatActionLabel = (action: string) => {
+        if (action.startsWith("status_changed:")) {
+            const parts = action.replace("status_changed:", "").split("->")
+            if (parts.length === 2) {
+                return `status changed: ${parts[0]} → ${parts[1]}`
+            }
+            return "status changed"
+        }
+        return action.replace(/_/g, " ")
     }
 
     return (
@@ -276,6 +314,92 @@ export function ClaimDetailsDialog({
                             <p className="text-xs text-muted-foreground italic">
                                 {t('claim_details.fraud_scan_desc', 'Fraud scan will run automatically during AI damage assessment.')}</p>
                         )}
+                    </div>
+
+                    <Separator />
+
+                    {/* Activity Timeline */}
+                    <div className="bg-white p-4 rounded-lg border border-slate-200">
+                        <Label className="text-sm font-bold">
+                            {t('claim_details.activity', 'Activity Timeline')}
+                        </Label>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                            <Button
+                                variant={activityFilter === "all" ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setActivityFilter("all")}
+                            >
+                                All
+                            </Button>
+                            <Button
+                                variant={activityFilter === "status" ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setActivityFilter("status")}
+                            >
+                                Status Changes
+                            </Button>
+                            <Button
+                                variant={activityFilter === "notes" ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setActivityFilter("notes")}
+                            >
+                                Notes
+                            </Button>
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                            <Input
+                                placeholder={t('claim_details.add_note', 'Add a note...')}
+                                value={activityNote}
+                                onChange={(e) => setActivityNote(e.target.value)}
+                            />
+                            <Button
+                                variant="outline"
+                                onClick={async () => {
+                                    if (!activityNote.trim()) return
+                                    try {
+                                        setIsUpdating(true)
+                                        await claimApi.addClaimActivity(claim.id, {
+                                            action: "note",
+                                            notes: activityNote.trim(),
+                                        })
+                                        setActivityNote("")
+                                        const data = await claimApi.getClaimActivity(claim.id)
+                                        setActivity(data)
+                                    } finally {
+                                        setIsUpdating(false)
+                                    }
+                                }}
+                                disabled={isUpdating}
+                            >
+                                {t('claim_details.add', 'Add')}
+                            </Button>
+                        </div>
+                        <div className="mt-3 space-y-3">
+                            {activityLoading ? (
+                                <div className="text-xs text-muted-foreground">{t('common.loading', 'Loading...')}</div>
+                            ) : filteredActivity.length === 0 ? (
+                                <div className="text-xs text-muted-foreground">
+                                    {t('claim_details.no_activity', 'No activity recorded yet.')}
+                                </div>
+                            ) : (
+                                filteredActivity.map((item) => (
+                                    <div key={item.id} className="flex gap-3 items-start">
+                                        <div className="mt-1 h-2 w-2 rounded-full bg-slate-300" />
+                                        <div className="flex-1">
+                                            <div className="text-xs font-semibold text-slate-700">
+                                                {formatActionLabel(item.action)}
+                                            </div>
+                                            {item.notes && (
+                                                <div className="text-xs text-slate-500">{item.notes}</div>
+                                            )}
+                                            <div className="text-[10px] text-slate-400">
+                                                {format(new Date(item.created_at), "PPp")}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
                 </div>
 
