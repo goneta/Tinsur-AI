@@ -462,3 +462,42 @@ With completion of Phase 8, the Insurance SaaS Platform will be:
 **Total Project Duration:** 24 months (2 years)  
 **Total Investment:** $1.37M - $2.17M  
 **Expected ROI:** Platform can serve hundreds of insurance companies across French-speaking Africa
+
+#### Handle Alembic Duplicate Column (MANDATORY)
+**File:** `handle_alembic_duplicate_column.mdc`
+
+**Summary:** Prevent migration failures when a column already exists (e.g., SQLite drift).
+
+**Checklist:**
+- [ ] If Alembic upgrade fails with "duplicate column name", inspect the migration.
+- [ ] Make the migration idempotent by checking column existence before `op.add_column`.
+- [ ] Re-run `alembic upgrade head` after patching.
+
+#### Handle Unicode Decode Errors (MANDATORY)
+**File:** `handle_unicode_decode_in_scripts.mdc`
+
+**Summary:** Prevent script crashes when reading files with mixed encodings.
+
+**Checklist:**
+- [ ] If a Python script raises `UnicodeDecodeError`, reopen files with `encoding="utf-8", errors="replace"` or use a safer fallback.
+- [ ] Avoid failing mid-batch; ensure all files are still processed.
+
+#### Seed Many-to-Many Client-Company (MANDATORY)
+**File:** `seed_many_to_many_client_company.mdc`
+
+**Summary:** Client-Company is many-to-many; seeding must use `client.companies.append(company)` rather than `client.company_id`.
+
+**Checklist:**
+- [ ] When seeding Clients, do not pass `company_id` to `Client(...)`.
+- [ ] Associate companies through `client.companies.append(company)`.
+
+#### Handle Missing Quote Columns (MANDATORY)
+**File:** `handle_missing_quote_columns_migration.mdc`
+
+**Summary:** If seed or queries fail due to missing quote snapshot columns, add a minimal migration.
+
+**Checklist:**
+- [ ] When SQLite error mentions `quotes.admin_fee_percent` or `quotes.admin_discount_percent`, add a targeted migration.
+- [ ] Make migration idempotent (check columns before add).
+- [ ] Re-run `alembic upgrade head` then re-run seed.
+

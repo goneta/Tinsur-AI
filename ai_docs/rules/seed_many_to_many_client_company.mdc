@@ -1,0 +1,8 @@
+#### Seed Many-to-Many Client-Company (MANDATORY)
+**File:** `seed_many_to_many_client_company.mdc`
+
+**Summary:** Client-Company is many-to-many; seeding must use `client.companies.append(company)` rather than `client.company_id`.
+
+**Checklist:**
+- [ ] When seeding Clients, do not pass `company_id` to `Client(...)`.
+- [ ] Associate companies through `client.companies.append(company)`.

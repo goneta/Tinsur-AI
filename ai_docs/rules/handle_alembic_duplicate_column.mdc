@@ -1,0 +1,9 @@
+#### Handle Alembic Duplicate Column (MANDATORY)
+**File:** `handle_alembic_duplicate_column.mdc`
+
+**Summary:** Prevent migration failures when a column already exists (e.g., SQLite drift).
+
+**Checklist:**
+- [ ] If Alembic upgrade fails with "duplicate column name", inspect the migration.
+- [ ] Make the migration idempotent by checking column existence before `op.add_column`.
+- [ ] Re-run `alembic upgrade head` after patching.

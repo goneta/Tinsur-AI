@@ -1,0 +1,8 @@
+#### Handle Unicode Decode Errors (MANDATORY)
+**File:** `handle_unicode_decode_in_scripts.mdc`
+
+**Summary:** Prevent script crashes when reading files with mixed encodings.
+
+**Checklist:**
+- [ ] If a Python script raises `UnicodeDecodeError`, reopen files with `encoding="utf-8", errors="replace"` or use a safer fallback.
+- [ ] Avoid failing mid-batch; ensure all files are still processed.
