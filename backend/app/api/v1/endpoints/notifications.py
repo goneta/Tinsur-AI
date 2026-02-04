@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict, Any
 from uuid import UUID
+from app.core.time import utcnow
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -18,7 +19,7 @@ async def get_notifications(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     unread_only: bool = False,
-    scope: str = Query("me", regex="^(me|all)$"),
+    scope: str = Query("me", pattern="^(me|all)$"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -72,7 +73,7 @@ async def mark_notification_read(
         
     notification.status = 'read'
     import datetime
-    notification.read_at = datetime.datetime.utcnow()
+    notification.read_at = utcnow()
     db.commit()
     
     return {"message": "Marked as read"}

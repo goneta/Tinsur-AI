@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 from uuid import UUID
+from app.core.time import utcnow
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, require_admin
@@ -24,9 +25,7 @@ class AiUsageLogResponse(BaseModel):
     action: str
     credits_consumed: float
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class UsageStat(BaseModel):
     date: str
@@ -154,7 +153,7 @@ async def get_usage_stats(
         return []
 
     # Last 30 days
-    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    thirty_days_ago = utcnow() - timedelta(days=30)
     
     # Aggregate by date
     # Using func.date for grouping - works on both SQLite and Postgres

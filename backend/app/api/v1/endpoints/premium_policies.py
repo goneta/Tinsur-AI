@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_user, require_admin
+from app.core.dependencies import get_current_user, get_optional_user, require_admin
 from app.models.user import User
 from app.models.user import User
 from app.models.premium_policy import PremiumPolicyCriteria, PremiumPolicyType
@@ -20,6 +20,7 @@ from app.schemas.premium_policy import (
     PremiumPolicyTypeListResponse,
     PremiumPolicyTypeListResponse,
     PremiumPolicyMatchResponse,
+    PremiumPolicyGlobalMatchResponse,
     PremiumPolicyMatchRequest
 )
 from app.services.premium_policy_service import PremiumPolicyService
@@ -262,6 +263,17 @@ def match_policies(
         # But wait, wizard might be used before client is fully created? 
         # Plan says "client_id: Optional". If missing, we rely PURELY on overrides.
         pass 
+
+    if target_client_id:
+        from app.models.client import Client, client_company
+        client = db.query(Client).join(
+            client_company, Client.id == client_company.c.client_id
+        ).filter(
+            Client.id == target_client_id,
+            client_company.c.company_id == current_user.company_id
+        ).first()
+        if not client:
+            raise HTTPException(status_code=404, detail="Client not found")
         
     overrides = {
         "vehicle_details": request.vehicle_details,
@@ -289,3 +301,51 @@ def match_policies(
         raise HTTPException(status_code=400, detail=result["message"])
         
     return result
+
+
+@router.post("/match-public", response_model=PremiumPolicyGlobalMatchResponse)
+def match_policies_public(
+    request: PremiumPolicyMatchRequest,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user)
+):
+    """
+    Public/global matching endpoint.
+    - If authenticated client: uses their profile for eligibility.
+    - Otherwise: uses only overrides (driver/vehicle) without pulling client data.
+    """
+    service = PremiumPolicyService(db)
+
+    target_client_id = None
+    if current_user and current_user.role == 'client':
+        from app.models.client import Client
+        client_profile = db.query(Client).filter(Client.user_id == current_user.id).first()
+        if not client_profile:
+            raise HTTPException(status_code=404, detail="Client profile not found for this user")
+        target_client_id = client_profile.id
+
+    overrides = {
+        "vehicle_details": request.vehicle_details,
+        "driver_details": request.driver_details
+    }
+
+    from app.models.company import Company
+    companies = db.query(Company).filter(Company.is_active == True).all()
+
+    results = []
+    for company in companies:
+        match = service.match_eligible_policies(company.id, target_client_id, overrides)
+        if match.get("status") == "success" and match.get("data"):
+            results.append({
+                "company_id": company.id,
+                "company_name": company.name,
+                "company_primary_color": company.primary_color,
+                "recommended_id": match.get("recommended_id"),
+                "policies": match.get("data", [])
+            })
+
+    return {
+        "status": "success",
+        "companies": results,
+        "message": None if results else "No eligible policies found"
+    }

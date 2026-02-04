@@ -45,8 +45,8 @@ import io
 @router.post("/export")
 def export_analytics_report(
     filter_params: AnalyticsFilter,
-    format: str = Query("csv", regex="^(csv|pdf)$"),
-    report_type: str = Query("financial_close", regex="^(financial_close|claims_summary|policies_summary)$"),
+    format: str = Query("csv", pattern="^(csv|pdf)$"),
+    report_type: str = Query("financial_close", pattern="^(financial_close|claims_summary|policies_summary)$"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

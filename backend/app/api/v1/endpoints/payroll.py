@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, desc
 import uuid
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.api.v1.endpoints.auth import get_current_user
 from app.core.database import get_db
@@ -67,7 +68,7 @@ def create_payroll_transaction(
         payment_month=transaction_in.payment_month,
         reference_number=transaction_in.reference_number,
         processed_by=current_user.id,
-        payment_date=datetime.utcnow()
+        payment_date=utcnow()
     )
     
     db.add(new_transaction)

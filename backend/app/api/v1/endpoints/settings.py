@@ -9,6 +9,7 @@ from datetime import datetime
 import os
 import shutil
 from pathlib import Path
+from app.core.time import utcnow
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, require_role
@@ -91,8 +92,8 @@ async def get_company_settings(
             currency="USD",
             timezone="UTC",
             is_active=True,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=utcnow(),
+            updated_at=utcnow(),
             primary_color="#00539F", # Default brand color
             secondary_color="#002D58" # Default brand darker
         )

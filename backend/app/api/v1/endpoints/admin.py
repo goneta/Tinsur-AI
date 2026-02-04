@@ -197,7 +197,7 @@ async def get_recent_activity(
         "activities": activities[:10]
     }
 from app.models.rbac import Role, Permission
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 
 class PermissionBase(BaseModel):
@@ -206,18 +206,14 @@ class PermissionBase(BaseModel):
     action: str
     description: Optional[str] = None
     key: str
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class RoleBase(BaseModel):
     id: str
     name: str
     description: Optional[str] = None
     permissions: List[PermissionBase] = []
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PermissionCreate(BaseModel):
     scope: str
