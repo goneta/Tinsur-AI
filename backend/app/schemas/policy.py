@@ -1,7 +1,7 @@
 """
 Pydantic schemas for policies.
 """
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime, date
 from uuid import UUID
@@ -47,9 +47,7 @@ class PolicyServiceResponse(BaseModel):
     name_en: str
     name_fr: Optional[str]
     price: Decimal # effective price on policy
-    
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PolicyResponse(PolicyBase):
@@ -71,9 +69,7 @@ class PolicyResponse(PolicyBase):
     client_name: str
     created_by_name: str
     # services: List[PolicyServiceResponse] = [] # Commented out for now until strict typed response handling is verified
-    
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PolicyListResponse(BaseModel):
@@ -138,6 +134,4 @@ class EndorsementResponse(EndorsementBase):
     created_by: UUID
     created_at: datetime
     updated_at: datetime
-    
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

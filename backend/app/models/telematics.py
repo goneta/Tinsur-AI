@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -29,7 +30,7 @@ class TelematicsData(Base):
     night_driving_km = Column(Numeric(10, 2))
     safety_score = Column(Numeric(5, 2))
     
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     
     # Relationships
     policy = relationship("Policy")

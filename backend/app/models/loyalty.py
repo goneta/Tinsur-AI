@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -23,8 +24,8 @@ class LoyaltyPoint(Base):
     
     tier = Column(String(50), default='bronze') # 'bronze', 'silver', 'gold', 'platinum'
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     # Relationships
     company = relationship("Company")

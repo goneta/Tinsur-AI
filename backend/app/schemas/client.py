@@ -1,7 +1,7 @@
 """
 Client schemas.
 """
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
 from typing import Optional, List, Dict, Any, Union
 from datetime import datetime, date
 import uuid
@@ -52,8 +52,7 @@ class ClientAutomobileResponse(ClientAutomobileBase):
     client_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ClientHousingBase(BaseModel):
@@ -90,8 +89,7 @@ class ClientHousingResponse(ClientHousingBase):
     client_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ClientHealthBase(BaseModel):
@@ -124,8 +122,7 @@ class ClientHealthResponse(ClientHealthBase):
     client_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ClientLifeBase(BaseModel):
@@ -151,8 +148,7 @@ class ClientLifeResponse(ClientLifeBase):
     client_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ClientDriverBase(BaseModel):
@@ -192,8 +188,7 @@ class ClientDriverResponse(ClientDriverBase):
     client_id: uuid.UUID
     created_at: datetime
     updated_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Main Client Schemas ---
 
@@ -299,13 +294,11 @@ class ClientInDB(ClientBase):
     created_at: datetime
     updated_at: datetime
     
-    @validator("company_ids", pre=True, always=True)
-    def set_company_ids(cls, v, values, **kwargs):
+    @field_validator("company_ids", mode="before")
+    def set_company_ids(cls, v):
         # This is tricky with from_attributes=True if it's a list of models
         return v
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ClientResponse(ClientInDB):

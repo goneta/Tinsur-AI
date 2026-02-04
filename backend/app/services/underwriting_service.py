@@ -7,6 +7,7 @@ from decimal import Decimal
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from sqlalchemy.orm import joinedload
+from app.core.time import utcnow
 
 from app.models.underwriting import UnderwritingReferral
 from app.models.user import User
@@ -87,7 +88,7 @@ class UnderwritingService:
         referral.status = status
         referral.decision_notes = notes
         referral.decided_by_id = decided_by_id
-        referral.decided_at = datetime.utcnow()
+        referral.decided_at = utcnow()
         
         result = None
         # Update quote status
@@ -108,7 +109,7 @@ class UnderwritingService:
                 if status == 'approved':
                     endorsement.status = 'approved'
                     endorsement.approved_by = decided_by_id
-                    endorsement.approved_at = datetime.utcnow()
+                    endorsement.approved_at = utcnow()
                 else:
                     endorsement.status = 'rejected'
                     endorsement.rejection_reason = notes

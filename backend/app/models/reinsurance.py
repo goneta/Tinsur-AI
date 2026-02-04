@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime, date
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -32,8 +33,8 @@ class ReinsuranceTreaty(Base):
     
     status = Column(String(50), default='active') # 'active', 'expired', 'cancelled'
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
 class ReinsuranceCession(Base):
     """
@@ -55,7 +56,7 @@ class ReinsuranceCession(Base):
     
     status = Column(String(50), default='recorded') # 'recorded', 'paid'
     
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
 
 class ReinsuranceRecovery(Base):
     """
@@ -75,4 +76,4 @@ class ReinsuranceRecovery(Base):
     
     status = Column(String(50), default='pending') # 'pending', 'collected'
     
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)

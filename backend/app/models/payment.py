@@ -7,6 +7,7 @@ from sqlalchemy.orm import relationship
 import uuid
 from app.core.guid import GUID
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -41,8 +42,8 @@ class Payment(Base):
     paid_at = Column(DateTime)
     refunded_at = Column(DateTime)
     created_by = Column(GUID(), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     # Relationships
     company = relationship("Company")
@@ -103,7 +104,7 @@ class PaymentTransaction(Base):
     error_message = Column(Text)
     
     # Timestamps
-    initiated_at = Column(DateTime, default=datetime.utcnow)
+    initiated_at = Column(DateTime, default=utcnow)
     completed_at = Column(DateTime)
     
     # Relationships

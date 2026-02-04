@@ -23,6 +23,8 @@ import {
     Gavel,
     Landmark,
     Database,
+    MessageSquare,
+    ClipboardList,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -120,6 +122,14 @@ export const navGroups: NavGroup[] = [
                 href: '/dashboard/claims',
                 icon: AlertCircle,
                 color: 'red',
+            },
+            {
+                id: 'tasks',
+                title: 'Tasks',
+                href: '/dashboard/tasks',
+                icon: ClipboardList,
+                roles: ['super_admin', 'company_admin', 'manager', 'agent'],
+                color: 'emerald',
             },
             {
                 id: 'clients',
@@ -295,6 +305,14 @@ export const navGroups: NavGroup[] = [
                 icon: Share2,
                 roles: ['super_admin', 'company_admin', 'manager'],
                 color: 'violet',
+            },
+            {
+                id: 'internal_chat',
+                title: 'Internal Chat',
+                href: '/dashboard/chat',
+                icon: MessageSquare,
+                roles: ['super_admin', 'company_admin', 'manager', 'agent'],
+                color: 'blue',
             },
             {
                 id: 'loyalty',

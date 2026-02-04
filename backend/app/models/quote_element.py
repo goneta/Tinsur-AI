@@ -7,6 +7,7 @@ import uuid
 from app.core.guid import GUID
 from datetime import datetime
 from app.core.database import Base
+from app.core.time import utcnow
 
 class QuoteElement(Base):
     """
@@ -30,8 +31,8 @@ class QuoteElement(Base):
     description = Column(String(255))
     is_active = Column(Boolean, default=True)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
     # Relationships
     company = relationship("Company")

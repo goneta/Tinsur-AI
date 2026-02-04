@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, func
 from datetime import datetime, date, timedelta
 from decimal import Decimal
+from app.core.time import utcnow
 
 from app.models.premium_schedule import PremiumSchedule
 
@@ -88,7 +89,7 @@ class PremiumScheduleRepository:
         if schedule:
             schedule.status = 'paid'
             schedule.payment_id = payment_id
-            schedule.paid_at = datetime.utcnow()
+            schedule.paid_at = utcnow()
             schedule.paid_amount = amount
             return self.update(schedule)
         return None

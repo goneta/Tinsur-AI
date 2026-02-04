@@ -12,6 +12,7 @@ import hashlib
 from app.models.company import Company
 from app.models.system_settings import SystemSettings, AiUsageLog
 from app.core.config import settings
+from app.core.time import utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +136,7 @@ class AiService:
                 "damage_description": f"AI detection reveals {severity.lower()} impact damage. Primary affected areas include body panels and light clusters. Structural integrity seems { 'affected' if severity == 'High' else 'intact' }.",
                 "suggested_estimate": estimates[severity],
                 "confidence_score": 0.85 + (random.random() * 0.1),
-                "analyzed_at": datetime.utcnow().isoformat()
+                "analyzed_at": utcnow().isoformat()
             }
             
         except Exception as e:
@@ -304,7 +305,7 @@ class AiService:
 
         # Final Score Aggregation
         claim.fraud_score = fraud_score
-        claim.fraud_details = {"risk_factors": risk_factors, "last_analyzed": datetime.utcnow().isoformat()}
+        claim.fraud_details = {"risk_factors": risk_factors, "last_analyzed": utcnow().isoformat()}
         self.db.commit()
         
         return {

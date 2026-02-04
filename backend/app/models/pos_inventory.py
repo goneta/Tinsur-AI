@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -22,8 +23,8 @@ class POSInventory(Base):
     quantity = Column(Integer, default=0)
     low_stock_threshold = Column(Integer, default=10)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     # Relationships
     pos_location = relationship("POSLocation", back_populates="inventory")
@@ -46,7 +47,7 @@ class POSInventoryTransaction(Base):
     
     notes = Column(String(500))
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     
     # Relationships
     inventory_item = relationship("POSInventory", back_populates="transactions")

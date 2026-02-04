@@ -5,6 +5,7 @@ from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Numeric, D
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 from app.core.guid import GUID
@@ -51,8 +52,8 @@ class ClientAutomobile(Base):
     no_claim_bonus_status = Column(String(50), nullable=True)
     previous_insurer = Column(String(100), nullable=True)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     client = relationship("Client", back_populates="automobile_details")
 
@@ -89,8 +90,8 @@ class ClientHousing(Base):
     ownership_status = Column(String(50)) # owner, tenant
     mortgage_info = Column(String(255))
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     client = relationship("Client", back_populates="housing_details")
 
@@ -122,8 +123,8 @@ class ClientHealth(Base):
     maternity_coverage = Column(Boolean, default=False)
     dental_optical_coverage = Column(Boolean, default=False)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     client = relationship("Client", back_populates="health_details")
 
@@ -150,8 +151,8 @@ class ClientLife(Base):
     # Beneficiaries
     beneficiaries = Column(Text) # JSON list of objects {name, relation, percentage}
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     client = relationship("Client", back_populates="life_details")
 
@@ -190,7 +191,7 @@ class ClientDriver(Base):
     is_main_driver = Column(Boolean, default=False)
     driving_license_url = Column(String(500), nullable=True)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     client = relationship("Client", back_populates="drivers")

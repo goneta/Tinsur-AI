@@ -5,6 +5,7 @@ from sqlalchemy import Column, String, DateTime, Float, JSON
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -18,7 +19,7 @@ class SystemSettings(Base):
     value = Column(JSON, default={}) # Stores keys like {"google_api_key": "...", "openai_key": "..."}
     description = Column(String(255))
     
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
     def __repr__(self):
         return f"<SystemSettings key={self.key}>"
@@ -36,7 +37,7 @@ class AiUsageLog(Base):
     credits_consumed = Column(Float, default=0.0)
     request_payload = Column(JSON, nullable=True) # Optional: track what was asked
     
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
 
     def __repr__(self):
         return f"<AiUsageLog company={self.company_id} user={self.user_id} credits={self.credits_consumed}>"

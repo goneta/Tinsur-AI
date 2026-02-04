@@ -5,6 +5,7 @@ from sqlalchemy import Column, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -18,7 +19,7 @@ class ApiKey(Base):
     name = Column(String(100), nullable=False)      # e.g., "OCR Agent Key"
     agent_id = Column(String(100), nullable=True)   # The ID of the agent this key belongs to
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     expires_at = Column(DateTime, nullable=True)
     last_used_at = Column(DateTime, nullable=True)
     

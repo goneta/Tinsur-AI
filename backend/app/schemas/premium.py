@@ -45,9 +45,7 @@ class PremiumScheduleResponse(PremiumScheduleBase):
     created_at: datetime
     updated_at: datetime
     is_overdue: bool
-    
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PremiumScheduleListResponse(BaseModel):

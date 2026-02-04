@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime
 from app.core.database import Base
 from app.core.guid import GUID
+from app.core.time import utcnow
 
 class Referral(Base):
     """Referral model."""
@@ -24,7 +25,7 @@ class Referral(Base):
     reward_paid = Column(Boolean, default=False)
     
     converted_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     
     # Relationships
     company = relationship("Company")

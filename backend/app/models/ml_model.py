@@ -5,6 +5,7 @@ from sqlalchemy import Column, String, Boolean, DateTime, Numeric, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -23,7 +24,7 @@ class MLModel(Base):
     deployed_at = Column(DateTime)
     
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     
     def __repr__(self):
         return f"<MLModel {self.model_name} v{self.model_version}>"

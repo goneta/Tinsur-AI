@@ -7,6 +7,7 @@ from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
 from app.core.database import Base
+from app.core.time import utcnow
 
 class ShareCode(Base):
     """ShareCode model for generating secure sharing codes."""
@@ -29,7 +30,7 @@ class ShareCode(Base):
     # For now, we'll generate it on the fly in the endpoint response.
     
     expires_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     
     # Relationships
     creator = relationship("User", backref="share_codes")

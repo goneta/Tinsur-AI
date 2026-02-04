@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -27,7 +28,7 @@ class PolicyArchive(Base):
     document_url = Column(String(500)) # Link to the file at the time of archiving
     archive_version = Column(Integer, default=1) # Increment for endorsements/renewals
     
-    archived_at = Column(DateTime, default=datetime.utcnow)
+    archived_at = Column(DateTime, default=utcnow)
     
     # Relationships
     company = relationship("Company")

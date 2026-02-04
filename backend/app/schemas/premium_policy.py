@@ -76,6 +76,18 @@ class PremiumPolicyTypeListResponse(BaseModel):
     page: int
     page_size: int
 
+class PremiumPolicyGlobalMatchItem(BaseModel):
+    company_id: UUID
+    company_name: str
+    company_primary_color: Optional[str] = None
+    recommended_id: Optional[UUID] = None
+    policies: List[PremiumPolicyTypeResponse] = []
+
+class PremiumPolicyGlobalMatchResponse(BaseModel):
+    status: str
+    message: Optional[str] = None
+    companies: List[PremiumPolicyGlobalMatchItem] = []
+
 class PremiumPolicyMatchResponse(BaseModel):
     status: str
     message: Optional[str] = None

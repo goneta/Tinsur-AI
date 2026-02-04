@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -23,7 +24,7 @@ class PayrollTransaction(Base):
     # Payment Details
     amount = Column(Numeric(15, 2), nullable=False)
     currency = Column(String(3), default='XOF')
-    payment_date = Column(DateTime, default=datetime.utcnow)
+    payment_date = Column(DateTime, default=utcnow)
     payment_month = Column(String(20)) # e.g., "2024-12" or "December 2024"
     
     payment_method = Column(String(50)) # 'mobile_money', 'bank_transfer'
@@ -52,8 +53,8 @@ class PayrollTransaction(Base):
     
     # Audit
     processed_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
     # Relationships
     employee = relationship("User", foreign_keys=[employee_id], backref="payroll_received")

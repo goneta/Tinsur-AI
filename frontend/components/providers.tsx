@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { ThemeProvider } from "./theme-provider";
 import { LanguageProvider } from "../contexts/language-context";
@@ -15,6 +15,16 @@ interface ProvidersProps {
 }
 
 export function Providers({ children, googleClientId }: ProvidersProps) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) {
+        return <div className="min-h-screen bg-background" />;
+    }
+
     return (
         <GoogleOAuthProvider clientId={googleClientId}>
             <ThemeProvider defaultTheme="light" storageKey="insurance-saas-theme">

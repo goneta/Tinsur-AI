@@ -7,6 +7,7 @@ from sqlalchemy.orm import relationship
 import uuid
 from app.core.guid import GUID
 from datetime import datetime
+from app.core.time import utcnow, utcnow_date
 
 from app.core.database import Base
 
@@ -25,7 +26,7 @@ class Endorsement(Base):
     
     # Dates
     effective_date = Column(Date, nullable=False)
-    issued_date = Column(Date, default=datetime.utcnow)
+    issued_date = Column(Date, default=utcnow_date)
     
     # Changes
     changes = Column(JSON, default={})  # Detailed changes made
@@ -48,8 +49,8 @@ class Endorsement(Base):
     
     # Audit
     created_by = Column(GUID(), ForeignKey("users.id"))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     # Relationships
     company = relationship("Company")

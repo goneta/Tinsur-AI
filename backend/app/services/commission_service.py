@@ -5,6 +5,7 @@ from typing import Optional, List
 from uuid import UUID
 from decimal import Decimal
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.models.commission import Commission
 from app.models.policy import Policy
@@ -56,7 +57,7 @@ class CommissionService:
             return None
             
         commission.status = 'paid'
-        commission.paid_at = datetime.utcnow()
+        commission.paid_at = utcnow()
         return self.commission_repo.update(commission)
     
     def get_agent_commissions(self, company_id: UUID, agent_id: UUID) -> List[Commission]:

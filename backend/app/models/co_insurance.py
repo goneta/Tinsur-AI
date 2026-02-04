@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship
 import uuid
 from app.core.guid import GUID
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -19,7 +20,7 @@ class CoInsuranceShare(Base):
     share_percentage = Column(Numeric(5, 2), nullable=False) # e.g. 30.00%
     fee_percentage = Column(Numeric(5, 2), default=0) # Management fee paid to lead insurer
     
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     notes = Column(Text)
     
     # Relationships

@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, func
 from datetime import datetime, date
+from app.core.time import utcnow
 
 from app.models.payment import Payment, PaymentTransaction
 
@@ -96,9 +97,9 @@ class PaymentRepository:
             if metadata:
                 payment.metadata.update(metadata)
             if status == 'completed':
-                payment.paid_at = datetime.utcnow()
+                payment.paid_at = utcnow()
             elif status == 'refunded':
-                payment.refunded_at = datetime.utcnow()
+                payment.refunded_at = utcnow()
             return self.update(payment)
         return None
     

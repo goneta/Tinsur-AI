@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -26,7 +27,7 @@ class Account(Base):
     is_active = Column(Boolean, default=True)
     description = Column(Text)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     
     # Relationships
     company = relationship("Company")
@@ -45,13 +46,13 @@ class JournalEntry(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     
-    entry_date = Column(DateTime, default=datetime.utcnow)
+    entry_date = Column(DateTime, default=utcnow)
     description = Column(String(500))
     reference = Column(String(100)) # e.g., Invoice # or Payroll ID
     
     # Audit trail
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     
     # Relationships
     company = relationship("Company")
@@ -76,7 +77,7 @@ class LedgerEntry(Base):
     debit = Column(Numeric(15, 2), default=0)
     credit = Column(Numeric(15, 2), default=0)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     
     # Relationships
     journal_entry = relationship("JournalEntry", back_populates="entries")

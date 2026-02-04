@@ -2,10 +2,22 @@
 Test configuration and fixtures.
 """
 import pytest
+import warnings
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+
+warnings.filterwarnings(
+    "ignore",
+    message="Accessing argon2.__version__ is deprecated*",
+    category=DeprecationWarning,
+)
+warnings.filterwarnings(
+    "ignore",
+    category=DeprecationWarning,
+    module=r"passlib\\.handlers\\.argon2",
+)
 
 from app.main import app
 from app.core.database import Base, get_db

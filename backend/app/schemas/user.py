@@ -1,7 +1,7 @@
 """
 User schemas.
 """
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 from typing import Optional
 from datetime import datetime
 import uuid
@@ -50,9 +50,7 @@ class UserInDB(UserBase):
     primary_color: Optional[str] = None
     secondary_color: Optional[str] = None
     company_logo_url: Optional[str] = None
-    
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserResponse(UserInDB):

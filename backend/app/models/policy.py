@@ -7,6 +7,7 @@ import uuid
 from app.core.guid import GUID
 import uuid
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 from app.models.regulatory import IFRS17Group
@@ -53,8 +54,8 @@ class Policy(Base):
     # Audit
     created_by = Column(GUID(), ForeignKey("users.id"))
     sales_agent_id = Column(GUID(), ForeignKey("users.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     # Relationships
     company = relationship("Company")

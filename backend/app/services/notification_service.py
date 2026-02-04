@@ -4,6 +4,7 @@ Notification service for sending notifications.
 from typing import List, Optional, Dict, Any
 from uuid import UUID
 from datetime import datetime
+from app.core.time import utcnow
 
 
 from app.models.notification import Notification
@@ -268,7 +269,7 @@ class NotificationService:
         print(f"Sending email to {notification.recipient_email}: {notification.subject}")
         
         notification.status = 'sent'
-        notification.sent_at = datetime.utcnow()
+        notification.sent_at = utcnow()
         notification.external_id = f"email-{datetime.now().timestamp()}"
         self.db.commit()
         
@@ -280,7 +281,7 @@ class NotificationService:
         print(f"Sending SMS to {notification.recipient_phone}")
         
         notification.status = 'sent'
-        notification.sent_at = datetime.utcnow()
+        notification.sent_at = utcnow()
         notification.external_id = f"sms-{datetime.now().timestamp()}"
         self.db.commit()
         
@@ -292,7 +293,7 @@ class NotificationService:
         print(f"Sending WhatsApp to {notification.recipient_phone}")
         
         notification.status = 'sent'
-        notification.sent_at = datetime.utcnow()
+        notification.sent_at = utcnow()
         notification.external_id = f"wa-{datetime.now().timestamp()}"
         self.db.commit()
         
@@ -302,7 +303,7 @@ class NotificationService:
         """Send push notification. (Placeholder)"""
         # In production, use Firebase Cloud Messaging or similar
         notification.status = 'sent'
-        notification.sent_at = datetime.utcnow()
+        notification.sent_at = utcnow()
         self.db.commit()
         
         return True

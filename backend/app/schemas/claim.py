@@ -2,7 +2,7 @@
 Pydantic schemas for claims.
 """
 from typing import Optional, List, Any, Dict
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import date, datetime
 from uuid import UUID
 
@@ -42,6 +42,4 @@ class ClaimResponse(ClaimBase):
     ai_assessment: Optional[Dict[str, Any]] = None
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

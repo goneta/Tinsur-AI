@@ -7,6 +7,7 @@ from decimal import Decimal
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from app.core.time import utcnow
 
 from app.models.client import Client
 from app.models.policy import Policy
@@ -36,7 +37,7 @@ class MLService:
             
         # 1. Months since first policy
         first_policy = min(p.created_at for p in policies)
-        months_active = (datetime.utcnow() - first_policy).days / 30
+        months_active = (utcnow() - first_policy).days / 30
         
         # 2. Number of claims
         claims_count = self.db.query(Claim).filter(Claim.client_id == client_id).count()
@@ -47,7 +48,7 @@ class MLService:
         overdue_count = 0
         for s in schedules:
             if s.status == 'overdue':
-                overdue_days += (datetime.utcnow().date() - s.due_date).days
+                overdue_days += (utcnow().date() - s.due_date).days
                 overdue_count += 1
             elif s.status == 'paid' and s.paid_at and s.paid_at.date() > s.due_date:
                 overdue_days += (s.paid_at.date() - s.due_date).days

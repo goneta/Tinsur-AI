@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -31,8 +32,8 @@ class Ticket(Base):
     resolved_at = Column(DateTime, nullable=True)
     sla_breach_at = Column(DateTime, nullable=True)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     # Relationships
     company = relationship("Company")
@@ -54,7 +55,7 @@ class TicketMessage(Base):
     message = Column(Text, nullable=False)
     is_internal = Column(Boolean, default=False) 
     
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     
     # Relationships
     ticket = relationship("Ticket", backref="messages")

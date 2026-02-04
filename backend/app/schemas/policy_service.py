@@ -1,6 +1,6 @@
 from typing import Optional, List
 from uuid import UUID
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from decimal import Decimal
 
 # Shared properties
@@ -24,9 +24,7 @@ class PolicyServiceUpdate(PolicyServiceBase):
 class PolicyServiceInDBBase(PolicyServiceBase):
     id: UUID
     company_id: UUID
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Properties to return to client
 class PolicyService(PolicyServiceInDBBase):

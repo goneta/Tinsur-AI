@@ -7,6 +7,7 @@ import uuid
 from app.core.guid import GUID
 import uuid
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 from app.models.policy_service import PolicyService
@@ -38,8 +39,8 @@ class PremiumPolicyCriteria(Base):
     field_name = Column(String(100), nullable=False)  # e.g., 'car_age', 'accidents_not_fault'
     operator = Column(String(20), nullable=False)    # e.g., '<', '>', '=', 'between'
     value = Column(String(255), nullable=False)      # e.g., '5', '0,1'
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
     # Relationships
     company = relationship("Company")
@@ -58,8 +59,8 @@ class PremiumPolicyType(Base):
     tagline = Column(String(255))
     is_featured = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
     # Relationships
     company = relationship("Company")

@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 import uuid
 
@@ -10,8 +10,7 @@ class PermissionBase(BaseModel):
 
 class PermissionSchema(PermissionBase):
     id: uuid.UUID
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class RoleBase(BaseModel):
     name: str
@@ -27,5 +26,4 @@ class RoleUpdate(BaseModel):
 class RoleSchema(RoleBase):
     id: uuid.UUID
     permissions: List[PermissionSchema] = []
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

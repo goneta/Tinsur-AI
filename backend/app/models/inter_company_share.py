@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime
 from app.core.guid import GUID
 from app.core.database import Base
+from app.core.time import utcnow
 # Client and User imports are usually handled by string reference in relationships to avoid circular imports, 
 
 class InterCompanyShare(Base):
@@ -52,7 +53,7 @@ class InterCompanyShare(Base):
     is_revoked = Column(Boolean, default=False)
     notes = Column(String(500), nullable=True) # Description or memo
     
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     
     # Relationships
     from_company = relationship("Company", foreign_keys=[from_company_id])

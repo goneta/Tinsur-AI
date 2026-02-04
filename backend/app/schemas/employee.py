@@ -1,7 +1,7 @@
 """
 Employee and Payroll schemas.
 """
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 from typing import Optional, List
 from datetime import datetime
 import uuid
@@ -52,24 +52,18 @@ class EmployeeUpdate(BaseModel):
 class EmployeeProfileResponse(EmployeeProfileBase):
     id: uuid.UUID
     user_id: uuid.UUID
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class POSLocationSummary(BaseModel):
     id: uuid.UUID
     name: str
     city: Optional[str] = None
-    
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class EmployeeResponse(UserResponse):
     employee_profile: Optional[EmployeeProfileResponse] = None
     pos_location: Optional[POSLocationSummary] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # Payroll Schemas
 
@@ -111,9 +105,7 @@ class PayrollTransactionResponse(PayrollTransactionBase):
     
     # Include employee name for display convenience
     employee_name: Optional[str] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PayrollGenerateRequest(BaseModel):
     month: str # YYYY-MM

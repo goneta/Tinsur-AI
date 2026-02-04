@@ -1,7 +1,7 @@
 """
 Pydantic schemas for API Key management.
 """
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
 from uuid import UUID
@@ -25,9 +25,7 @@ class ApiKeyResponse(ApiKeyBase):
     is_active: bool
     created_at: datetime
     last_used_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ApiKeyCreatedResponse(ApiKeyResponse):
     plain_text_key: str  # Only returned once on creation

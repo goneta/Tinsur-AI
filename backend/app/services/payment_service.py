@@ -7,6 +7,7 @@ from decimal import Decimal
 from datetime import datetime
 from sqlalchemy.orm import Session
 import random
+from app.core.time import utcnow
 
 from app.models.payment import Payment, PaymentTransaction
 from app.models.co_insurance import CoInsuranceShare
@@ -105,7 +106,7 @@ class PaymentService:
             
             if result.get('status') == 'success':
                 payment.status = 'completed'
-                payment.paid_at = datetime.utcnow()
+                payment.paid_at = utcnow()
                 payment.reference_number = result.get('reference_number')
                 
                 # Check if this is a credit top-up
@@ -273,7 +274,7 @@ class PaymentService:
         
         # In production, this would call the gateway's refund API
         payment.status = 'refunded'
-        payment.refunded_at = datetime.utcnow()
+        payment.refunded_at = utcnow()
         payment.metadata['refund_reason'] = reason
         payment.metadata['refund_amount'] = str(refund_amount)
         
@@ -303,7 +304,7 @@ class PaymentService:
         
         if status == 'completed' or status == 'success':
             payment.status = 'completed'
-            payment.paid_at = datetime.utcnow()
+            payment.paid_at = utcnow()
         elif status == 'failed':
             payment.status = 'failed'
             payment.failure_reason = payload.get('error_message')

@@ -2,11 +2,10 @@
 Regulatory models for IFRS 17 and Solvency II.
 """
 from sqlalchemy import Column, String, DateTime, ForeignKey, Numeric, JSON, Date
-from sqlalchemy import Column, String, DateTime, ForeignKey, Numeric, JSON, Date
 from sqlalchemy.orm import relationship
 import uuid
 from app.core.guid import GUID
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.database import Base
 
@@ -33,8 +32,8 @@ class IFRS17Group(Base):
     
     status = Column(String(50), default='active')
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 class RegulatoryMetricSnapshot(Base):
     """
@@ -46,7 +45,7 @@ class RegulatoryMetricSnapshot(Base):
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     
-    snapshot_date = Column(Date, default=datetime.utcnow().date)
+    snapshot_date = Column(Date, default=lambda: datetime.now(timezone.utc).date())
     
     # Solvency II Metrics
     eligible_own_funds = Column(Numeric(15, 2), nullable=False) # Capital available
@@ -60,4 +59,4 @@ class RegulatoryMetricSnapshot(Base):
     
     details = Column(JSON, default={}) # Detailed breakdown of calculations
     
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

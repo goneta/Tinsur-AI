@@ -112,6 +112,7 @@ class PremiumPolicyService:
 
         # 5. Matching Logic
         eligible_policies = []
+        missing_fields = set()
         
         for policy in policies:
             is_eligible = True
@@ -122,6 +123,7 @@ class PremiumPolicyService:
                 
                 # Double check if value is missing for this specific policy's specific criteria
                 if client_value is None:
+                     missing_fields.add(criteria.field_name)
                      is_eligible = False
                      break
                 
@@ -140,6 +142,14 @@ class PremiumPolicyService:
             eligible_policies.sort(key=lambda p: p.price)
             recommended_id = eligible_policies[0].id
 
+        if not eligible_policies and missing_fields:
+            return {
+                "status": "missing_info",
+                "message": "Client information missing for eligibility check.",
+                "missing_fields": list(missing_fields),
+                "data": []
+            }
+
         return {
             "status": "success",
             "data": eligible_policies,
@@ -149,13 +159,15 @@ class PremiumPolicyService:
     def _evaluate_rule(self, actual_value: Any, operator: str, target_value: str) -> bool:
         """Helper to evaluate single rule."""
         try:
-            # Convert target to same type as actual if possible, usually int/float
-            # Currently assuming numeric comparisons for simpler implementation
-            
-            # Handle list/in operator
+            # Handle list/in operator (string comparison)
             if operator == 'in':
                 options = [x.strip() for x in target_value.split(',')]
                 return str(actual_value) in options
+
+            # Handle between operator (numeric)
+            if operator == 'between':
+                low, high = map(float, target_value.split(','))
+                return low <= float(actual_value) <= high
 
             val_num = float(actual_value)
             target_num = float(target_value)

@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship
 import uuid
 from app.core.guid import GUID
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -16,7 +17,7 @@ client_company = Table(
     Base.metadata,
     Column('client_id', GUID(), ForeignKey('clients.id', ondelete='CASCADE'), primary_key=True),
     Column('company_id', GUID(), ForeignKey('companies.id', ondelete='CASCADE'), primary_key=True),
-    Column('created_at', DateTime, default=datetime.utcnow)
+    Column('created_at', DateTime, default=utcnow)
 )
 
 
@@ -75,8 +76,8 @@ class Client(Base):
     compliance_notes = Column(Text, nullable=True)
     status = Column(String(50), default='active')  # 'active', 'inactive', 'suspended'
     created_by = Column(GUID(), ForeignKey("users.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     # Relationships
     # Many-to-many with companies via junction table

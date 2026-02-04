@@ -14,6 +14,7 @@ from app.models.payment import Payment
 from app.models.policy_type import PolicyType
 from app.models.client_details import ClientAutomobile
 from app.core.security import get_password_hash
+from app.core.time import utcnow
 
 # Helper for random strings
 def random_string(length=10):
@@ -231,7 +232,7 @@ def seed_data():
                     final_premium=premium,
                     status=status,
                     created_by=admin.id,
-                    created_at=datetime.utcnow() - timedelta(days=random.randint(1, 60))
+                    created_at=utcnow() - timedelta(days=random.randint(1, 60))
                 )
                 db.add(quote)
                 db.commit()
@@ -284,7 +285,7 @@ def seed_data():
                         amount=premium / 12,
                         status="completed",
                         payment_method="orange_money",
-                        paid_at=datetime.utcnow() - timedelta(days=random.randint(1, 10))
+                        paid_at=utcnow() - timedelta(days=random.randint(1, 10))
                     )
                     db.add(payment)
 

@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -19,8 +20,8 @@ class AgentMemory(Base):
     memory_key = Column(String(255), nullable=False) # Unique key for the memory (e.g., 'user_preference')
     content = Column(Text, nullable=False)
     metadata_json = Column(JSON, nullable=True) # Renamed to avoid reserved words if any, though JSON is fine
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
     # Relationship
     user = relationship("User")

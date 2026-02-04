@@ -193,7 +193,7 @@ class AuthService:
         print("DEBUG: Constructing response dict")
         try:
             res = {
-                **tokens.dict(),
+                **tokens.model_dump(),
                 "user": {
                     "id": str(user.id),
                     "email": user.email,
@@ -220,7 +220,7 @@ class AuthService:
         """Helper to create tokens and return standard response for a user already found/created."""
         tokens = self.create_tokens(user)
         return {
-            **tokens.dict(),
+            **tokens.model_dump(),
             "user": {
                 "id": str(user.id),
                 "email": user.email,

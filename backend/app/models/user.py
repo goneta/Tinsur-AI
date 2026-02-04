@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship
 import uuid
 from app.core.guid import GUID
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -22,7 +23,11 @@ class User(Base):
     last_name = Column(String(100))
     phone = Column(String(50))
     user_type = Column(String(50), nullable=False)  # 'super_admin', 'company_admin', 'manager', 'agent', 'client'
-    pos_location_id = Column(GUID(), ForeignKey("pos_locations.id"), nullable=True)
+    pos_location_id = Column(
+        GUID(),
+        ForeignKey("pos_locations.id", use_alter=True, name="fk_users_pos_location_id"),
+        nullable=True,
+    )
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
     mfa_enabled = Column(Boolean, default=False)
@@ -34,8 +39,8 @@ class User(Base):
     underwriting_limit = Column(Numeric(15, 2), default=0.00)
     last_login = Column(DateTime)
     created_by = Column(GUID(), ForeignKey("users.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     # Relationships
     company = relationship("Company", back_populates="users")
