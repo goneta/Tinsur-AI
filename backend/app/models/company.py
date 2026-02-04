@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship
 import uuid
 from app.core.guid import GUID
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -41,7 +42,9 @@ class Company(Base):
 
     # New Mandatory Fees (TVA & Admin)
     government_tax_percent = Column(Float, default=0.0)
-    admin_fee = Column(Numeric(15, 2), default=0.0)
+    admin_fee = Column(Numeric(15, 2), default=0.0) # Fixed admin fee (deprecated in favor of percent?)
+    admin_fee_percent = Column(Float, default=0.0)
+    admin_discount_percent = Column(Float, default=0.0)
     
     is_active = Column(Boolean, default=True)
     
@@ -61,8 +64,8 @@ class Company(Base):
     ai_api_key_encrypted = Column(String(500), nullable=True) # For BYOK Plan
     ai_credits_balance = Column(Float, default=100.0) # For CREDIT Plan
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     # Relationships
     users = relationship("User", back_populates="company", cascade="all, delete-orphan")

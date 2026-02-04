@@ -1,7 +1,7 @@
 """
 Pydantic schemas for Company settings.
 """
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
@@ -45,6 +45,8 @@ class CompanyResponse(BaseModel):
     # Mandatory Fees
     government_tax_percent: Optional[float] = 0.0
     admin_fee: Optional[float] = 0.0
+    admin_fee_percent: Optional[float] = 0.0
+    admin_discount_percent: Optional[float] = 0.0
     
     currency: str = "USD"
     country: Optional[str] = None
@@ -52,9 +54,7 @@ class CompanyResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CompanyUpdate(BaseModel):
@@ -75,12 +75,12 @@ class CompanyUpdate(BaseModel):
     # Mandatory Fees
     government_tax_percent: Optional[float] = None
     admin_fee: Optional[float] = None
+    admin_fee_percent: Optional[float] = None
+    admin_discount_percent: Optional[float] = None
 
     primary_color: Optional[str] = Field(None, max_length=10)
     secondary_color: Optional[str] = Field(None, max_length=10)
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CompanyCreate(BaseModel):
@@ -94,3 +94,11 @@ class CompanyCreate(BaseModel):
     currency: str = Field(default="USD", max_length=10)
     country: Optional[str] = Field(None, max_length=100)
     timezone: str = Field(default="UTC", max_length=50)
+    
+    # Financial defaults
+    apr_percent: float = 0.0
+    arrangement_fee: float = 0.0
+    extra_fee: float = 0.0
+    government_tax_percent: float = 0.0
+    admin_fee_percent: float = 0.0
+    admin_discount_percent: float = 0.0
