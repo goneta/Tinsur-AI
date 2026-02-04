@@ -5,6 +5,7 @@ from starlette.responses import JSONResponse
 import os
 import hashlib
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import SessionLocal
 from app.models.api_keys import ApiKey
@@ -51,7 +52,7 @@ class AgentAuthMiddleware(BaseHTTPMiddleware):
             
             if db_key:
                 # Update last used timestamp
-                db_key.last_used_at = datetime.utcnow()
+                db_key.last_used_at = utcnow()
                 db.commit()
                 return await call_next(request)
         except Exception as e:

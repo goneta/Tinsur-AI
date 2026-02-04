@@ -9,6 +9,7 @@ import uuid
 from jose import JWTError
 from pydantic import ValidationError
 from datetime import datetime
+from app.core.time import utcnow
 
 from app.core.database import get_db
 from app.core.security import decode_token
@@ -55,7 +56,7 @@ async def get_current_user(
         print(msg)
         try:
             with open("auth_error.log", "a") as f:
-                f.write(f"{datetime.utcnow()} - {msg}\n")
+                f.write(f"{utcnow()} - {msg}\n")
         except:
             pass
         raise credentials_exception
@@ -78,7 +79,7 @@ async def get_current_user(
         print(msg)
         try:
             with open("auth_error.log", "a") as f:
-                f.write(f"{datetime.utcnow()} - {msg}\n")
+                f.write(f"{utcnow()} - {msg}\n")
         except:
             pass
         raise credentials_exception

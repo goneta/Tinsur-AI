@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 import os
 import logging
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
 # Explicitly load .env files from potential locations (Backend root and Project root)
@@ -28,13 +29,32 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan handler."""
+    # Ensure all models are registered
+    import app.models
+    # Create database tables
+    Base.metadata.create_all(bind=engine)
+
+    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
+    print(f"DEBUG_CHECK: DATABASE_URL={settings.DATABASE_URL}")
+    logger.info(f"Environment: {settings.ENVIRONMENT}")
+    logger.info("Application started successfully")
+    try:
+        yield
+    finally:
+        logger.info("Shutting down application")
+
+
 # Create FastAPI app
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description="Multi-tenant Insurance Management SaaS Platform",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # Configure CORS (MUST be before other middleware)
@@ -63,25 +83,6 @@ if not os.path.exists(UPLOADS_DIR):
     os.makedirs(UPLOADS_DIR)
     
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
-
-@app.on_event("startup")
-async def startup_event():
-    """Run on application startup."""
-    # Ensure all models are registered
-    import app.models
-    # Create database tables
-    Base.metadata.create_all(bind=engine)
-    
-    logger.info(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
-    print(f"DEBUG_CHECK: DATABASE_URL={settings.DATABASE_URL}")
-    logger.info(f"Environment: {settings.ENVIRONMENT}")
-    logger.info("Application started successfully")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Run on application shutdown."""
-    logger.info("Shutting down application")
 
 
 @app.get("/")

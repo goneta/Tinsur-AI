@@ -19,18 +19,14 @@ class PermissionBase(BaseModel):
     action: str
     description: str | None = None
     key: str
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class RoleBase(BaseModel):
     id: str
     name: str
     description: str | None = None
     permissions: List[PermissionBase] = []
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PermissionCreate(BaseModel):
     scope: str
