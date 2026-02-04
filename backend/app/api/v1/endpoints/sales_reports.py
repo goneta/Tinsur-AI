@@ -6,11 +6,9 @@ from datetime import datetime, timedelta
 from uuid import UUID
 
 from app.core import dependencies as deps
-from app.models.policy import Policy
-from app.models.quote import Quote
+from app.models.sales import SalesTransaction
 from app.models.pos_location import POSLocation
 from app.models.user import User
-from app.core.database import Base
 
 router = APIRouter()
 
@@ -22,15 +20,15 @@ def get_sales_summary(
     current_user: User = Depends(deps.get_current_active_user),
 ):
     """Get sales summary (total volume, count) within a date range."""
-    query = db.query(Policy).filter(Policy.company_id == current_user.company_id)
+    query = db.query(SalesTransaction).filter(SalesTransaction.company_id == current_user.company_id)
     
     if start_date:
-        query = query.filter(Policy.created_at >= start_date)
+        query = query.filter(SalesTransaction.created_at >= start_date)
     if end_date:
-        query = query.filter(Policy.created_at <= end_date)
+        query = query.filter(SalesTransaction.created_at <= end_date)
         
     total_sales = query.count()
-    total_revenue = query.with_entities(func.sum(Policy.premium_amount)).scalar() or 0
+    total_revenue = query.with_entities(func.sum(SalesTransaction.sale_amount)).scalar() or 0
     
     return {
         "total_sales": total_sales,
@@ -46,15 +44,15 @@ def get_sales_by_channel(
 ):
     """Get sales breakdown by channel."""
     results = db.query(
-        Policy.sale_channel,
-        func.count(Policy.id).label("count"),
-        func.sum(Policy.premium_amount).label("revenue")
+        SalesTransaction.channel,
+        func.count(SalesTransaction.id).label("count"),
+        func.sum(SalesTransaction.sale_amount).label("revenue")
     ).filter(
-        Policy.company_id == current_user.company_id
-    ).group_by(Policy.sale_channel).all()
+        SalesTransaction.company_id == current_user.company_id
+    ).group_by(SalesTransaction.channel).all()
     
     return [
-        {"channel": r.sale_channel, "count": r.count, "revenue": r.revenue or 0}
+        {"channel": r.channel, "count": r.count, "revenue": r.revenue or 0}
         for r in results
     ]
 
@@ -66,12 +64,12 @@ def get_sales_by_pos(
     """Get sales performance by POS location."""
     results = db.query(
         POSLocation.name,
-        func.count(Policy.id).label("count"),
-        func.sum(Policy.premium_amount).label("revenue")
+        func.count(SalesTransaction.id).label("count"),
+        func.sum(SalesTransaction.sale_amount).label("revenue")
     ).join(
-        Policy, Policy.pos_location_id == POSLocation.id
+        SalesTransaction, SalesTransaction.pos_location_id == POSLocation.id
     ).filter(
-        Policy.company_id == current_user.company_id
+        SalesTransaction.company_id == current_user.company_id
     ).group_by(POSLocation.name).order_by(desc("revenue")).all()
     
     return [
@@ -90,12 +88,12 @@ def get_sales_leaderboard(
     results = db.query(
         User.first_name,
         User.last_name,
-        func.count(Policy.id).label("count"),
-        func.sum(Policy.premium_amount).label("revenue")
+        func.count(SalesTransaction.id).label("count"),
+        func.sum(SalesTransaction.sale_amount).label("revenue")
     ).join(
-        Policy, Policy.sales_agent_id == User.id
+        SalesTransaction, SalesTransaction.employee_id == User.id
     ).filter(
-        Policy.company_id == current_user.company_id,
+        SalesTransaction.company_id == current_user.company_id,
         User.role.in_(['agent', 'manager'])
     ).group_by(User.id).order_by(desc("revenue")).limit(limit).all()
     

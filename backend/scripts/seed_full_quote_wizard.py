@@ -4,6 +4,7 @@ import os
 import uuid
 from decimal import Decimal
 from datetime import datetime
+from app.core.time import utcnow
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
@@ -18,6 +19,8 @@ from app.models.client import Client
 from app.models.premium_policy import PremiumPolicyType, PremiumPolicyCriteria
 from app.models.quote_element import QuoteElement
 from app.models.quote import Quote
+from app.models.sales import SalesTransaction
+from app.models.sales import SalesTarget
 
 def seed_full_wizard_data():
     db = SessionLocal()
@@ -82,7 +85,6 @@ def seed_full_wizard_data():
             client = db.query(Client).filter(Client.email == c_data["email"]).first()
             if not client:
                 client = Client(
-                    company_id=company.id,
                     user_id=user.id,
                     first_name=c_data["fname"],
                     last_name=c_data["lname"],
@@ -98,11 +100,14 @@ def seed_full_wizard_data():
                     employment_status=c_data["fields"]["employment_status"]
                 )
                 db.add(client)
+                client.companies.append(company)
                 print(f"Created Client: {c_data['fname']}")
             else:
                 # Update fields just in case
                 client.accident_count = c_data["fields"]["accident_count"]
                 client.driving_license_years = c_data["fields"]["driving_license_years"]
+                if company not in client.companies:
+                    client.companies.append(company)
                 print(f"Updated Client: {c_data['fname']}")
         db.commit()
 
@@ -244,8 +249,63 @@ def seed_full_wizard_data():
                 
                 db.add(quote)
                 print("Created Sample Quote: Q-SAMPLE-001")
+            else:
+                quote = quote_exists
         
         db.commit()
+
+        # 6. Sales Transactions
+        print("Seeding Sales Transactions...")
+        if quote:
+            channels = ["online", "pos", "agent", "mobile"]
+            for idx, channel in enumerate(channels):
+                existing_sale = db.query(SalesTransaction).filter(
+                    SalesTransaction.company_id == company.id,
+                    SalesTransaction.policy_id == quote.policy_type_id,
+                    SalesTransaction.channel == channel
+                ).first()
+                if not existing_sale:
+                    sale = SalesTransaction(
+                        company_id=company.id,
+                        policy_id=quote.policy_type_id,
+                        employee_id=quote.created_by,
+                        pos_location_id=None,
+                        channel=channel,
+                        sale_amount=quote.final_premium + (idx * 1000),
+                        commission_amount=None,
+                        sale_date=utcnow().date(),
+                        sale_time=utcnow().time(),
+                    )
+                    db.add(sale)
+            db.commit()
+            print("Created Sample Sales Transactions (multi-channel).")
+        else:
+            print("No sample quote found for sales seeding.")
+
+        # 7. Sales Targets
+        print("Seeding Sales Targets...")
+        admin_user = db.query(User).filter(User.email == "admin@demoinsurance.com").first()
+        target_user_id = admin_user.id if admin_user else quote.created_by if quote else None
+        if target_user_id:
+            for period in ["daily", "weekly", "monthly", "yearly"]:
+                existing_target = db.query(SalesTarget).filter(
+                    SalesTarget.employee_id == target_user_id,
+                    SalesTarget.period == period
+                ).first()
+                if not existing_target:
+                    target = SalesTarget(
+                        employee_id=target_user_id,
+                        period=period,
+                        target_amount=50000 if period == "daily" else 250000 if period == "weekly" else 1000000 if period == "monthly" else 12000000,
+                        target_count=2 if period == "daily" else 10 if period == "weekly" else 40 if period == "monthly" else 500,
+                        start_date=utcnow().date(),
+                        end_date=utcnow().date(),
+                    )
+                    db.add(target)
+            db.commit()
+            print("Created Sample Sales Targets.")
+        else:
+            print("No user found for sales target seeding.")
 
         print("\nSeeding Complete! Database ready for Quote Wizard.")
 
