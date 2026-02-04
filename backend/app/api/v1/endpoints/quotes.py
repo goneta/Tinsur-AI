@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 import logging
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_user, get_optional_user
+from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.schemas.quote import (
     QuoteCreate,
@@ -41,6 +41,20 @@ def calculate_quote(
     try:
         logger = logging.getLogger("api.quotes")
         logger.info(f"Calculating premium for client {calculation_request.client_id} with policy {calculation_request.policy_type_id} coverage {calculation_request.coverage_amount}")
+
+        from app.models.client import Client, client_company
+        client = db.query(Client).join(
+            client_company, Client.id == client_company.c.client_id
+        ).filter(
+            Client.id == calculation_request.client_id,
+            client_company.c.company_id == current_user.company_id
+        ).first()
+        if not client:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Client not found"
+            )
+
         
         result = quote_service.calculate_premium(
             policy_type_id=calculation_request.policy_type_id,
@@ -48,7 +62,8 @@ def calculate_quote(
             risk_factors=calculation_request.risk_factors,
             duration_months=calculation_request.duration_months,
             company_id=current_user.company_id,
-            financial_overrides=calculation_request.financial_overrides
+            financial_overrides=calculation_request.financial_overrides,
+            selected_services=calculation_request.selected_services
         )
         return result
     except Exception as e:
@@ -65,39 +80,33 @@ def calculate_quote(
 def create_quote(
     quote_data: QuoteCreate,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_user)
+    current_user: User = Depends(get_current_user)
 ):
     """
     Create a new quote.
-    Supports both Authenticated (strict) and Unauthenticated (fallback) flows.
+    Authenticated only.
     """
     quote_repo = QuoteRepository(db)
     quote_service = QuoteService(quote_repo)
     
-    company_id = None
-    created_by = None
-    pos_location_id = None
-    
-    if current_user:
-        # Authenticated: Use trusted session data
-        company_id = current_user.company_id
-        created_by = current_user.id
-        pos_location_id = getattr(current_user, 'pos_location_id', None)
-    else:
-        # Unauthenticated / 401 Bypass: Derive context from Client
-        from app.models.client import Client
-        client = db.query(Client).filter(Client.id == quote_data.client_id).first()
-        
-        if not client:
-             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Client not found"
-            )
-        
-        company_id = client.company_id
-        # Trust the payload for creator if auth failed
-        created_by = quote_data.created_by
-        pos_location_id = quote_data.pos_location_id
+    # Authenticated: Use trusted session data
+    company_id = current_user.company_id
+    created_by = current_user.id
+    pos_location_id = getattr(current_user, 'pos_location_id', None)
+
+    # Ensure client belongs to the same company (multi-tenant isolation)
+    from app.models.client import Client, client_company
+    client = db.query(Client).join(
+        client_company, Client.id == client_company.c.client_id
+    ).filter(
+        Client.id == quote_data.client_id,
+        client_company.c.company_id == company_id
+    ).first()
+    if not client:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Client not found"
+        )
 
     try:
         quote = quote_service.create_quote(
@@ -111,7 +120,8 @@ def create_quote(
             discount_percent=quote_data.discount_percent,
             created_by=created_by,
             pos_location_id=pos_location_id,
-            financial_overrides=quote_data.financial_overrides
+            financial_overrides=quote_data.financial_overrides,
+            selected_services=quote_data.selected_services
         )
         return quote
     except Exception as e:
@@ -132,23 +142,12 @@ def list_quotes(
     page: int = 1,
     page_size: int = 50,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_user)
+    current_user: User = Depends(get_current_user)
 ):
     """List quotes with filters."""
     repo = QuoteRepository(db)
     
-    company_id = None
-    if current_user:
-        company_id = current_user.company_id
-    else:
-        # Fallback for Stale Token: Impersonate Admin Company
-        # We assume the default admin exists.
-        admin = db.query(User).filter(User.email == "admin@demoinsurance.com").first()
-        if admin:
-            company_id = admin.company_id
-        else:
-            # Absolute fallback if even admin missing (unlikely)
-            return {"quotes": [], "total": 0, "page": page, "page_size": page_size}
+    company_id = current_user.company_id
 
     skip = (page - 1) * page_size
     quotes, total = repo.get_by_company(
@@ -262,7 +261,7 @@ def approve_quote(
         )
 
     # Idempotency Check: If already policy_created or accepted
-    if quote.status in ['policy_created', 'accepted']:
+    if quote.status in ['policy_created', 'accepted', 'approved']:
         # Find existing policy
         policy = policy_repo.get_by_quote_id(quote_id)
         if policy:
@@ -299,6 +298,9 @@ def approve_quote(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create policy from accepted quote"
         )
+
+    quote.status = 'policy_created'
+    quote_repo.update(quote)
         
     return {
         "message": "Quote approved and policy created successfully",
@@ -349,7 +351,7 @@ def archive_quote(
     # Only accepted quotes can be archived? Or any?
     # User Reqt: "Archive icon -> available for Approved / Accepted quotes (approved quotes cannot be deleted)"
     # Implies Archive is FOR accepted quotes.
-    if quote.status != 'accepted':
+    if quote.status not in ['accepted', 'policy_created', 'approved']:
          raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Only accepted quotes can be archived"
@@ -380,7 +382,7 @@ def convert_quote_to_policy(
         )
     
     # Accept the quote first if not already accepted
-    if quote.status != 'accepted':
+    if quote.status not in ['accepted', 'policy_created', 'approved']:
         quote_service = QuoteService(quote_repo)
         quote_service.accept_quote(quote_id)
     

@@ -99,11 +99,20 @@ class QuoteService:
         # Initialize apr_percent safely
         apr_percent = 0.0
         included_services = [] 
-
-        # Determine Base Premium
+        excess = Decimal('0')
+        # 1. Determine Base Premium
         base_premium = Decimal('0')
-        
-        # 1. Try to get price from Selected Policy
+
+        # If policy_type_id not provided, try to find a match between eligible policies
+        if not policy_type_id and company_id:
+            try:
+                # We use a limited set of risk_factors for evaluation if needed
+                evaluation = self.evaluate_premium_policy(company_id, risk_factors)
+                if evaluation:
+                    policy_type_id = evaluation['id']
+            except:
+                pass # Fallback to manual calculation if evaluation fails
+
         if policy_type_id:
              policy = self.quote_repo.db.query(PremiumPolicyType).filter(PremiumPolicyType.id == policy_type_id).first()
              if policy:
@@ -114,7 +123,7 @@ class QuoteService:
                      base_premium = base_premium * duration_factor
                  
                  # Populate included services and excess
-                 included_services = [{"en": s.name_en, "fr": s.name_fr} for s in policy.services]
+                 included_services = [{"id": str(s.id), "en": s.name_en, "fr": s.name_fr} for s in policy.services]
                  excess = Decimal(str(policy.excess or 0))
         
         # 2. Fallback to Coverage * Rate if no policy price or 0
@@ -148,70 +157,120 @@ class QuoteService:
         # Total Risk Adjustment
         total_risk_adjustment = multiplier_cost + score_cost
 
-        # Discounts (User Requirement: Calculated on Base Premium)
-        discount_percent = Decimal('0')
-        if financial_overrides and 'company_discount' in financial_overrides:
-            discount_percent = Decimal('0') # Reset to avoid double counting if logic loops
-            discounts = financial_overrides['company_discount']
-            if isinstance(discounts, list):
-                 for d in discounts:
-                     discount_percent += Decimal(str(d))
-            else:
-                 discount_percent = Decimal(str(discounts))
-        
-        discount_amount = base_premium * (discount_percent / Decimal('100'))
+        # Step 1: Base Premium (P)
+        # We'll treat (base_premium + total_risk_adjustment) as the foundation the user called "Cover Total Amount" / "Base Premium"
+        # Since risk adjustments are additive to base.
+        p_foundation = base_premium + total_risk_adjustment
 
-        # UBI Adjustment (Placeholder for Phase 7)
-        ubi_adjustment_amount = Decimal('0')
+        # Fetch Admin Fee % and Admin Discount % from Company
+        admin_fee_percent = Decimal('0')
+        admin_discount_percent = Decimal('0')
+        tax_percent = Decimal('0')
 
-        # Fees (Fixed amounts)
-        arrangement_fee = Decimal('0')
-        extra_fee = Decimal('0')
-        admin_fee = Decimal('0')
-        
         if company_id:
             company = self.quote_repo.db.query(Company).filter(Company.id == company_id).first()
             if company:
                 apr_percent = company.apr_percent or 0.0
                 arrangement_fee = Decimal(str(company.arrangement_fee or 0))
-                # Fixed: Use Government Tax from Company Settings
                 tax_percent = Decimal(str(company.government_tax_percent or 0))
-                extra_fee = Decimal(str(company.extra_fee or 0))
-                admin_fee = Decimal(str(company.admin_fee or 0))
+                admin_fee_percent = Decimal(str(company.admin_fee_percent or 0))
+                admin_discount_percent = Decimal(str(company.admin_discount_percent or 0))
 
+        # Apply Overrides if present
+        if financial_overrides:
+            if 'admin_fee_percent' in financial_overrides:
+                admin_fee_percent = Decimal(str(financial_overrides['admin_fee_percent']))
+            
+            # Handle company_discount (list of additive percentages)
+            if 'company_discount' in financial_overrides:
+                discounts = financial_overrides['company_discount']
+                if isinstance(discounts, list):
+                    # Sum them up (e.g. 5% + 10% = 15% discount)
+                    manual_discount = sum(Decimal(str(d)) for d in discounts)
+                    admin_discount_percent += manual_discount
+                else:
+                    admin_discount_percent += Decimal(str(discounts))
+
+            # Direct override for admin_discount_percent (takes precedence or adds?)
+            # Let's say it overwrites the final percent if explicitly provided
+            if 'admin_discount_percent' in financial_overrides:
+                admin_discount_percent = Decimal(str(financial_overrides['admin_discount_percent']))
+                
+            if 'tax_percent' in financial_overrides:
+                tax_percent = Decimal(str(financial_overrides['tax_percent']))
+
+        # Step 2: Admin Fee (percentage)
+        # Correct Admin Fee = Cover Total Amount × Admin Fee %
+        # Subtotal1 = Cover Total Amount + Admin Fee
+        admin_fee_amount = p_foundation * (admin_fee_percent / Decimal('100'))
+        subtotal1 = p_foundation + admin_fee_amount
+
+        # Step 3: Policy services
+        # Services are added after admin fee.
+        extra_fee = Decimal('0')
+        
+        # Add fixed extra fee from financial overrides if present
         if financial_overrides and 'fixed_fee' in financial_overrides:
-            fees = financial_overrides['fixed_fee']
-            if isinstance(fees, list):
-                for f in fees:
-                    extra_fee += Decimal(str(f))
-            else:
-                extra_fee += Decimal(str(fees))
+            extra_fee += Decimal(str(financial_overrides['fixed_fee']))
+            
+        # Get IDs of already included services
+        included_service_ids = {s["id"] for s in included_services}
 
-        # Add selected services to extra_fee if provided
-        if selected_services and policy_type_id:
-             policy = self.quote_repo.db.query(PremiumPolicyType).filter(PremiumPolicyType.id == policy_type_id).first()
-             if policy:
-                  for service_id in selected_services:
-                       policy_service = next((ps for ps in policy.services if ps.id == service_id), None)
-                       if policy_service:
-                            extra_fee += Decimal(str(policy_service.default_price or 0))
+        # Add price of each selected service if NOT already included in policy
+        if selected_services:
+            from app.models.policy_service import PolicyService # Local import to avoid circular dependency
+            for service_id in selected_services:
+                service_id_str = str(service_id)
+                if service_id_str not in included_service_ids:
+                    service = self.quote_repo.db.query(PolicyService).filter(PolicyService.id == service_id).first()
+                    if service:
+                        extra_fee += Decimal(str(service.default_price or 0))
+                        # Add to the list of services for the quote record breakdown if not already present
+                        included_services.append({"id": service_id_str, "en": service.name_en, "fr": service.name_fr})
 
-        # Subtotal (Base - Discount + Risk + Extra Fees + Admin Fee)
-        subtotal = base_premium - discount_amount + total_risk_adjustment + extra_fee + admin_fee
+        subtotal2 = subtotal1 + extra_fee
 
-        # Tax (User Requirement: Mandatory Government Tax)
-        # Use Company Settings (already fetched), allow override if explicit
-        if financial_overrides and 'government_tax' in financial_overrides:
-             tax_percent = Decimal(str(financial_overrides['government_tax']))
+        # Step 4: Admin discount
+        # Admin Discount = Subtotal2 × Admin Discount %
+        # Subtotal3 = Subtotal2 − Admin Discount
+        admin_discount_amount = subtotal2 * (admin_discount_percent / Decimal('100'))
+        subtotal3 = subtotal2 - admin_discount_amount
+
+        # Step 5: Government tax (VAT / TVA)
+        # Correct VAT Amount = Subtotal3 × VAT %
+        # Quote Amount = Subtotal3 + VAT Amount
+        tax_amount = subtotal3 * (tax_percent / Decimal('100'))
         
-        tax_amount = subtotal * (tax_percent / Decimal('100'))
+        # Round final amount to 2 decimals
+        final_premium = (subtotal3 + tax_amount).quantize(Decimal('0.01'))
 
-        # Final Premium
-        final_premium = subtotal + tax_amount
+        # Breakdown for Audit
+        calculation_breakdown = {
+            "step1_base_premium": float(p_foundation),
+            "step2_admin_fee": {
+                "percent": float(admin_fee_percent),
+                "amount": float(admin_fee_amount),
+                "subtotal1": float(subtotal1)
+            },
+            "step3_services": {
+                "amount": float(extra_fee),
+                "subtotal2": float(subtotal2)
+            },
+            "step4_admin_discount": {
+                "percent": float(admin_discount_percent),
+                "amount": float(admin_discount_amount),
+                "subtotal3": float(subtotal3)
+            },
+            "step5_tax": {
+                "percent": float(tax_percent),
+                "amount": float(tax_amount),
+                "final_amount": float(final_premium)
+            },
+            "formula": "((P + (P * F) + S) * (1 - D)) * (1 + T)"
+        }
 
-        # Total Financed
+        # Totals for installation
         total_financed_amount = final_premium + arrangement_fee
-        
         interest_amount = total_financed_amount * (Decimal(str(apr_percent)) / Decimal('100'))
         total_installment_price = total_financed_amount + interest_amount
         
@@ -222,25 +281,28 @@ class QuoteService:
         return {
             'base_premium': base_premium,
             'risk_adjustment': total_risk_adjustment,
-            'ubi_adjustment': ubi_adjustment_amount,
+            'ubi_adjustment': Decimal('0'),
             'risk_score': risk_score,
             'final_premium': final_premium,
             # Only run auto-evaluation if NO policy was explicitly selected
             'premium_evaluation': self.evaluate_premium_policy(company_id, risk_factors) if (company_id and not policy_type_id) else None,
-            'discount_amount': discount_amount,
+            'discount_amount': admin_discount_amount,
             'tax_amount': tax_amount,
             'risk_factors_analysis': self._analyze_risk_factors(risk_factors),
             'recommendations': self._generate_recommendations(risk_score, risk_factors),
             # Financials
             'apr_percent': float(apr_percent),
             'arrangement_fee': arrangement_fee,
-            'admin_fee': admin_fee,
+            'admin_fee': admin_fee_amount,
+            'admin_fee_percent': float(admin_fee_percent),
+            'admin_discount_percent': float(admin_discount_percent),
             'extra_fee': extra_fee,
             'total_financed_amount': total_financed_amount,
             'monthly_installment': monthly_installment,
             'total_installment_price': total_installment_price,
             'excess': excess,
-            'included_services': included_services
+            'included_services': included_services,
+            'calculation_breakdown': calculation_breakdown
         }
     
     def _calculate_risk_score(self, risk_factors: Dict[str, Any]) -> Decimal:
@@ -358,17 +420,9 @@ class QuoteService:
             else:
                  discount_percent = Decimal(str(discounts))
         
-        # Override premium_amount if a premium policy match was found
-        if calculation.get('premium_evaluation'):
-            premium_amount = Decimal(str(calculation['premium_evaluation']['price']))
-            # If using fixed price policy, we might need to adjust final premium?
-            # Current logic in calculate_premium doesn't seem to switch to fixed price.
-            # It just returns 'premium_evaluation'.
-            # If we strictly want to use the Calculated Final Premium:
-            final_premium = calculation['final_premium']
-        else:
-            premium_amount = calculation['base_premium'] # Store base premium
-            final_premium = calculation['final_premium']
+        # Use calculation results for storage
+        premium_amount = calculation['base_premium'] 
+        final_premium = calculation['final_premium']
 
         # Generate quote number
         quote_number = self.generate_quote_number(company_id, "AUTO")  # TODO: Get policy type code
@@ -414,10 +468,13 @@ class QuoteService:
             apr_percent=calculation['apr_percent'],
             arrangement_fee=calculation['arrangement_fee'],
             admin_fee=calculation['admin_fee'],
+            admin_fee_percent=calculation['admin_fee_percent'],
+            admin_discount_percent=calculation['admin_discount_percent'],
             extra_fee=calculation['extra_fee'],
             total_financed_amount=calculation['total_financed_amount'],
             monthly_installment=calculation['monthly_installment'],
             total_installment_price=calculation['total_installment_price'],
+            calculation_breakdown=calculation['calculation_breakdown'],
             # Premium Policy Snapshot
             excess=calculation.get('excess', Decimal('0')),
             included_services=calculation.get('included_services', [])
@@ -469,7 +526,7 @@ class QuoteService:
         """Mark quote as accepted."""
         quote = self.quote_repo.get_by_id(quote_id)
         if quote and not quote.is_expired:
-            quote.status = 'policy_created'
+            quote.status = 'accepted'
             return self.quote_repo.update(quote)
         return None
     
@@ -553,7 +610,7 @@ class QuoteService:
                     "name": ptype.name,
                     "price": ptype.price,
                     "excess": ptype.excess,
-                    "included_services": [s.name_en for s in ptype.services]
+                    "included_services": [{"id": str(s.id), "name": s.name_en} for s in ptype.services]
                 }
                 break
         
@@ -588,6 +645,9 @@ class QuoteService:
         try:
             if op == '=':
                 return str(val) == str(target)
+            elif op == 'in':
+                options = [x.strip() for x in str(target).split(',')]
+                return str(val) in options
             elif op == '>':
                 return float(val) > float(target)
             elif op == '<':

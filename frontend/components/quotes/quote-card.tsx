@@ -38,7 +38,9 @@ export function QuoteCard({
     const { t } = useLanguage()
     const isProcessing = loadingId === quote.id
     const [selectedServices, setSelectedServices] = useState<string[]>(
-        quote.included_services || (quote.details as any)?.selected_services || []
+        (quote.included_services || (quote.details as any)?.selected_services || []).map((s: any) =>
+            typeof s === 'object' ? s.id || s.name_en : s
+        )
     )
     const [isExpanded, setIsExpanded] = useState(false)
 
@@ -74,9 +76,12 @@ export function QuoteCard({
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'policy_created':
-            case 'accepted': return 'bg-green-100 text-green-800'
+            case 'approved': return 'bg-green-100 text-green-800'
+            case 'accepted': return 'bg-emerald-100 text-emerald-800'
             case 'rejected': return 'bg-red-100 text-red-800'
-            case 'sent': return 'bg-blue-100 text-blue-800'
+            case 'sent':
+            case 'submitted':
+            case 'under_review': return 'bg-blue-100 text-blue-800'
             case 'draft_from_client': return 'bg-purple-100 text-purple-800'
             case 'expired': return 'bg-gray-100 text-gray-800'
             case 'archived': return 'bg-gray-100 text-gray-800'
@@ -86,13 +91,11 @@ export function QuoteCard({
 
     const getStatusLabel = () => {
         const s = quote.status as string;
-        if (s === 'policy_created' || s === 'accepted') {
-            if (quote.created_by_name === 'Online' || quote.created_by_name === 'Unknown') {
-                return t("Approved (Co)", "Approved (Co)")
-            } else {
-                return t("Approved (Cli)", "Approved (Cli)")
-            }
-        }
+        if (s === 'policy_created') return t("Policy Created", "Policy Created")
+        if (s === 'accepted') return t("Accepted", "Accepted")
+        if (s === 'approved') return t("Approved", "Approved")
+        if (s === 'under_review') return t("Under Review", "Under Review")
+        if (s === 'submitted') return t("Submitted", "Submitted")
         if (s === 'draft_from_client') return t("Draft (Client)", "Draft (Client)")
         return t(quote.status, quote.status)
     }
@@ -108,7 +111,9 @@ export function QuoteCard({
         ? availableServices
         : (availableServices.length > 0
             ? availableServices.filter(s => selectedServices.includes(s.id) || selectedServices.includes(s.name_en))
-            : (quote.included_services?.map(s => ({ id: s, name_en: s, default_price: 0 })) || [])
+            : (quote.included_services?.map((s: any) =>
+                typeof s === 'object' ? s : { id: s, name_en: s, default_price: 0 }
+            ) || [])
         ); // Fallback for legacy
 
     const items: EntityItem[] = displayServices.map((service: any, idx) => {
@@ -163,7 +168,7 @@ export function QuoteCard({
                 </Button>
             )}
 
-            {['sent', 'draft_from_client'].includes(quote.status as string) && (
+            {['sent', 'draft_from_client', 'submitted', 'under_review'].includes(quote.status as string) && (
                 <>
                     <Button
                         className="bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl"
@@ -185,7 +190,7 @@ export function QuoteCard({
                 </>
             )}
 
-            {((quote.status as string) === 'policy_created' || (quote.status as string) === 'accepted') && (
+            {((quote.status as string) === 'policy_created' || (quote.status as string) === 'approved') && (
                 <div className="col-span-2 w-full p-3 bg-green-50 text-green-700 rounded-xl text-center text-sm font-black border border-green-100 flex items-center justify-center gap-2 uppercase tracking-wide">
                     <Check className="h-4 w-4 stroke-[3]" /> {t("Active Policy", "Active Policy")}
                 </div>

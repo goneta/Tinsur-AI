@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { QuoteAPI } from "@/lib/api/quotes";
+import { useAuth } from "@/lib/auth";
 import { portalApi } from "@/lib/portal-api";
 import { PremiumPolicyType } from "@/lib/premium-policy-api";
+import { policyServiceApi, PolicyService } from "@/lib/policy-service-api";
 import { PremiumPolicyCard } from "../quotes/premium-policy-card";
 import { UniversalEntityCard } from "@/components/shared/universal-entity-card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +26,7 @@ import {
     Car, GlassWater, Globe, UserCheck, Monitor, Key,
     HeartPulse, Briefcase, Baby, Lock, Sparkles, Fuel,
     Plane, AlertTriangle, Hotel, Scale, Wrench, KeyRound,
-    Droplets, Plus, Minus, ChevronDown, ChevronUp, Check
+    Droplets, Plus, Minus, ChevronDown, ChevronUp, Check, CheckCircle2
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { RiskFactorForm } from "../quotes/risk-factor-form";
@@ -66,9 +68,12 @@ interface PortalQuoteWizardProps {
 
 export function PortalQuoteWizard({ open, onOpenChange, onSuccess }: PortalQuoteWizardProps) {
     const { toast } = useToast();
+    const { user } = useAuth();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [showAllServices, setShowAllServices] = useState(false);
+
+    const isPublicMarketplace = user?.role === 'client' && !user?.company_id;
 
     // Matching State
     const [eligiblePolicies, setEligiblePolicies] = useState<PremiumPolicyType[]>([]);
@@ -82,6 +87,7 @@ export function PortalQuoteWizard({ open, onOpenChange, onSuccess }: PortalQuote
     const [noPolicyMessage, setNoPolicyMessage] = useState("");
     const [missingInfoOpen, setMissingInfoOpen] = useState(false);
     const [missingFields, setMissingFields] = useState<string[]>([]);
+    const [allServices, setAllServices] = useState<PolicyService[]>([]);
 
     const methods = useForm<WizardValues>({
         defaultValues: {
@@ -103,18 +109,38 @@ export function PortalQuoteWizard({ open, onOpenChange, onSuccess }: PortalQuote
             reset();
             checkEligibility();
         }
-    }, [open]);
+    }, [open, isPublicMarketplace]);
 
     const checkEligibility = async () => {
         setLoading(true);
         try {
             // No clientID needed for portal user
-            const result = await QuoteAPI.matchPolicies();
+            const result = isPublicMarketplace
+                ? await QuoteAPI.matchPoliciesPublic()
+                : await QuoteAPI.matchPolicies();
 
             if (result.status === "success") {
-                setEligiblePolicies(result.data);
-                setRecommendedPolicyId(result.recommended_id);
+                if (isPublicMarketplace) {
+                    const companies = result.companies || [];
+                    const flattened = companies.flatMap((c: any) => (c.policies || []).map((p: any) => ({
+                        ...p,
+                        company_name: c.company_name,
+                        company_primary_color: c.company_primary_color,
+                        tagline: p.tagline || c.company_name
+                    })));
+                    setEligiblePolicies(flattened);
+                    const firstRecommended = companies.find((c: any) => c.recommended_id)?.recommended_id || null;
+                    setRecommendedPolicyId(firstRecommended);
+                } else {
+                    setEligiblePolicies(result.data);
+                    setRecommendedPolicyId(result.recommended_id);
+                }
                 // Remain on Step 1 (Policy Selection)
+                if ((isPublicMarketplace && (!result.companies || result.companies.length == 0)) || (!isPublicMarketplace && (!result.data || result.data.length == 0))) {
+                    const message = result.message || "We currently have no premium policies available depending on your profile.";
+                    setNoPolicyMessage(message);
+                    setNoPolicyOpen(true);
+                }
             } else if (result.status === "no_policies") {
                 setNoPolicyMessage(result.message);
                 setNoPolicyOpen(true);
@@ -294,89 +320,64 @@ export function PortalQuoteWizard({ open, onOpenChange, onSuccess }: PortalQuote
                                                 </div>
 
                                                 <div className="grid grid-cols-1 gap-4">
-                                                    {selectedPolicy.services
-                                                        .slice(0, showAllServices ? undefined : 4)
-                                                        .map((service) => {
+                                                    {allServices.length > 0 ? (
+                                                        allServices.map(service => {
+                                                            const isIncluded = selectedPolicy.services?.some((s: any) => s.id === service.id);
+                                                            const isChecked = watch("selected_services")?.includes(service.id);
                                                             const Icon = ({
                                                                 ShieldCheck, Car, GlassWater, Globe, UserCheck, Monitor, Key,
                                                                 HeartPulse, Briefcase, Baby, Lock, Sparkles, Fuel,
                                                                 Plane, AlertTriangle, Hotel, Scale, Wrench, KeyRound, Droplets
                                                             } as any)[service.icon_name || "ShieldCheck"] || ShieldCheck;
 
-                                                            const isChecked = watch("selected_services")?.includes(service.id);
-
                                                             return (
-                                                                <FormField
+                                                                <div
                                                                     key={service.id}
-                                                                    control={methods.control}
-                                                                    name="selected_services"
-                                                                    render={({ field }) => (
-                                                                        <FormItem
-                                                                            className={`
-                                                                                flex flex-row items-center space-x-4 space-y-0 rounded-2xl border-2 p-5 transition-all cursor-pointer
-                                                                                ${isChecked ? 'border-[#00539F] bg-blue-50/50 shadow-md' : 'border-gray-100 bg-white hover:border-gray-300'}
-                                                                            `}
-                                                                            onClick={() => {
-                                                                                const current = field.value || [];
-                                                                                const next = current.includes(service.id)
-                                                                                    ? current.filter((v: string) => v !== service.id)
-                                                                                    : [...current, service.id];
-                                                                                field.onChange(next);
-                                                                            }}
-                                                                        >
-                                                                            <FormControl>
-                                                                                <Checkbox
-                                                                                    checked={isChecked}
-                                                                                    onCheckedChange={(checked) => {
-                                                                                        return checked
-                                                                                            ? field.onChange([...(field.value || []), service.id])
-                                                                                            : field.onChange((field.value || []).filter((value: string) => value !== service.id));
-                                                                                    }}
-                                                                                    className="h-6 w-6 rounded-md border-2"
-                                                                                />
-                                                                            </FormControl>
-
-                                                                            <div className="flex items-center gap-4 flex-1">
-                                                                                <div className={`p-3 rounded-xl ${isChecked ? 'bg-[#00539F] text-white' : 'bg-gray-100 text-gray-500'}`}>
-                                                                                    <Icon className="h-6 w-6" />
-                                                                                </div>
-                                                                                <div className="space-y-1">
-                                                                                    <FormLabel className="text-base font-black text-gray-900 cursor-pointer">
-                                                                                        {service.name_fr || service.name_en}
-                                                                                    </FormLabel>
-                                                                                    <p className="text-sm font-bold text-gray-400 uppercase tracking-tighter">
-                                                                                        {service.category || 'Protection'}
-                                                                                    </p>
-                                                                                </div>
+                                                                    className={`
+                                                                        flex flex-row items-center space-x-4 space-y-0 rounded-2xl border-2 p-5 transition-all cursor-pointer
+                                                                        ${isChecked || isIncluded ? 'border-[#00539F] bg-blue-50/50 shadow-md' : 'border-gray-100 bg-white hover:border-gray-300'}
+                                                                    `}
+                                                                    onClick={() => {
+                                                                        if (isIncluded) return;
+                                                                        const current = watch("selected_services") || [];
+                                                                        const next = current.includes(service.id)
+                                                                            ? current.filter((v: string) => v !== service.id)
+                                                                            : [...current, service.id];
+                                                                        setValue("selected_services", next);
+                                                                    }}
+                                                                >
+                                                                    <div className="flex items-center gap-4 flex-1">
+                                                                        <div className={`p-3 rounded-xl ${isChecked || isIncluded ? 'bg-[#00539F] text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                                                            <Icon className="h-6 w-6" />
+                                                                        </div>
+                                                                        <div className="space-y-1">
+                                                                            <div className="text-base font-black text-gray-900 flex items-center gap-2">
+                                                                                {service.name_fr || service.name_en}
+                                                                                {isIncluded && (
+                                                                                    <Badge className="bg-emerald-500 text-white text-[8px] font-black uppercase tracking-tighter h-4 px-1.5">Included</Badge>
+                                                                                )}
                                                                             </div>
+                                                                            <p className="text-sm font-bold text-gray-400 uppercase tracking-tighter">
+                                                                                {service.category || 'Protection'}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
 
-                                                                            <div className="text-right">
-                                                                                <div className="text-lg font-black text-[#00539F]">
-                                                                                    +{formatCurrency(service.default_price || 0)}
-                                                                                </div>
-                                                                                <div className="text-[10px] font-bold text-gray-400 uppercase">per month</div>
-                                                                            </div>
-                                                                        </FormItem>
-                                                                    )}
-                                                                />
+                                                                    <div className="text-right">
+                                                                        <div className="text-lg font-black text-[#00539F]">
+                                                                            {isIncluded ? 'Free' : `+${formatCurrency(service.default_price || 0)}`}
+                                                                        </div>
+                                                                        <div className="text-[10px] font-bold text-gray-400 uppercase">{isIncluded ? 'With Policy' : 'per month'}</div>
+                                                                    </div>
+                                                                </div>
                                                             );
-                                                        })}
+                                                        })
+                                                    ) : (
+                                                        <div className="py-12 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                                                            <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No services available</p>
+                                                        </div>
+                                                    )}
                                                 </div>
-
-                                                {selectedPolicy.services.length > 4 && (
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        className="w-full h-14 border-2 border-dashed border-gray-200 rounded-2xl text-gray-500 font-black uppercase tracking-widest hover:bg-gray-50"
-                                                        onClick={() => setShowAllServices(!showAllServices)}
-                                                    >
-                                                        {showAllServices ? (
-                                                            <><Minus className="mr-2 h-5 w-5" /> Show less features</>
-                                                        ) : (
-                                                            <><Plus className="mr-2 h-5 w-5" /> Add more features ({selectedPolicy.services.length - 4})</>
-                                                        )}
-                                                    </Button>
-                                                )}
                                             </div>
                                         )}
                                     </form>
@@ -395,19 +396,31 @@ export function PortalQuoteWizard({ open, onOpenChange, onSuccess }: PortalQuote
                                                 icon: ShieldCheck,
                                                 badgeText: `Duration: ${getValues('duration_months')} Months`
                                             }}
-                                            items={selectedPolicy?.services?.filter(s => watch("selected_services")?.includes(s.id)).map(s => ({
-                                                id: s.id,
-                                                label: s.name_fr || s.name_en,
-                                                price: s.default_price,
-                                                checked: true,
-                                                disabled: true
-                                            })) || []}
+                                            items={calculation.included_services?.map((s: any) => {
+                                                const isActuallyIncluded = selectedPolicy?.services?.some(ps => ps.id === s.id);
+                                                const serviceInfo = allServices.find(as => as.id === s.id);
+                                                return {
+                                                    id: s.id,
+                                                    label: s.name_fr || s.name_en || s.name || s.en || s.fr, // Robust fallback
+                                                    price: isActuallyIncluded ? 0 : (serviceInfo?.default_price || 0),
+                                                    checked: true,
+                                                    disabled: true
+                                                };
+                                            }) || []}
                                             financials={[
                                                 { label: 'Base Rate', amount: formatCurrency(calculation.base_premium) },
                                                 { label: 'Risk Adjustment', amount: `+${formatCurrency(calculation.risk_adjustment || 0)}` },
-                                                { label: 'Govt Tax (TVA)', amount: formatCurrency(calculation.tax_amount || 0) },
-                                                { label: 'Company Admin Fee', amount: formatCurrency(calculation.arrangement_fee || 0) },
-                                                { label: `Total / ${getValues('premium_frequency')}`, amount: formatCurrency(calculation.total_installment_price), isTotal: true }
+                                                { label: 'Admin Fee', amount: formatCurrency(calculation.admin_fee || 0) },
+                                                { label: 'Optional Services', amount: formatCurrency(calculation.extra_fee || 0) },
+                                                ...(calculation.discount_amount > 0 ? [
+                                                    { label: 'Admin Discount', amount: `-${formatCurrency(calculation.discount_amount)}` }
+                                                ] : []),
+                                                { label: 'VAT / Taxes', amount: formatCurrency(calculation.tax_amount || 0) },
+                                                { label: `Final Premium (Cash)`, amount: formatCurrency(calculation.final_premium), isTotal: true },
+                                                ...(watch('premium_frequency') !== 'annual' ? [
+                                                    { label: `Monthly Installment`, amount: formatCurrency(calculation.monthly_installment) },
+                                                    { label: `Total Financed`, amount: formatCurrency(calculation.total_installment_price) }
+                                                ] : [])
                                             ]}
                                             footer={{
                                                 validUntil: '30 Days from now',

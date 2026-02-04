@@ -10,6 +10,7 @@ import { PremiumPolicyType } from "@/lib/premium-policy-api";
 import { RiskFactorForm } from "./risk-factor-form";
 import { PremiumPolicyCard } from "./premium-policy-card";
 import { quoteElementApi, QuoteElement } from "@/lib/quote-element-api";
+import { policyServiceApi, PolicyService } from "@/lib/policy-service-api";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -155,6 +156,7 @@ export function QuoteWizard() {
     const [clientVehicles, setClientVehicles] = useState<any[]>([]);
     const [clientDrivers, setClientDrivers] = useState<any[]>([]);
     const [showAllServices, setShowAllServices] = useState(false);
+    const [allServices, setAllServices] = useState<PolicyService[]>([]);
 
     const methods = useForm<WizardValues>({
         defaultValues: {
@@ -246,8 +248,18 @@ export function QuoteWizard() {
                 console.error("Failed to load company settings", e);
             }
         }
+        async function loadAllServices() {
+            try {
+                const services = await policyServiceApi.getAll();
+                setAllServices(services);
+            } catch (e) {
+                console.error("Failed to load services", e);
+            }
+        }
         loadClients();
         loadElements();
+        loadCompanySettings();
+        loadAllServices();
         loadCompanySettings();
     }, [setValue]);
 
@@ -361,8 +373,8 @@ export function QuoteWizard() {
                     base_rate: selectedBaseRateId ? quoteElements.find(e => e.id === selectedBaseRateId)?.value : undefined,
                     risk_multiplier: selectedMultipliers.map(id => quoteElements.find(e => e.id === id)?.value).filter(Boolean),
                     fixed_fee: selectedFees.map(id => quoteElements.find(e => e.id === id)?.value).filter(Boolean),
-                    // government_tax: selectedTaxes.map(id => quoteElements.find(e => e.id === id)?.value).filter(Boolean), // REMOVED to enforce company settings
-                    company_discount: selectedDiscounts.map(id => quoteElements.find(e => e.id === id)?.value).filter(Boolean)
+                    company_discount: selectedDiscounts.map(id => quoteElements.find(e => e.id === id)?.value).filter(Boolean),
+                    admin_discount_percent: data.discount_percent
                 }
             });
             setCalculation(result);
@@ -462,75 +474,17 @@ export function QuoteWizard() {
     const calculatedValues = useMemo(() => {
         if (!calculation) return null;
 
-        const base = calculation.base_premium;
-
-        // Calculate Risk
-        let totalRisk = 0;
-        selectedMultipliers.forEach(id => {
-            const el = quoteElements.find(e => e.id === id);
-            if (el) {
-                totalRisk += base * (el.value - 1);
-            }
-        });
-
-        // Calculate Discount
-        let totalDiscount = 0;
-        selectedDiscounts.forEach(id => {
-            const el = quoteElements.find(e => e.id === id);
-            if (el) {
-                totalDiscount += base * (el.value / 100);
-            }
-        });
-
-        // Manual discount
-        const manualDiscountPercent = watch("discount_percent") || 0;
-        totalDiscount += base * (manualDiscountPercent / 100);
-
-
-        // Calculate Fixed Fees (Elements + Selected Services)
-        let totalFees = 0;
-        selectedFees.forEach(id => {
-            const el = quoteElements.find(e => e.id === id);
-            if (el) {
-                totalFees += el.value;
-            }
-        });
-
-        // Add Selected Optional Services Fees
-        const selectedServiceIds = watch("selected_services") || [];
-        if (selectedPolicy?.services) {
-            selectedPolicy.services.forEach(service => {
-                if (selectedServiceIds.includes(service.id)) {
-                    totalFees += service.default_price;
-                }
-            });
-        }
-
-        // Subtotal
-        const subtotal = base - totalDiscount + totalRisk + totalFees;
-
-        // Calculate Tax (based on Subtotal)
-        // Calculate Tax (Use backend calculation or settings)
-        // If calculation.tax_amount exists, use it as it comes from settings
-        // Otherwise fallback to manual calc which is now deprecated but kept for safety
-        const totalTax = calculation?.tax_amount ?? 0;
-
-        // Use calculation.admin_fee if available
-        const adminFee = calculation?.admin_fee ?? 0;
-
-        const finalPremium = subtotal + totalTax + adminFee; // Ensure admin fee is added if it wasn't in subtotal
-
         return {
-            base,
-            totalRisk,
-            totalFees,
-            totalDiscount,
-            subtotal,
-            totalTax,
-            adminFee,
-            finalPremium
+            base: calculation.base_premium,
+            totalRisk: calculation.risk_adjustment,
+            totalFees: calculation.extra_fee,
+            totalDiscount: calculation.discount_amount,
+            subtotal: calculation.final_premium - calculation.tax_amount,
+            totalTax: calculation.tax_amount,
+            adminFee: calculation.admin_fee,
+            finalPremium: calculation.final_premium
         };
-    }, [calculation, selectedMultipliers, selectedFees, selectedDiscounts, selectedTaxes, quoteElements, watch("selected_services"), watch("discount_percent"), selectedPolicy]);
+    }, [calculation]);
 
     return (
         <Card className="w-full max-w-5xl mx-auto min-h-[700px] flex flex-col border-none shadow-2xl rounded-[40px] overflow-hidden">
@@ -895,53 +849,47 @@ export function QuoteWizard() {
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {(selectedPolicy.services && selectedPolicy.services.length > 0) ? (
-                                        selectedPolicy.services.map(service => {
+                                    {allServices.length > 0 ? (
+                                        allServices.map(service => {
+                                            const isIncluded = selectedPolicy.services?.some((s: any) => s.id === service.id);
                                             const isSelected = watch("selected_services")?.includes(service.id);
+
                                             return (
                                                 <div
                                                     key={service.id}
-                                                    onClick={() => {
-                                                        const current = watch("selected_services") || [];
-                                                        if (current.includes(service.id)) {
-                                                            setValue("selected_services", current.filter(id => id !== service.id));
-                                                        } else {
-                                                            setValue("selected_services", [...current, service.id]);
-                                                        }
-                                                    }}
-                                                    className={`p-8 rounded-[40px] border-2 cursor-pointer transition-all flex flex-col justify-between bg-white group min-h-[220px] ${isSelected ? 'border-[#00539F] bg-blue-50/50 shadow-xl scale-[1.02]' : 'border-slate-100 hover:border-blue-200 shadow-sm'}`}
-                                                >
-                                                    <div className="flex justify-between items-start mb-6">
-                                                        <div className={`h-14 w-14 rounded-2xl flex items-center justify-center transition-all ${isSelected ? 'bg-[#00539F] text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-blue-50 group-hover:text-[#00539F]'}`}>
-                                                            <PlusCircle className="h-7 w-7" />
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <span className="text-2xl font-black text-slate-900 block">{formatCurrency(service.default_price)}</span>
-                                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Added to Premium</span>
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <h5 className="font-black text-slate-900 text-lg leading-tight uppercase tracking-tight">{language === 'fr' ? (service.name_fr || service.name_en) : service.name_en}</h5>
-                                                        <p className="text-xs font-bold text-slate-400 mt-2 line-clamp-2 uppercase tracking-widest">{service.description || "Enhanced protection for your policy"}</p>
-                                                    </div>
-                                                    {isSelected && (
-                                                        <div className="mt-6 flex items-center gap-2 text-[#00539F] text-[10px] font-black uppercase tracking-widest">
-                                                            <div className="h-6 w-6 bg-blue-100 rounded-full flex items-center justify-center">
-                                                                <Check className="h-3.5 w-3.5" />
-                                                            </div>
-                                                            Service Selected
-                                                        </div>
+                                                    onClick={() => !isIncluded && (
+                                                        isSelected
+                                                            ? setValue("selected_services", (watch("selected_services") || []).filter((id: string) => id !== service.id))
+                                                            : setValue("selected_services", [...(watch("selected_services") || []), service.id])
                                                     )}
+                                                    className={`relative p-8 rounded-[40px] border-2 transition-all cursor-pointer group hover:shadow-2xl ${isSelected || isIncluded ? 'border-[#00539F] bg-blue-50/50 shadow-xl scale-[1.02]' : 'border-slate-100 bg-white shadow-md'}`}
+                                                >
+                                                    <div className="flex flex-col h-full space-y-4">
+                                                        <div className="flex justify-between items-start">
+                                                            <div className={`h-14 w-14 rounded-2xl flex items-center justify-center ${isSelected || isIncluded ? 'bg-blue-100' : 'bg-slate-100'}`}>
+                                                                <CheckCircle2 className={`h-8 w-8 ${isSelected || isIncluded ? 'text-[#00539F]' : 'text-slate-400'}`} />
+                                                            </div>
+                                                            {isIncluded ? (
+                                                                <Badge className="bg-emerald-500 text-white px-3 py-1 rounded-full font-black text-[10px] tracking-widest border-none">INCLUDED</Badge>
+                                                            ) : (
+                                                                <span className="text-lg font-black text-[#00539F]">+{wrapperFormatCurrency(service.default_price)}</span>
+                                                            )}
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="text-lg font-black text-slate-900 leading-tight">{language === 'fr' ? service.name_fr || service.name_en : service.name_en}</h4>
+                                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1 tracking-wider">{service.category || 'Maintenance'}</p>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             );
                                         })
                                     ) : (
                                         <div className="col-span-full py-20 text-center bg-slate-50 rounded-[40px] border-2 border-dashed border-slate-200">
                                             <div className="h-20 w-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-                                                <Info className="h-10 w-10 text-slate-300" />
+                                                <PlusCircle className="h-10 w-10 text-slate-300" />
                                             </div>
                                             <h4 className="text-xl font-black text-slate-900 uppercase tracking-widest">No Extra Services Available</h4>
-                                            <p className="text-slate-400 font-bold mt-2">This policy does not have any optional extras to add.</p>
+                                            <p className="text-slate-400 font-bold mt-2">No additional services could be loaded at this time.</p>
                                         </div>
                                     )}
                                 </div>
@@ -1155,13 +1103,13 @@ export function QuoteWizard() {
                                                 <div className="pt-8 border-t border-slate-200">
                                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 block">Included Extra Services</span>
                                                     <div className="flex flex-wrap gap-2">
-                                                        {watch("selected_services")?.map(key => (
-                                                            <Badge key={key} className="bg-white text-[#00539F] border-2 border-blue-100 rounded-xl px-4 py-2 font-bold shadow-sm">
-                                                                {language === 'fr' ? FEATURES_MAP[key].fr : FEATURES_MAP[key].en}
+                                                        {calculation?.included_services?.map((s: any) => (
+                                                            <Badge key={s.id} className="bg-white text-[#00539F] border-2 border-blue-100 rounded-xl px-4 py-2 font-bold shadow-sm">
+                                                                {language === 'fr' ? s.name_fr || s.name : s.name_en || s.name}
                                                             </Badge>
                                                         ))}
-                                                        {(!watch("selected_services") || watch("selected_services").length === 0) && (
-                                                            <span className="text-slate-400 italic font-medium">No additional services selected</span>
+                                                        {(!calculation?.included_services || calculation.included_services.length === 0) && (
+                                                            <span className="text-slate-400 italic font-medium">No additional services active</span>
                                                         )}
                                                     </div>
                                                 </div>
@@ -1224,25 +1172,25 @@ export function QuoteWizard() {
                                                                         <tr key={id}>
                                                                             <td className="px-6 py-4 font-bold text-slate-600">{el?.name}</td>
                                                                             <td className="px-6 py-4 font-bold text-slate-400 text-xs">Extras</td>
-                                                                            <td className="px-6 py-4 font-black text-slate-900 text-right">+{wrapperFormatCurrency(el?.value || 0)}</td>
+                                                                            <td className="px-6 py-4 font-black text-slate-900 text-right">+{formatCurrency(el?.value || 0)}</td>
                                                                         </tr>
                                                                     );
                                                                 })}
                                                                 {/* Display Dynamic Admin Fee if > 0 */}
-                                                                {(calculatedValues?.adminFee ?? 0) > 0 && (
+                                                                {(calculation?.calculation_breakdown?.step2_admin_fee?.amount ?? 0) > 0 && (
                                                                     <tr>
-                                                                        <td className="px-6 py-4 font-bold text-slate-600 uppercase">COMPANY ADMIN FEE</td>
+                                                                        <td className="px-6 py-4 font-bold text-slate-600 uppercase">COMPANY ADMIN FEE ({calculation?.calculation_breakdown?.step2_admin_fee?.percent ?? 0}%)</td>
                                                                         <td className="px-6 py-4 font-bold text-slate-400 text-xs">Mandatory</td>
-                                                                        <td className="px-6 py-4 font-black text-slate-900 text-right">+{wrapperFormatCurrency(calculatedValues?.adminFee || 0)}</td>
+                                                                        <td className="px-6 py-4 font-black text-slate-900 text-right">+{formatCurrency(calculation?.calculation_breakdown?.step2_admin_fee?.amount ?? 0)}</td>
                                                                     </tr>
                                                                 )}
                                                                 {/* Display Dynamic Tax */}
                                                                 <tr>
                                                                     <td className="px-6 py-4 font-bold text-slate-600 uppercase">
-                                                                        GOVT TAX ({companySettings?.government_tax_percent || 0}%)
+                                                                        GOVT TAX ({calculation?.calculation_breakdown?.step5_tax?.percent ?? companySettings?.government_tax_percent ?? 0}%)
                                                                     </td>
                                                                     <td className="px-6 py-4 font-bold text-blue-500 text-xs">Included</td>
-                                                                    <td className="px-6 py-4 font-black text-slate-900 text-right">+{wrapperFormatCurrency(calculatedValues?.totalTax || 0)}</td>
+                                                                    <td className="px-6 py-4 font-black text-slate-900 text-right">+{formatCurrency(calculation?.calculation_breakdown?.step5_tax?.amount ?? 0)}</td>
                                                                 </tr>
                                                             </tbody>
                                                         </table>
@@ -1266,11 +1214,12 @@ export function QuoteWizard() {
                                                                             </tr>
                                                                         );
                                                                     })}
-                                                                    {watch("discount_percent") > 0 && (
-                                                                        <tr>
-                                                                            <td className="px-6 py-4 font-bold">Manual Adjustment</td>
-                                                                            <td className="px-6 py-4 font-bold text-xs">-{watch("discount_percent")}% Reduction</td>
-                                                                            <td className="px-6 py-4 font-black text-right">-{wrapperFormatCurrency((calculatedValues?.base || 0) * ((watch("discount_percent") || 0) / 100))}</td>
+                                                                    {/* Manual percent discount row */}
+                                                                    {(watch("discount_percent") > 0 || (calculation?.calculation_breakdown?.step4_admin_discount?.amount ?? 0) > 0) && (
+                                                                        <tr className="bg-green-100/50">
+                                                                            <td className="px-6 py-4 font-black text-[#00539F]">TOTAL ADMIN DISCOUNTS</td>
+                                                                            <td className="px-6 py-4 font-bold text-xs">-{calculation?.calculation_breakdown?.step4_admin_discount?.percent ?? watch("discount_percent")}% Total</td>
+                                                                            <td className="px-6 py-4 font-black text-right">-{wrapperFormatCurrency(calculation?.calculation_breakdown?.step4_admin_discount?.amount ?? 0)}</td>
                                                                         </tr>
                                                                     )}
                                                                 </tbody>
@@ -1335,6 +1284,18 @@ export function QuoteWizard() {
                                                         <div className="text-6xl font-black tracking-tighter">
                                                             {wrapperFormatCurrency(calculatedValues?.finalPremium || 0)}
                                                         </div>
+                                                        {watch('premium_frequency') !== 'annual' && calculation && (
+                                                            <div className="mt-4 p-4 bg-white/10 rounded-2xl space-y-2 border border-white/10">
+                                                                <div className="flex justify-between items-center">
+                                                                    <span className="text-sm font-bold text-blue-100/60 uppercase">Monthly Installment</span>
+                                                                    <span className="text-xl font-black">{wrapperFormatCurrency(calculation.monthly_installment)}</span>
+                                                                </div>
+                                                                <div className="flex justify-between items-center text-xs text-blue-100/40">
+                                                                    <span>Total with Interest (APR {calculation.apr_percent}%)</span>
+                                                                    <span>{wrapperFormatCurrency(calculation.total_installment_price)}</span>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                         <span className="text-blue-100/40 text-xs font-bold mt-2 uppercase tracking-widest">Guaranteed for 30 days • Inclusive of all taxes</span>
                                                     </div>
                                                 </div>

@@ -105,7 +105,7 @@ export function QuoteDetails({ id }: { id: string }) {
                             <Send className="mr-2 h-4 w-4" /> Send to Client
                         </Button>
                     )}
-                    {(quote.status === 'sent' || quote.status === 'accepted') && (
+                    {(['sent', 'draft_from_client', 'accepted', 'approved'].includes(quote.status)) && (
                         <Dialog>
                             <DialogTrigger asChild>
                                 <Button variant="default" className="w-full sm:w-auto">
@@ -194,9 +194,9 @@ export function QuoteDetails({ id }: { id: string }) {
                             <div className="pt-2 pb-2">
                                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Included Services</span>
                                 <div className="flex flex-wrap gap-2 mt-2">
-                                    {quote.included_services.map((service, index) => (
+                                    {quote.included_services.map((service: any, index: number) => (
                                         <Badge key={index} variant="secondary" className="text-xs">
-                                            {service}
+                                            {typeof service === 'object' ? service.name_en || service.name : service}
                                         </Badge>
                                     ))}
                                 </div>

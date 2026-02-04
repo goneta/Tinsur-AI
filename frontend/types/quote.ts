@@ -22,7 +22,7 @@ export interface Quote {
     excess?: number;
     included_services?: any[];
     risk_score?: number;
-    status: 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'expired' | 'sent' | 'accepted';
+    status: 'draft' | 'draft_from_client' | 'submitted' | 'under_review' | 'approved' | 'rejected' | 'expired' | 'sent' | 'accepted' | 'policy_created' | 'archived';
     details?: Record<string, any>;
     notes?: string;
     valid_until: string;
@@ -90,7 +90,7 @@ export interface QuoteCalculationResponse {
     apr_percent: number;
     arrangement_fee: number;
     extra_fee: number;
-    admin_fee: number; // New
+    admin_fee: number;
     total_financed_amount: number;
     monthly_installment: number;
     total_installment_price: number;
@@ -99,6 +99,7 @@ export interface QuoteCalculationResponse {
     risk_score: number;
     risk_factors_analysis: Record<string, any>;
     recommendations: string[];
+    calculation_breakdown?: Record<string, any>;
 }
 
 export interface PolicyType {

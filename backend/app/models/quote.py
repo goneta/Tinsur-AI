@@ -7,6 +7,7 @@ from sqlalchemy.orm import relationship
 import uuid
 from app.core.guid import GUID
 from datetime import datetime, timedelta
+from app.core.time import utcnow
 
 from app.core.database import Base
 
@@ -34,11 +35,16 @@ class Quote(Base):
     # Financial Snapshot (Calculated at creation)
     apr_percent = Column(Float, default=0.0)
     arrangement_fee = Column(Numeric(15, 2), default=0.0)
-    admin_fee = Column(Numeric(15, 2), default=0.0)
+    admin_fee = Column(Numeric(15, 2), default=0.0) # Calculated amount
+    admin_fee_percent = Column(Float, default=0.0) # Snapshot percent
+    admin_discount_percent = Column(Float, default=0.0) # Snapshot percent
     extra_fee = Column(Numeric(15, 2), default=0.0)
     total_financed_amount = Column(Numeric(15, 2), default=0.0)
     monthly_installment = Column(Numeric(15, 2), default=0.0)
     total_installment_price = Column(Numeric(15, 2), default=0.0)
+    
+    # Calculation audit trail
+    calculation_breakdown = Column(JSON, default={})
     
     # Premium Policy Snapshot
     excess = Column(Numeric(15, 2), default=0.0)
@@ -50,7 +56,7 @@ class Quote(Base):
     risk_score = Column(Numeric(5, 2))
     
     # Status
-    status = Column(String(50), default='draft')  # 'draft', 'submitted', 'under_review', 'approved', 'rejected', 'expired'
+    status = Column(String(50), default='draft')  # 'draft', 'draft_from_client', 'sent', 'accepted', 'policy_created', 'submitted', 'under_review', 'approved', 'rejected', 'expired', 'archived'
     valid_until = Column(Date)
     valid_for_days = Column(Integer, default=30)
     
@@ -60,8 +66,8 @@ class Quote(Base):
     
     # Audit
     created_by = Column(GUID(), ForeignKey("users.id"))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     
     # Relationships
     company = relationship("Company")

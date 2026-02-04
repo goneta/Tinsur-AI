@@ -18,8 +18,14 @@ import { format } from "date-fns"
 const statusColor = (status: string) => {
     switch (status?.toLowerCase()) {
         case 'draft': return 'secondary';
+        case 'draft_from_client': return 'secondary';
         case 'sent': return 'default';
+        case 'submitted': return 'default';
+        case 'under_review': return 'default';
         case 'accepted': return 'default';
+        case 'policy_created': return 'default';
+        case 'approved': return 'default';
+        case 'archived': return 'outline';
         case 'rejected': return 'destructive';
         case 'expired': return 'destructive';
         default: return 'outline';
@@ -117,12 +123,12 @@ export const columns = (
                             <DropdownMenuItem onClick={() => setTimeout(() => onView(quote.id), 0)}>
                                 <FileText className="mr-2 h-4 w-4" /> View Details
                             </DropdownMenuItem>
-                            {quote.status === 'draft' && (
+                            {['draft', 'draft_from_client'].includes(quote.status) && (
                                 <DropdownMenuItem onClick={() => setTimeout(() => onSend(quote), 0)}>
                                     <Send className="mr-2 h-4 w-4" /> Send to Client
                                 </DropdownMenuItem>
                             )}
-                            {['sent'].includes(quote.status) && (
+                            {['sent', 'draft_from_client', 'submitted', 'under_review'].includes(quote.status) && (
                                 <>
                                     <DropdownMenuItem className="text-green-600" onClick={() => setTimeout(() => onApprove(quote), 0)}>
                                         <CheckCircle className="mr-2 h-4 w-4" /> Approve
@@ -132,12 +138,12 @@ export const columns = (
                                     </DropdownMenuItem>
                                 </>
                             )}
-                            {['accepted'].includes(quote.status) && (
+                            {['accepted', 'policy_created', 'approved'].includes(quote.status) && (
                                 <DropdownMenuItem className="text-gray-600" onClick={() => setTimeout(() => onArchive(quote), 0)}>
                                     <Archive className="mr-2 h-4 w-4" /> Archive
                                 </DropdownMenuItem>
                             )}
-                            {quote.status === 'draft' && (
+                            {['draft', 'draft_from_client'].includes(quote.status) && (
                                 <DropdownMenuItem className="text-red-600" onClick={() => setTimeout(() => onDelete(quote.id), 0)}>
                                     <Trash className="mr-2 h-4 w-4" /> Delete
                                 </DropdownMenuItem>

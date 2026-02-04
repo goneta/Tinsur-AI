@@ -485,7 +485,7 @@ export function InsuranceDetailsTab({
                 drivers: fetchedDrivers.length > 0 ? [fetchedDrivers[0].fullName] : ['Main Driver'],
                 usage: 'Social, Domestic & Pleasure',
                 status: q.status,
-                included_services: (q.details?.selected_services as string[]) || ['comprehensive']
+                included_services: (q.details?.selected_services?.map((s: any) => typeof s === 'object' ? s.id : s) || ['comprehensive'])
             })));
 
             // Map Policies
@@ -497,7 +497,7 @@ export function InsuranceDetailsTab({
                 activeDate: p.start_date.split('T')[0],
                 status: p.status,
                 premium: `£${p.premium_amount || 0}`,
-                included_services: ((p.details as Record<string, unknown>)?.selected_services as string[]) || ['comprehensive', 'windscreen']
+                included_services: ((p.details as Record<string, unknown>)?.selected_services as any[])?.map((s: any) => typeof s === 'object' ? s.id : s) || ['comprehensive', 'windscreen']
             })));
 
             // Map Claims
@@ -1086,7 +1086,7 @@ export function InsuranceDetailsTab({
                                             // Actions
                                             const actions = (
                                                 <div className="flex gap-2 w-full">
-                                                    {quote.status === 'approved' && (
+                                                    {['sent', 'draft_from_client'].includes(quote.status) && (
                                                         <Button
                                                             onClick={() => handleApproveQuote(quote)}
                                                             className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl"

@@ -65,6 +65,14 @@ export const QuoteAPI = {
         return response.data;
     },
 
+    matchPoliciesPublic: async (data?: any) => {
+        const payload = {
+            ...(data || {})
+        };
+        const response = await api.post('/premium-policies/match-public', payload);
+        return response.data;
+    },
+
     // Archive quote
     archive: async (id: string) => {
         const response = await api.post<Quote>(`/quotes/${id}/archive`);

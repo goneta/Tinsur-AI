@@ -16,6 +16,7 @@ import {
 import { portalApi } from '@/lib/portal-api';
 import { useEffect } from 'react';
 import { QuoteAPI } from '@/lib/api/quotes';
+import { useAuth } from '@/lib/auth';
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -53,6 +54,7 @@ export function QuoteCreationWizard({ open, onOpenChange, vehicle, drivers, onSu
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { language, t } = useLanguage();
     const { toast } = useToast();
+    const { user } = useAuth();
 
     // Form States
     const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
@@ -65,6 +67,8 @@ export function QuoteCreationWizard({ open, onOpenChange, vehicle, drivers, onSu
     const [expandedTiers, setExpandedTiers] = useState<Record<string, boolean>>({});
     const [realPolicies, setRealPolicies] = useState<any[]>([]);
     const [isLoadingPolicies, setIsLoadingPolicies] = useState(false);
+
+    const isPublicMarketplace = user?.role === 'client' && !user?.company_id;
 
     useEffect(() => {
         if (open) {
@@ -106,12 +110,23 @@ export function QuoteCreationWizard({ open, onOpenChange, vehicle, drivers, onSu
                         }
                     };
 
-                    const result = await QuoteAPI.matchPolicies(clientId, overrides);
+                    const result = isPublicMarketplace
+                        ? await QuoteAPI.matchPoliciesPublic(overrides)
+                        : await QuoteAPI.matchPolicies(clientId, overrides);
+
                     if (result.status === "success") {
-                        setRealPolicies(result.data);
+                        const policies = isPublicMarketplace
+                            ? (result.companies || []).flatMap((c: any) => (c.policies || []).map((p: any) => ({
+                                ...p,
+                                company_name: c.company_name,
+                                company_primary_color: c.company_primary_color
+                            })))
+                            : result.data;
+
+                        setRealPolicies(policies);
                         // Default selection to the first policy (often Bronze or similar)
-                        if (result.data && result.data.length > 0) {
-                            setSelectedPolicy(result.data[0]);
+                        if (policies && policies.length > 0) {
+                            setSelectedPolicy(policies[0]);
                         }
                     } else if (result.status === "no_policies") {
                         setRealPolicies([]);
@@ -127,7 +142,7 @@ export function QuoteCreationWizard({ open, onOpenChange, vehicle, drivers, onSu
             };
             fetchPolicies();
         }
-    }, [open, clientId]);
+    }, [open, clientId, isPublicMarketplace]);
 
     const FEATURES_MAP: Record<string, { en: string; fr: string; price: number }> = {
         "comprehensive": { en: "Comprehensive cover", fr: "Couverture tous risques", price: 0.00 },

@@ -158,12 +158,20 @@ export const portalApi = {
 
     // Quotes
     calculateQuote: async (data: any) => {
-        const response = await api.post<any>('/portal/quotes/calculate', data);
+        const payload = {
+            ...data,
+            selected_services: data?.selected_services ?? []
+        };
+        const response = await api.post<any>('/portal/quotes/calculate', payload);
         return response.data;
     },
 
     createQuote: async (data: any) => {
-        const response = await api.post<any>('/portal/quotes', data);
+        const payload = {
+            ...data,
+            selected_services: data?.selected_services ?? []
+        };
+        const response = await api.post<any>('/portal/quotes', payload);
         return response.data;
     },
 

@@ -7,7 +7,7 @@ from app.core.database import get_db
 from app.core.dependencies import get_current_active_user, require_admin
 from app.models.quote_element import QuoteElement
 from app.models.user import User
-from pydantic import BaseModel, condecimal
+from pydantic import BaseModel, ConfigDict, condecimal
 
 router = APIRouter()
 
@@ -30,9 +30,7 @@ class QuoteElementOut(QuoteElementBase):
     company_id: Any
     created_at: Any
     updated_at: Any
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 @router.get("/", response_model=List[QuoteElementOut])
 def read_quote_elements(

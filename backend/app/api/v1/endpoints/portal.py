@@ -5,6 +5,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from app.core.time import utcnow
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_client
@@ -125,7 +126,7 @@ async def register_client(
             referral.status = "converted" # Or keep pending until first payment? 
             # Plan says: "In process_payment, mark referral as converted and award points... on first payment"
             # So I'll just link the referred_client_id here.
-            referral.converted_at = datetime.utcnow()
+            referral.converted_at = utcnow()
             db.add(referral)
             db.commit() # Commit referral changes if any
     
@@ -372,7 +373,7 @@ async def process_my_payment(
     
     # Create and process payment
     payment = payment_service.create_payment(
-        company_id=current_client.company_id,
+        company_id=(current_client.companies[0].id if getattr(current_client, 'companies', None) and len(current_client.companies) > 0 else None),
         policy_id=payment_request.policy_id,
         client_id=current_client.id,
         amount=payment_request.amount,
@@ -420,13 +421,17 @@ async def calculate_my_quote(
     """
     quote_repo = QuoteRepository(db)
     quote_service = QuoteService(quote_repo)
-    
+
+    company_id = current_client.companies[0].id if getattr(current_client, 'companies', None) and len(current_client.companies) > 0 else None
+    if not company_id:
+        raise HTTPException(status_code=400, detail="Client is not associated with any company")
+
     result = quote_service.calculate_premium(
         policy_type_id=calculation_request.policy_type_id,
         coverage_amount=calculation_request.coverage_amount,
         risk_factors=calculation_request.risk_factors,
         duration_months=calculation_request.duration_months,
-        company_id=current_client.company_id,
+        company_id=(current_client.companies[0].id if getattr(current_client, 'companies', None) and len(current_client.companies) > 0 else None),
         selected_services=calculation_request.selected_services,
         financial_overrides=calculation_request.financial_overrides
     )
@@ -444,12 +449,16 @@ async def create_my_quote(
     """
     quote_repo = QuoteRepository(db)
     quote_service = QuoteService(quote_repo)
-    
+
+    company_id = current_client.companies[0].id if getattr(current_client, 'companies', None) and len(current_client.companies) > 0 else None
+    if not company_id:
+        raise HTTPException(status_code=400, detail="Client is not associated with any company")
+
     quote_data.client_id = current_client.id
     
     try:
         quote = quote_service.create_quote(
-            company_id=current_client.company_id,
+            company_id=(current_client.companies[0].id if getattr(current_client, 'companies', None) and len(current_client.companies) > 0 else None),
             client_id=current_client.id,
             policy_type_id=quote_data.policy_type_id,
             coverage_amount=quote_data.coverage_amount,
@@ -479,7 +488,7 @@ async def create_my_ticket(
     Create a support ticket.
     """
     ticket = Ticket(
-        company_id=current_client.company_id,
+        company_id=(current_client.companies[0].id if getattr(current_client, 'companies', None) and len(current_client.companies) > 0 else None),
         client_id=current_client.id,
         ticket_number=f"TKT-{random.randint(10000, 99999)}",
         category=ticket_data.category,
@@ -610,7 +619,7 @@ async def create_my_referral(
     """
     service = ReferralService(db)
     return service.create_referral(
-        company_id=current_client.company_id,
+        company_id=(current_client.companies[0].id if getattr(current_client, 'companies', None) and len(current_client.companies) > 0 else None),
         referrer_client_id=current_client.id
     )
 

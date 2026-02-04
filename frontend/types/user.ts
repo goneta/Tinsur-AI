@@ -4,7 +4,7 @@
 
 export interface User {
     id: string;
-    company_id: string;
+    company_id?: string | null;
     email: string;
     first_name: string;
     last_name: string;

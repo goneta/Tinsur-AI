@@ -1,7 +1,7 @@
 """
 Pydantic schemas for quotes.
 """
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime, date
 from uuid import UUID
@@ -57,7 +57,7 @@ class QuoteUpdate(BaseModel):
     premium_frequency: Optional[str] = None
     duration_months: Optional[int] = Field(None, ge=1, le=120)
     risk_score: Optional[Decimal] = Field(None, ge=0, le=100, decimal_places=2)
-    status: Optional[str] = Field(None, pattern='^(draft|sent|accepted|rejected|expired)$')
+    status: Optional[str] = Field(None, pattern='^(draft|draft_from_client|sent|accepted|policy_created|submitted|under_review|approved|rejected|expired|archived)$')
     details: Optional[Dict[str, Any]] = None
     notes: Optional[str] = None
 
@@ -79,7 +79,10 @@ class QuoteResponse(QuoteBase):
     monthly_installment: Optional[Decimal] = 0.0
     total_installment_price: Optional[Decimal] = 0.0
     excess: Optional[Decimal] = 0.0
-    included_services: Optional[List[str]] = []
+    included_services: Optional[List[dict]] = []
+    admin_fee_percent: Optional[float] = 0.0
+    admin_discount_percent: Optional[float] = 0.0
+    calculation_breakdown: Optional[Dict[str, Any]] = {}
     risk_score: Optional[Decimal]
     status: str
     valid_until: Optional[date] = None
@@ -90,9 +93,7 @@ class QuoteResponse(QuoteBase):
     client_name: str
     created_by_name: str
     policy_type_name: str
-    
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class QuoteListResponse(BaseModel):
@@ -119,7 +120,10 @@ class QuoteCalculationResponse(BaseModel):
     monthly_installment: Decimal
     total_installment_price: Decimal
     excess: Decimal
-    included_services: List[str]
+    included_services: List[dict]
+    admin_fee_percent: float
+    admin_discount_percent: float
+    calculation_breakdown: Dict[str, Any]
     risk_score: Decimal
     risk_factors_analysis: Dict[str, Any]
     recommendations: Optional[List[str]] = []

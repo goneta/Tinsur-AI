@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Plus, Loader2, FileText } from "lucide-react"
 import { EmptyState } from "@/components/ui/empty-state"
 import { QuoteAPI } from "@/lib/api/quotes"
@@ -207,11 +208,34 @@ export default function QuotesPage() {
             </div>
 
             <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
+
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                <span>{t("Lifecycle", "Lifecycle")}:</span>
+                <Badge role="button" onClick={() => setActiveTab('draft')} variant="secondary" className="cursor-pointer">Draft</Badge>
+                <Badge role="button" onClick={() => setActiveTab('draft_from_client')} variant="secondary" className="cursor-pointer">Draft (Client)</Badge>
+                <span className="text-muted-foreground">?</span>
+                <Badge role="button" onClick={() => setActiveTab('sent')} variant="default" className="cursor-pointer">Sent</Badge>
+                <Badge role="button" onClick={() => setActiveTab('submitted')} variant="default" className="cursor-pointer">Submitted</Badge>
+                <Badge role="button" onClick={() => setActiveTab('under_review')} variant="default" className="cursor-pointer">Under Review</Badge>
+                <span className="text-muted-foreground">?</span>
+                <Badge role="button" onClick={() => setActiveTab('accepted')} variant="default" className="cursor-pointer">Accepted</Badge>
+                <span className="text-muted-foreground">?</span>
+                <Badge role="button" onClick={() => setActiveTab('policy_created')} variant="default" className="cursor-pointer">Policy Created</Badge>
+                <span className="text-muted-foreground">?</span>
+                <Badge role="button" onClick={() => setActiveTab('archived')} variant="outline" className="cursor-pointer">Archived</Badge>
+                <Badge role="button" onClick={() => setActiveTab('rejected')} variant="destructive" className="cursor-pointer">Rejected</Badge>
+                <Badge role="button" onClick={() => setActiveTab('expired')} variant="destructive" className="cursor-pointer">Expired</Badge>
+                <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px]" onClick={() => setActiveTab('all')}>{t("Reset", "Reset")}</Button>
+            </div>
+
                 <TabsList>
                     <TabsTrigger value="all">{t("All Quotes", "All Quotes")}</TabsTrigger>
                     <TabsTrigger value="draft">{t("Draft", "Draft")}</TabsTrigger>
+                    <TabsTrigger value="draft_from_client">{t("Draft (Client)", "Draft (Client)")}</TabsTrigger>
                     <TabsTrigger value="sent">{t("Sent", "Sent")}</TabsTrigger>
+                    <TabsTrigger value="under_review">{t("Under Review", "Under Review")}</TabsTrigger>
                     <TabsTrigger value="accepted">{t("Accepted", "Accepted")}</TabsTrigger>
+                    <TabsTrigger value="policy_created">{t("Policy Created", "Policy Created")}</TabsTrigger>
                     <TabsTrigger value="archived" className="text-red-500 data-[state=active]:text-red-600">{t("Archived", "Archived")}</TabsTrigger>
                 </TabsList>
 
