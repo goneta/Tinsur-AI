@@ -80,6 +80,7 @@ class PremiumPolicyGlobalMatchItem(BaseModel):
     company_id: UUID
     company_name: str
     company_primary_color: Optional[str] = None
+    company_currency: Optional[str] = None
     recommended_id: Optional[UUID] = None
     policies: List[PremiumPolicyTypeResponse] = []
 

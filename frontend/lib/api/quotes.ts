@@ -1,4 +1,5 @@
 import { api } from '@/lib/api';
+import { PremiumPolicyType } from '@/lib/premium-policy-api';
 import {
     Quote,
     QuoteCreate,
@@ -8,6 +9,19 @@ import {
     QuoteCalculationResponse,
     PolicyType
 } from '@/types/quote';
+
+export interface MatchPublicResponse {
+    status: string;
+    message?: string;
+    companies?: Array<{
+        company_id: string;
+        company_name: string;
+        company_primary_color?: string;
+        company_currency?: string;
+        recommended_id?: string;
+        policies: PremiumPolicyType[];
+    }>;
+}
 
 export const QuoteAPI = {
     // List quotes with filters
@@ -61,16 +75,52 @@ export const QuoteAPI = {
             client_id: clientId,
             ...(data || {})
         };
-        const response = await api.post('/premium-policies/match', payload);
-        return response.data;
+        try {
+            const response = await api.post('/premium-policies/match', payload);
+            return response.data;
+        } catch (error: any) {
+            const status = error?.response?.status;
+            const detail = error?.response?.data?.detail;
+            const code = detail?.code;
+
+            if (status === 404 && code === "NO_PREMIUM_POLICIES") {
+                return {
+                    status: "no_policies",
+                    message: detail?.message || "No eligible policies found"
+                };
+            }
+
+            if (status === 400 && code === "MISSING_CLIENT_INFO") {
+                return {
+                    status: "missing_info",
+                    message: detail?.message || "Missing client information",
+                    missing_fields: detail?.missing_fields || []
+                };
+            }
+
+            // Fallback for other 404/400 errors
+            if (status === 404 && typeof detail === "string") {
+                return { status: "error", message: detail };
+            }
+
+            throw error;
+        }
     },
 
-    matchPoliciesPublic: async (data?: any) => {
+    matchPoliciesPublic: async (data?: any): Promise<MatchPublicResponse> => {
         const payload = {
             ...(data || {})
         };
-        const response = await api.post('/premium-policies/match-public', payload);
-        return response.data;
+        try {
+            const response = await api.post('/premium-policies/match-public', payload);
+            return response.data;
+        } catch (error: any) {
+            const detail = error?.response?.data?.detail;
+            if (typeof detail === "string") {
+                return { status: "error", message: detail };
+            }
+            throw error;
+        }
     },
 
     // Archive quote

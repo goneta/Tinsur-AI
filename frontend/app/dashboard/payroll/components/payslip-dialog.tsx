@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/lib/utils";
 
 interface PayslipDialogProps {
     isOpen: boolean;
@@ -56,7 +57,7 @@ export function PayslipDialog({ isOpen, onOpenChange, data }: PayslipDialogProps
                         <div className="text-right">
                             <h3 className="font-bold">{data.employee_name || 'Employee Name'}</h3>
                             <p className="text-sm text-muted-foreground">Reference: {data.id.slice(0, 8)}</p>
-                            <p className="text-sm text-muted-foreground">Date: {new Date(data.payment_date).toLocaleDateString()}</p>
+                            <p className="text-sm text-muted-foreground">Date: {formatDate(data.payment_date)}</p>
                         </div>
                     </div>
 

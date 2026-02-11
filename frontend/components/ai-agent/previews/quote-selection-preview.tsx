@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FileText, ArrowRight } from 'lucide-react';
+import { formatDate } from '@/lib/utils';
 
 interface QuoteEntry {
     id: string;
@@ -49,7 +50,7 @@ export function QuoteSelectionPreview({ data, onAction }: QuoteSelectionPreviewP
                         {data.quotes.map((quote) => (
                             <tr key={quote.id} className="hover:bg-gray-50/50 transition-colors group">
                                 <td className="px-4 py-4 text-xs text-gray-600">
-                                    {new Date(quote.created_at).toLocaleDateString()}
+                                    {formatDate(quote.created_at)}
                                 </td>
                                 <td className="px-4 py-4">
                                     <span className="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">

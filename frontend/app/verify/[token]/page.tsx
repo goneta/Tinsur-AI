@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle2, XCircle, ShieldCheck, Calendar, Building2, UserCircle } from "lucide-react";
+import { formatDate } from "@/lib/utils";
 
 interface VerificationData {
     status: string;
@@ -128,7 +129,7 @@ export default function VerificationPage() {
                                 <div>
                                     <p className="text-xs text-gray-500 uppercase font-semibold">Expiry Date</p>
                                     <p className={`text-sm font-medium ${isInactive ? 'text-red-600' : 'text-gray-900'}`}>
-                                        {data?.expiry_date ? new Date(data.expiry_date).toLocaleDateString() : 'N/A'}
+                                        {data?.expiry_date ? formatDate(data.expiry_date) : 'N/A'}
                                     </p>
                                 </div>
                             </div>
@@ -142,7 +143,7 @@ export default function VerificationPage() {
                     <div className="text-center border-t pt-4">
                         <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Verification Timestamp</p>
                         <p className="text-xs text-gray-500 tabular-nums">
-                            {data?.verified_at ? new Date(data.verified_at).toLocaleString() : new Date().toLocaleString()}
+                            {data?.verified_at ? formatDate(data.verified_at) : formatDate(new Date())}
                         </p>
                     </div>
                 </CardContent>

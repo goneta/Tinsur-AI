@@ -17,6 +17,7 @@ import { ProcessPayrollDialog } from './components/process-payroll-dialog';
 import { PayslipDialog } from './components/payslip-dialog';
 import { Eye, CircleDollarSign, History, Users } from 'lucide-react';
 import { useLanguage } from '@/contexts/language-context';
+import { formatDate } from '@/lib/utils';
 
 export default function PayrollPage() {
     const { t } = useLanguage();
@@ -185,7 +186,7 @@ export default function PayrollPage() {
 
                                         return (
                                             <TableRow key={tItem.id}>
-                                                <TableCell>{new Date(tItem.payment_date).toLocaleDateString()}</TableCell>
+                                                <TableCell>{formatDate(tItem.payment_date)}</TableCell>
                                                 <TableCell><Badge variant="outline">{tItem.payment_month || '-'}</Badge></TableCell>
                                                 <TableCell className="font-medium hover:text-primary cursor-pointer" onClick={() => {
                                                     const e = employees.find(emp => emp.id === tItem.employee_id);

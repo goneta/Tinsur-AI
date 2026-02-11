@@ -10,6 +10,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { formatDate } from '@/lib/utils';
 
 interface TelematicsTableProps {
     data: TelematicsData[];
@@ -33,7 +34,7 @@ export function TelematicsTable({ data }: TelematicsTableProps) {
             <TableBody>
                 {data.map((trip) => (
                     <TableRow key={trip.id}>
-                        <TableCell>{new Date(trip.trip_date).toLocaleDateString()}</TableCell>
+                        <TableCell>{formatDate(trip.trip_date)}</TableCell>
                         <TableCell>{trip.distance_km.toFixed(1)}</TableCell>
                         <TableCell>{trip.avg_speed.toFixed(1)} km/h</TableCell>
                         <TableCell>

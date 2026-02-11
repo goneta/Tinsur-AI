@@ -16,16 +16,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 
 import { premiumPolicyApi, PremiumPolicyType } from "@/lib/premium-policy-api"
+import { policyServiceApi, PolicyService } from "@/lib/policy-service-api"
+import { useAuth } from "@/lib/auth"
 import { useLanguage } from "@/contexts/language-context"
 
 export default function QuotesPage() {
     const router = useRouter()
     const { toast } = useToast()
     const { t } = useLanguage()
+    const { user } = useAuth()
     const [quotes, setQuotes] = useState<Quote[]>([])
     const [loading, setLoading] = useState(true)
     const [policyTypes, setPolicyTypes] = useState<Record<string, string>>({})
     const [premiumPolicyTypes, setPremiumPolicyTypes] = useState<Record<string, PremiumPolicyType>>({}) // Map id -> Object
+    const [policyServices, setPolicyServices] = useState<PolicyService[]>([])
     const [isMounted, setIsMounted] = useState(false)
     const [processingId, setProcessingId] = useState<string | null>(null)
     const [activeTab, setActiveTab] = useState("all")
@@ -70,6 +74,19 @@ export default function QuotesPage() {
         setIsMounted(true)
         fetchQuotes()
     }, [])
+
+    useEffect(() => {
+        if (!user?.company_id) return
+        const loadServices = async () => {
+            try {
+                const services = await policyServiceApi.getAll({ company_id: user.company_id })
+                setPolicyServices(services)
+            } catch (error) {
+                console.warn("Failed to fetch policy services", error)
+            }
+        }
+        loadServices()
+    }, [user?.company_id])
 
     // --- Action Handlers ---
 
@@ -183,6 +200,10 @@ export default function QuotesPage() {
             quote={quote}
             policyTypeName={policyTypes[quote.policy_type_id]}
             premiumPolicyType={premiumPolicyTypes[quote.policy_type_id]}
+            allServices={policyServices}
+            onServicesUpdated={(updated) => {
+                setQuotes(prev => prev.map(q => q.id === updated.id ? updated : q))
+            }}
             onSend={handleSend}
             onApprove={handleApprove}
             onReject={handleReject}
@@ -191,7 +212,7 @@ export default function QuotesPage() {
             onEdit={handleEdit}
             loadingId={processingId}
         />
-    ), [policyTypes, handleSend, handleApprove, handleReject, handleArchive, handleDelete, handleEdit, processingId])
+    ), [policyTypes, premiumPolicyTypes, policyServices, handleSend, handleApprove, handleReject, handleArchive, handleDelete, handleEdit, processingId])
 
     if (!isMounted) return null
 

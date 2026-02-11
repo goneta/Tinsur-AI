@@ -340,6 +340,7 @@ def match_policies_public(
                 "company_id": company.id,
                 "company_name": company.name,
                 "company_primary_color": company.primary_color,
+                "company_currency": company.currency,
                 "recommended_id": match.get("recommended_id"),
                 "policies": match.get("data", [])
             })

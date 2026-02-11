@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { MessageSquare, Plus, Send } from "lucide-react";
+import { formatDate } from "@/lib/utils";
 
 export default function ChatPage() {
     const { toast } = useToast();
@@ -352,7 +353,7 @@ export default function ChatPage() {
                                     .map((msg) => (
                                         <div key={msg.id} className="mb-3">
                                             <div className="text-[11px] text-slate-500">
-                                                {new Date(msg.created_at).toLocaleString()}
+                                                {formatDate(msg.created_at)}
                                             </div>
                                             <div className="text-sm bg-white border rounded-md p-2">
                                                 {msg.message}

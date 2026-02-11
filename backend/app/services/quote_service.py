@@ -102,6 +102,7 @@ class QuoteService:
         excess = Decimal('0')
         # 1. Determine Base Premium
         base_premium = Decimal('0')
+        policy_price_defined = False
 
         # If policy_type_id not provided, try to find a match between eligible policies
         if not policy_type_id and company_id:
@@ -116,18 +117,17 @@ class QuoteService:
         if policy_type_id:
              policy = self.quote_repo.db.query(PremiumPolicyType).filter(PremiumPolicyType.id == policy_type_id).first()
              if policy:
-                 if policy.price:
-                     # Use Policy Fixed Price as Base
+                 if policy.price is not None:
+                     # Use Policy Fixed Price as Base (strictly)
                      base_premium = Decimal(str(policy.price))
-                     # Adjust for duration? Assuming policy price is Annual.
-                     base_premium = base_premium * duration_factor
+                     policy_price_defined = True
                  
                  # Populate included services and excess
-                 included_services = [{"id": str(s.id), "en": s.name_en, "fr": s.name_fr} for s in policy.services]
+                 included_services = [{"id": str(s.id), "name_en": s.name_en, "name_fr": s.name_fr} for s in policy.services]
                  excess = Decimal(str(policy.excess or 0))
         
         # 2. Fallback to Coverage * Rate if no policy price or 0
-        if base_premium == 0:
+        if base_premium == 0 and not policy_price_defined:
             base_premium = coverage_amount * base_rate
             base_premium = base_premium * duration_factor
 
@@ -211,7 +211,12 @@ class QuoteService:
         
         # Add fixed extra fee from financial overrides if present
         if financial_overrides and 'fixed_fee' in financial_overrides:
-            extra_fee += Decimal(str(financial_overrides['fixed_fee']))
+            fixed_fee = financial_overrides['fixed_fee']
+            if isinstance(fixed_fee, list):
+                for fee in fixed_fee:
+                    extra_fee += Decimal(str(fee))
+            elif fixed_fee is not None:
+                extra_fee += Decimal(str(fixed_fee))
             
         # Get IDs of already included services
         included_service_ids = {s["id"] for s in included_services}
@@ -226,7 +231,7 @@ class QuoteService:
                     if service:
                         extra_fee += Decimal(str(service.default_price or 0))
                         # Add to the list of services for the quote record breakdown if not already present
-                        included_services.append({"id": service_id_str, "en": service.name_en, "fr": service.name_fr})
+                        included_services.append({"id": service_id_str, "name_en": service.name_en, "name_fr": service.name_fr})
 
         subtotal2 = subtotal1 + extra_fee
 
@@ -304,6 +309,107 @@ class QuoteService:
             'included_services': included_services,
             'calculation_breakdown': calculation_breakdown
         }
+
+    def recalculate_quote_services(
+        self,
+        quote: Quote,
+        selected_services: List[UUID]
+    ) -> Quote:
+        """
+        Recalculate quote amounts using snapshot values and selected services.
+        Follows updated calculation order:
+        Base Premium + Total Services + Admin Fees -> Discount -> Tax -> Final.
+        """
+        base_premium = Decimal(str(quote.premium_amount or 0))
+        admin_fee_percent = Decimal(str(quote.admin_fee_percent or 0))
+        admin_discount_percent = Decimal(str(quote.admin_discount_percent or quote.discount_percent or 0))
+        tax_percent = Decimal(str(quote.tax_percent or 0))
+        arrangement_fee = Decimal(str(quote.arrangement_fee or 0))
+        apr_percent = Decimal(str(quote.apr_percent or 0))
+
+        policy = self.quote_repo.db.query(PremiumPolicyType).filter(
+            PremiumPolicyType.id == quote.policy_type_id
+        ).first()
+
+        included_services = []
+        included_total = Decimal("0")
+        included_ids = set()
+        if policy and policy.services:
+            for s in policy.services:
+                included_services.append({"id": str(s.id), "name_en": s.name_en, "name_fr": s.name_fr})
+                included_total += Decimal(str(s.default_price or 0))
+                included_ids.add(str(s.id))
+
+        optional_total = Decimal("0")
+        if selected_services:
+            from app.models.policy_service import PolicyService
+            for service_id in selected_services:
+                service = self.quote_repo.db.query(PolicyService).filter(
+                    PolicyService.id == service_id
+                ).first()
+                if not service:
+                    continue
+                if str(service.id) not in included_ids:
+                    included_services.append({
+                        "id": str(service.id),
+                        "name_en": service.name_en,
+                        "name_fr": service.name_fr
+                    })
+                optional_total += Decimal(str(service.default_price or 0))
+
+        total_services = included_total + optional_total
+
+        admin_fee_amount = (base_premium + total_services) * (admin_fee_percent / Decimal("100"))
+        discount_base = base_premium + total_services + admin_fee_amount
+        discount_amount = discount_base * (admin_discount_percent / Decimal("100"))
+        taxable_base = discount_base - discount_amount
+        tax_amount = taxable_base * (tax_percent / Decimal("100"))
+        final_premium = (taxable_base + tax_amount).quantize(Decimal("0.01"))
+
+        total_financed_amount = final_premium + arrangement_fee
+        interest_amount = total_financed_amount * (apr_percent / Decimal("100"))
+        total_installment_price = total_financed_amount + interest_amount
+        monthly_installment = Decimal("0")
+        if quote.duration_months and quote.duration_months > 0:
+            monthly_installment = total_installment_price / Decimal(quote.duration_months)
+
+        quote.extra_fee = total_services
+        quote.admin_fee = admin_fee_amount
+        quote.tax_amount = tax_amount
+        quote.final_premium = final_premium
+        quote.total_financed_amount = total_financed_amount
+        quote.monthly_installment = monthly_installment
+        quote.total_installment_price = total_installment_price
+        quote.included_services = included_services
+        quote.calculation_breakdown = {
+            "step1_base_premium": float(base_premium),
+            "step2_admin_fee": {
+                "percent": float(admin_fee_percent),
+                "amount": float(admin_fee_amount),
+                "subtotal1": float(base_premium + total_services + admin_fee_amount - total_services)
+            },
+            "step3_services": {
+                "amount": float(total_services),
+                "subtotal2": float(base_premium + total_services + admin_fee_amount)
+            },
+            "step4_admin_discount": {
+                "percent": float(admin_discount_percent),
+                "amount": float(discount_amount),
+                "subtotal3": float(taxable_base)
+            },
+            "step5_tax": {
+                "percent": float(tax_percent),
+                "amount": float(tax_amount),
+                "final_amount": float(final_premium)
+            },
+            "formula": "((P + S + (P+S)*F) - D) * (1 + T)"
+        }
+
+        details = quote.details or {}
+        details["selected_services"] = [str(s) for s in selected_services] if selected_services else []
+        quote.details = details
+
+        return self.quote_repo.update(quote)
     
     def _calculate_risk_score(self, risk_factors: Dict[str, Any]) -> Decimal:
         """Calculate risk score from risk factors (0-100)."""

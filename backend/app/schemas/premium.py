@@ -13,7 +13,7 @@ class PremiumScheduleBase(BaseModel):
     policy_id: UUID
     installment_number: str
     due_date: date
-    amount: Decimal = Field(..., ge=0, decimal_places=2)
+    amount: Decimal = Field(..., ge=0, multiple_of=Decimal('0.01'))
     grace_period_days: Decimal = Field(default=15, ge=0, le=90)
 
 
@@ -25,8 +25,8 @@ class PremiumScheduleCreate(PremiumScheduleBase):
 class PremiumScheduleUpdate(BaseModel):
     """Schema for updating a premium schedule."""
     status: Optional[str] = Field(None, pattern='^(pending|paid|overdue|waived)$')
-    late_fee: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
-    paid_amount: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
+    late_fee: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
+    paid_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
 
 
 class PremiumScheduleResponse(PremiumScheduleBase):
@@ -59,7 +59,7 @@ class PremiumScheduleListResponse(BaseModel):
 
 class PremiumCalculationRequest(BaseModel):
     """Schema for premium calculation."""
-    total_premium: Decimal = Field(..., ge=0, decimal_places=2)
+    total_premium: Decimal = Field(..., ge=0, multiple_of=Decimal('0.01'))
     frequency: str = Field(..., pattern='^(monthly|quarterly|semi-annual|annual)$')
     start_date: date
     duration_months: int = Field(..., ge=1, le=120)

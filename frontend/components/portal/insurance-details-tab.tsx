@@ -9,12 +9,9 @@ import {
     CreditCard, Calendar, Briefcase,
     XCircle, Info, Camera, Calculator,
     ShieldCheck, Edit3, ChevronRight, FileText, Download,
-    Check, AlertTriangle
+    Check, AlertTriangle, ArrowLeft
 } from 'lucide-react';
-import { QuoteCreationWizard } from './quote-creation-wizard';
-import { UniversalEntityCard } from '@/components/shared/universal-entity-card';
 import { PolicyCard } from '@/components/shared/policy-card';
-import { getCompanySettings } from "@/lib/settings-api";
 import { ClientDriver, ClientAutomobile } from '@/types/client';
 import { Quote as BackendQuote } from '@/types/quote';
 import { Policy as BackendPolicy } from '@/types/policy';
@@ -28,11 +25,11 @@ import { claimApi } from '@/lib/claim-api';
 import { paymentApi } from '@/lib/payment-api';
 import { UnifiedEntityForm } from '@/components/shared/unified-entity-form';
 import { VehicleDetailsTable } from './vehicle-details-table';
+import { policyServiceApi, PolicyService } from '@/lib/policy-service-api';
+import { premiumPolicyApi, PremiumPolicyType } from "@/lib/premium-policy-api";
+import { QuoteCard } from "@/components/quotes/quote-card";
 
-import {
-    Dialog,
-    DialogTrigger,
-} from "@/components/ui/dialog";
+import { QuoteWizard } from "@/components/quotes/quote-wizard";
 import {
     Table,
     TableBody,
@@ -87,21 +84,7 @@ export interface PortalVehicle {
     imageUrl?: string;
 }
 
-export interface PortalQuote {
-    id: string;
-    vehicle: PortalVehicle;
-    reference: string;
-    coverLevel: string;
-    coverType: string;
-    basePremium: string;
-    premium: string;
-    expiresAt: string;
-    drivers: string[];
-    usage: string;
-    status: string;
-    included_services: string[];
-    created_at?: string;
-}
+export type PortalQuote = BackendQuote;
 
 export interface PortalPolicy {
     id: string;
@@ -137,22 +120,6 @@ export interface PortalPayment {
 
 export type Driver = PortalDriver;
 export type Vehicle = PortalVehicle;
-
-const MOCK_DRIVERS: PortalDriver[] = [
-    {
-        id: '1',
-        fullName: 'Kenneth Cisse',
-        phoneNumber: '+44 7700 900000',
-        address: '123 Insurance Way, London, E1 6AN',
-        licenseNumber: 'CISSE825255KC99',
-        licenseIssueDate: '2015-05-20',
-        employmentStatus: 'Employed',
-        maritalStatus: 'Married',
-        numberOfChildren: 2,
-        photoUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kenneth',
-        dateOfBirth: '1990-05-15'
-    }
-];
 
 const MOCK_VEHICLES: PortalVehicle[] = [
     {
@@ -206,89 +173,68 @@ export function InsuranceDetailsTab({
     const [vehicles, setVehicles] = useState<PortalVehicle[]>(initialVehicles || []);
     const [isEditingVehicle, setIsEditingVehicle] = useState(false);
     const [editingVehicle, setEditingVehicle] = useState<PortalVehicle | null>(null);
-    const [quoteWizardOpen, setQuoteWizardOpen] = useState(false);
-    const [selectedVehicleForQuote, setSelectedVehicleForQuote] = useState<PortalVehicle | null>(null);
     const [selectedPolicyForDocuments, setSelectedPolicyForDocuments] = useState<string | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editingDriver, setEditingDriver] = useState<PortalDriver | null>(null);
     const [isAddingDriver, setIsAddingDriver] = useState(false);
     const [isAddingVehicle, setIsAddingVehicle] = useState(false);
     const { toast } = useToast();
-    const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    const [quoteView, setQuoteView] = useState<'list' | 'wizard'>('list');
+    const [quoteWizardKey, setQuoteWizardKey] = useState(0);
+    const [wizardVehicleId, setWizardVehicleId] = useState<string | null>(null);
 
 
     // Form States
     const handleAddVehicle = async () => {
+        if (!clientId) {
+            toast({
+                title: "Client profile loading",
+                description: "Please wait until your profile finishes loading before adding a vehicle.",
+                variant: "destructive"
+            });
+            return;
+        }
         setIsAddingVehicle(true);
         setEditingVehicle(null);
         setActiveSection('vehicles');
     };
-    const [expandedQuotes, setExpandedQuotes] = useState<Record<string, boolean>>({});
-    const [selectedQuoteServices, setSelectedQuoteServices] = useState<Record<string, string[]>>({});
-
-    const toggleQuoteService = (quoteId: string, serviceId: string) => {
-        setSelectedQuoteServices(prev => {
-            const quote = quotes.find(q => q.id === quoteId);
-            const current = prev[quoteId] !== undefined ? prev[quoteId] : (quote?.included_services || []);
-
-            const updated = current.includes(serviceId)
-                ? current.filter((id: string) => id !== serviceId)
-                : [...current, serviceId];
-            return { ...prev, [quoteId]: updated };
-        });
+    const startQuoteWizard = (vehicleId?: string) => {
+        if (!clientId) {
+            toast({
+                title: "Client profile loading",
+                description: "Please wait until your profile finishes loading before continuing.",
+                variant: "destructive"
+            });
+            return;
+        }
+        setWizardVehicleId(vehicleId ?? null);
+        setActiveSection('quotes');
+        setQuoteView('wizard');
+        setQuoteWizardKey((prev) => prev + 1);
     };
-
-    const [companySettings, setCompanySettings] = useState<{ government_tax_percent: number; admin_fee: number } | null>(null);
+    const [premiumPolicyTypes, setPremiumPolicyTypes] = useState<Record<string, PremiumPolicyType>>({});
+    const [policyServices, setPolicyServices] = useState<PolicyService[]>([]);
 
     React.useEffect(() => {
-        const loadSettings = async () => {
+        let isMounted = true;
+        const loadPolicyTypes = async () => {
             try {
-                const settings = await getCompanySettings();
-                setCompanySettings({
-                    government_tax_percent: settings.government_tax_percent || 0,
-                    admin_fee: Number(settings.admin_fee || 0)
-                });
+                const result = await premiumPolicyApi.getPolicyTypes(1, 200);
+                const mapped = Object.fromEntries(
+                    result.premium_policy_types.map((type) => [type.id, type])
+                );
+                if (isMounted) {
+                    setPremiumPolicyTypes(mapped);
+                }
             } catch (error) {
-                console.error("Failed to load company settings (using defaults):", error);
-                // Fallback defaults so the UI doesn't break
-                setCompanySettings({
-                    government_tax_percent: 20, // Default 20%
-                    admin_fee: 10 // Default £10
-                });
+                console.error("Failed to load premium policy types", error);
             }
         };
-        loadSettings();
-    }, []);
-
-    const calculateBreakdown = (basePremium: string, quoteId: string) => {
-        const base = parseFloat(basePremium.replace('£', ''));
-        const quote = quotes.find(q => q.id === quoteId);
-        const currentServices = selectedQuoteServices[quoteId] !== undefined
-            ? selectedQuoteServices[quoteId]
-            : (quote?.included_services || []);
-
-        const additional = currentServices.reduce((acc: number, id: string) => {
-            return acc + (FEATURES_MAP[id]?.price || 0);
-        }, 0);
-
-        const subtotal = base + additional;
-        const adminFee = companySettings?.admin_fee || 0;
-        const taxPercent = companySettings?.government_tax_percent || 0;
-        const taxAmount = (subtotal * taxPercent) / 100;
-        const total = subtotal + adminFee + taxAmount;
-
-        return {
-            subtotal,
-            adminFee,
-            taxPercent,
-            taxAmount,
-            total
+        loadPolicyTypes();
+        return () => {
+            isMounted = false;
         };
-    };
-
-    const toggleQuoteFeatures = (id: string) => {
-        setExpandedQuotes(prev => ({ ...prev, [id]: !prev[id] }));
-    };
+    }, []);
 
     const FEATURES_MAP: Record<string, { en: string; fr: string; price: number }> = {
         "comprehensive": { en: "Comprehensive cover", fr: "Couverture tous risques", price: 0.00 },
@@ -313,23 +259,22 @@ export function InsuranceDetailsTab({
         "hotel_expenses": { en: "Hotel expenses", fr: "Frais d’hébergement", price: 1.50 }
     };
 
-    // Realistic Mock Data for UI demonstration
-    const [quotes, setQuotes] = useState<PortalQuote[]>(initialQuotes || [
-        {
-            id: 'q1',
-            vehicle: MOCK_VEHICLES[0],
-            reference: 'Q-7A2B4C',
-            coverLevel: 'Silver',
-            coverType: 'Comprehensive',
-            basePremium: '£189.00',
-            premium: '£189.00',
-            expiresAt: '2026-02-10',
-            drivers: ['Kenneth Cisse'],
-            usage: 'Social, Domestic & Pleasure',
-            status: 'approved',
-            included_services: ['comprehensive', 'small_courtesy', 'windscreen', 'eu_cover']
-        }
-    ]);
+    const [quotes, setQuotes] = useState<PortalQuote[]>(initialQuotes || []);
+
+    React.useEffect(() => {
+        if (quotes.length === 0) return;
+        const companyId = quotes[0]?.company_id;
+        if (!companyId) return;
+        const loadServices = async () => {
+            try {
+                const services = await policyServiceApi.getAll({ company_id: companyId });
+                setPolicyServices(services);
+            } catch (error) {
+                console.error("Failed to load policy services", error);
+            }
+        };
+        loadServices();
+    }, [quotes]);
 
     const [policies, setPolicies] = useState<PortalPolicy[]>(initialPolicies || [
         {
@@ -472,21 +417,7 @@ export function InsuranceDetailsTab({
             setVehicles(fetchedVehicles);
             setDrivers(driversToSet);
 
-            // Map Quotes
-            setQuotes(qs.quotes.map((q: BackendQuote) => ({
-                id: q.id,
-                vehicle: fetchedVehicles.find((v: PortalVehicle) => v.id === (q.details?.vehicle_id || '')) || fetchedVehicles[0] || MOCK_VEHICLES[0],
-                reference: q.quote_number,
-                coverLevel: q.details?.cover_level || 'Standard',
-                coverType: 'Comprehensive',
-                basePremium: `£${q.final_premium}`,
-                premium: `£${q.final_premium}`,
-                expiresAt: new Date(new Date(q.created_at).setMonth(new Date(q.created_at).getMonth() + 3)).toISOString().split('T')[0],
-                drivers: fetchedDrivers.length > 0 ? [fetchedDrivers[0].fullName] : ['Main Driver'],
-                usage: 'Social, Domestic & Pleasure',
-                status: q.status,
-                included_services: (q.details?.selected_services?.map((s: any) => typeof s === 'object' ? s.id : s) || ['comprehensive'])
-            })));
+            setQuotes(qs.quotes);
 
             // Map Policies
             setPolicies(ps.policies.map((p: BackendPolicy) => ({
@@ -592,15 +523,14 @@ export function InsuranceDetailsTab({
     };
 
     const handleCreateQuote = (vehicle: PortalVehicle) => {
-        setSelectedVehicleForQuote(vehicle);
-        setQuoteWizardOpen(true);
+        startQuoteWizard(vehicle.id);
     };
 
     const handleQuoteSuccess = (newQuote: PortalQuote) => {
         setQuotes(prev => [...prev, newQuote]);
-        setQuoteWizardOpen(false);
+        setQuoteView('list');
+        setWizardVehicleId(null);
         setActiveSection('quotes');
-        setSelectedVehicleForQuote(null);
     };
 
     const handleApproveQuote = async (quote: PortalQuote) => {
@@ -608,19 +538,7 @@ export function InsuranceDetailsTab({
             toast({ title: "Activating Policy...", description: "Please wait while we generate your policy documents." });
             const result = await quoteApi.approveQuote(quote.id);
 
-            const newPolicy = {
-                ...quote,
-                id: result.policy_id || quote.id,
-                policyNumber: result.policy_number || 'PENDING',
-                status: 'active',
-                activeDate: new Date().toISOString().split('T')[0],
-                validUntil: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0] // Default 1 year if missing
-            };
-
-            setPolicies(prev => [...prev, newPolicy]);
-            // Remove from quotes list (optional, but logical)
-            setQuotes(prev => prev.filter(q => q.id !== quote.id));
-
+            await refreshData();
             toast({ title: "Values Updated", description: "Policy activated successfully!" });
             setActiveSection('policies');
         } catch (error: unknown) {
@@ -708,22 +626,23 @@ export function InsuranceDetailsTab({
                     <div className="flex items-center gap-2">
                         {(activeSection === 'vehicles' || activeSection === 'quotes' || activeSection === 'policies') && !isAddingVehicle && !isEditingVehicle && (
                             activeSection === 'vehicles' ? (
-                                <Button
-                                    onClick={handleAddVehicle}
-                                    className="bg-[#00539F] hover:bg-[#004380] text-white rounded-xl px-6 font-bold flex items-center gap-2"
-                                >
+                            <Button
+                                onClick={handleAddVehicle}
+                                disabled={!clientId}
+                                className={`bg-[#00539F] hover:bg-[#004380] text-white rounded-xl px-6 font-bold flex items-center gap-2 ${!clientId ? 'opacity-70 cursor-not-allowed hover:bg-[#00539F]' : ''}`}
+                            >
                                     <Plus className="h-5 w-5" />
                                     {t('Add Vehicle')}
                                 </Button>
                             ) : (
-                                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                                    <DialogTrigger asChild>
-                                        <Button className="bg-[#00539F] hover:bg-[#004380] text-white rounded-xl px-6 font-bold flex items-center gap-2">
-                                            <Plus className="h-5 w-5" />
-                                            {activeSection === 'quotes' ? t('New Quote') : t('New Policy')}
-                                        </Button>
-                                    </DialogTrigger>
-                                </Dialog>
+                                <Button
+                                    onClick={() => startQuoteWizard()}
+                                    disabled={!clientId}
+                                    className={`bg-[#00539F] hover:bg-[#004380] text-white rounded-xl px-6 font-bold flex items-center gap-2 ${!clientId ? 'opacity-70 cursor-not-allowed hover:bg-[#00539F]' : ''}`}
+                                >
+                                    <Plus className="h-5 w-5" />
+                                    {t('New Quote')}
+                                </Button>
                             )
                         )}
                         {activeSection === 'drivers' && !isAddingDriver && !isEditing && (
@@ -740,20 +659,7 @@ export function InsuranceDetailsTab({
             </div>
 
             {
-                quoteWizardOpen && selectedVehicleForQuote ? (
-                    <QuoteCreationWizard
-                        open={quoteWizardOpen}
-                        onOpenChange={(open) => {
-                            setQuoteWizardOpen(open);
-                            if (!open) setSelectedVehicleForQuote(null);
-                        }}
-                        vehicle={selectedVehicleForQuote}
-                        drivers={drivers}
-                        onSuccess={handleQuoteSuccess}
-                        clientId={clientId}
-                        isAdmin={isAdmin}
-                    />
-                ) : (isAddingDriver || (isEditing && editingDriver)) ? (
+                (isAddingDriver || (isEditing && editingDriver)) ? (
                     <UnifiedEntityForm
                         type="driver"
                         clientId={clientId || ''}
@@ -1042,85 +948,75 @@ export function InsuranceDetailsTab({
 
                         {activeSection === 'quotes' && (
                             <div className="space-y-6">
-                                {quotes.length === 0 ? (
+                                {quoteView === 'wizard' ? (
+                                    <div className="space-y-6">
+                                        <div className="flex items-center justify-between">
+                                            <Button
+                                                variant="ghost"
+                                                onClick={() => setQuoteView('list')}
+                                                className="text-xs font-black uppercase tracking-widest text-gray-500 hover:text-[#00539F] rounded-full px-4 py-2 border border-gray-200"
+                                            >
+                                                <ArrowLeft className="h-4 w-4 mr-2 inline" />
+                                                {t('Back to Quotes')}
+                                            </Button>
+                                            <span className="text-xs font-bold uppercase tracking-[0.4em] text-gray-400">{t('Quote Wizard')}</span>
+                                        </div>
+                                        <QuoteWizard
+                                            key={`portal-quote-${quoteWizardKey}`}
+                                            initialClientId={clientId || undefined}
+                                            initialVehicleId={wizardVehicleId || undefined}
+                                            onQuoteCreated={handleQuoteSuccess}
+                                            onExit={() => setQuoteView('list')}
+                                        />
+                                    </div>
+                                ) : quotes.length === 0 ? (
                                     <Card className="rounded-[30px] p-12 text-center border-dashed border-2 border-gray-200">
                                         <div className="mx-auto h-16 w-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-6">
                                             <Calculator className="h-8 w-8 text-gray-300" />
                                         </div>
                                         <h3 className="text-xl font-black text-gray-900 mb-2">No quotes yet</h3>
                                         <p className="text-gray-500 font-medium mb-8">Create a new quote from the Vehicle Details tab to see it here.</p>
-                                        <Button
-                                            onClick={() => setActiveSection('vehicles')}
-                                            className="bg-[#00539F] text-white rounded-xl font-bold"
-                                        >
-                                            View Vehicles
-                                        </Button>
+                                        <div className="flex flex-wrap items-center justify-center gap-3">
+                                            <Button
+                                                onClick={() => startQuoteWizard()}
+                                                className="bg-[#00539F] text-white rounded-xl font-bold"
+                                            >
+                                                {t('Create First Quote')}
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setActiveSection('vehicles')}
+                                                className="rounded-xl border-gray-200 text-gray-600"
+                                            >
+                                                {t('View Vehicles')}
+                                            </Button>
+                                        </div>
                                     </Card>
                                 ) : (
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                                        {quotes.map((quote) => {
-                                            const breakdown = calculateBreakdown(quote.basePremium || quote.premium, quote.id);
-
-                                            // Map services to items format
-                                            const allServices = (expandedQuotes[quote.id] ? Object.keys(FEATURES_MAP) : (quote.included_services || []));
-                                            const items = allServices.map((serviceId: string) => ({
-                                                id: serviceId,
-                                                label: FEATURES_MAP[serviceId]?.[language] || FEATURES_MAP[serviceId]?.en || serviceId,
-                                                price: FEATURES_MAP[serviceId]?.price,
-                                                checked: (selectedQuoteServices[quote.id] !== undefined ? selectedQuoteServices[quote.id] : (quote.included_services || [])).includes(serviceId),
-                                                onCheckedChange: () => {
-                                                    if (quote.status === 'draft') { // Only allow editing if draft (simplified logic)
-                                                        toggleQuoteService(quote.id, serviceId)
-                                                    }
-                                                },
-                                                disabled: quote.status !== 'draft' // Disable check if not draft
-                                            }));
-
-                                            // Financials
-                                            const financials = [
-                                                { label: t('quote.admin_fee', 'Company Admin Fee'), amount: `£${breakdown.adminFee.toFixed(2)}` },
-                                                { label: `${t('quote.tax', 'Govt Tax')} (${breakdown.taxPercent}%)`, amount: `£${breakdown.taxAmount.toFixed(2)}` },
-                                                { label: 'Total Premium', amount: `£${breakdown.total.toFixed(2)}`, isTotal: true }
-                                            ];
-
-                                            // Actions
-                                            const actions = (
-                                                <div className="flex gap-2 w-full">
-                                                    {['sent', 'draft_from_client'].includes(quote.status) && (
-                                                        <Button
-                                                            onClick={() => handleApproveQuote(quote)}
-                                                            className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl"
-                                                        >
-                                                            <Check className="h-4 w-4 mr-2" />
-                                                            Activate Policy
-                                                        </Button>
-                                                    )}
-                                                    {/* Add other actions like Edit/Delete if needed */}
-                                                </div>
-                                            );
-
-                                            return (
-                                                <UniversalEntityCard
-                                                    key={quote.id}
-                                                    header={{
-                                                        title: `${quote.vehicle.make} ${quote.vehicle.model}`,
-                                                        subtitle: `Quote #${quote.reference}`,
-                                                        status: quote.status,
-                                                        icon: ShieldCheck,
-                                                        badgeText: `Tinsur.AI ${quote.coverLevel}`
-                                                    }}
-                                                    items={items}
-                                                    financials={financials}
-                                                    footer={{
-                                                        validUntil: quote.expiresAt,
-                                                        createdAt: quote.created_at ? new Date(quote.created_at).toLocaleDateString() : 'Today'
-                                                    }}
-                                                    actions={actions}
-                                                    onToggleExpand={() => toggleQuoteFeatures(quote.id)}
-                                                    isExpanded={expandedQuotes[quote.id]}
-                                                />
-                                            );
-                                        })}
+                                        {quotes.map((quote) => (
+                                            <QuoteCard
+                                                key={quote.id}
+                                                quote={quote}
+                                                policyTypeName={
+                                                    premiumPolicyTypes[quote.policy_type_id]?.name ||
+                                                    quote.policy_type_name ||
+                                                    'Premium Policy'
+                                                }
+                                                premiumPolicyType={premiumPolicyTypes[quote.policy_type_id]}
+                                                allServices={policyServices}
+                                                onServicesUpdated={(updated) => {
+                                                    setQuotes(prev => prev.map(q => q.id === updated.id ? updated : q))
+                                                }}
+                                                onSend={() => {}}
+                                                onApprove={(q) => handleApproveQuote(q)}
+                                                onReject={() => {}}
+                                                onArchive={() => {}}
+                                                onDelete={() => {}}
+                                                onEdit={() => {}}
+                                                loadingId={null}
+                                            />
+                                        ))}
                                     </div>
                                 )}
                             </div>

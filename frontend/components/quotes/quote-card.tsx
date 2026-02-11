@@ -1,11 +1,14 @@
 import { Quote } from "@/types/quote"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { UniversalEntityCard, EntityItem } from "@/components/shared/universal-entity-card"
 import { Loader2, Send, ThumbsUp, ThumbsDown, Archive, Pencil, Trash, Check } from "lucide-react"
 import { PremiumPolicyType } from "@/lib/premium-policy-api"
+import { QuoteAPI } from "@/lib/api/quotes"
+import { formatCurrency, formatDate } from "@/lib/utils"
+import { PolicyService } from "@/lib/policy-service-api"
 
 import { cn } from "@/lib/utils"
 import { useLanguage } from "@/contexts/language-context"
@@ -14,6 +17,8 @@ interface QuoteCardProps {
     quote: Quote
     policyTypeName: string
     premiumPolicyType?: PremiumPolicyType
+    allServices?: PolicyService[]
+    onServicesUpdated?: (quote: Quote) => void
     onSend: (quote: Quote) => void
     onApprove: (quote: Quote) => void
     onReject: (quote: Quote) => void
@@ -27,6 +32,8 @@ export function QuoteCard({
     quote,
     policyTypeName,
     premiumPolicyType,
+    allServices = [],
+    onServicesUpdated,
     onSend,
     onApprove,
     onReject,
@@ -44,32 +51,16 @@ export function QuoteCard({
     )
     const [isExpanded, setIsExpanded] = useState(false)
 
+    useEffect(() => {
+        const next = (quote.details as any)?.selected_services || quote.included_services || [];
+        setSelectedServices(
+            next.map((s: any) => (typeof s === 'object' ? s.id || s.name_en : s))
+        );
+    }, [quote.id, quote.included_services, quote.details])
+
     // Calculate premium dynamically
-    const basePremium = Number(quote.final_premium) || 0 // Assuming final_premium in quote includes selected services at time of creation? 
-    // Actually, if we change services, we should start from a base + additives.
-    // If we don't know the Base Premium (without services), this is hard.
-    // However, usually Quote Premium = Base + Services.
-    // Let's try to recalculate: 
-    // If we assume `premiumPolicyType.price` is the base for the policy type?
-    // Or if `quote.details.base_premium` exists?
-    // Fallback: Use quote premium and assume it matches current selection, then adjust diff.
-
-    // Better approach: Calculate total from scratch if we have all info.
-    // Base = PremiumType Price? Or Quote Base?
-    // Let's try to find a base.
-
-    const quoteBase = Number((quote.details as any)?.base_premium) || Number(premiumPolicyType?.price) || (Number(quote.final_premium) - 0) // Fallback
-
-    const currentPremium = useMemo(() => {
-        if (!premiumPolicyType?.services) return Number(quote.final_premium);
-
-        const servicesTotal = selectedServices.reduce((sum: number, serviceId: string) => {
-            const service = premiumPolicyType.services.find(s => s.id === serviceId || s.name_en === serviceId);
-            return sum + (service?.default_price || 0);
-        }, 0);
-
-        return quoteBase + servicesTotal;
-    }, [quoteBase, selectedServices, premiumPolicyType, quote.final_premium]);
+    const quoteBase = Number(quote.premium_amount || premiumPolicyType?.price || 0)
+    const basePolicyPrice = premiumPolicyType?.price ?? quote.premium_amount ?? quoteBase
 
 
     // --- Helper Logic ---
@@ -102,39 +93,139 @@ export function QuoteCard({
 
     // --- Map Data to Entity Items ---
     const availableServices = premiumPolicyType?.services || []
+    const availableServiceIds = new Set(availableServices.map(s => s.id))
+    const serviceCatalog = new Map<string, PolicyService>()
+    allServices.forEach(s => serviceCatalog.set(s.id, s))
+    availableServices.forEach(s => {
+        if (!serviceCatalog.has(s.id)) {
+            serviceCatalog.set(s.id, {
+                id: s.id,
+                company_id: quote.company_id,
+                name_en: s.name_en,
+                name_fr: s.name_fr,
+                description: undefined,
+                default_price: Number(s.default_price || 0),
+                category: undefined,
+                icon_name: undefined,
+                is_active: true
+            })
+        }
+    })
 
     // Combine available services with any extra ones in quote that might not be in type definition (legacy?)
     // Actually, just use available services if present to allow "Show All".
     // If no premiumPolicyType, fall back to quote included only.
 
-    const displayServices = isExpanded && availableServices.length > 0
-        ? availableServices
-        : (availableServices.length > 0
-            ? availableServices.filter(s => selectedServices.includes(s.id) || selectedServices.includes(s.name_en))
-            : (quote.included_services?.map((s: any) =>
-                typeof s === 'object' ? s : { id: s, name_en: s, default_price: 0 }
-            ) || [])
-        ); // Fallback for legacy
+    const optionalServices = allServices.filter(s => !availableServiceIds.has(s.id))
 
-    const items: EntityItem[] = displayServices.map((service: any, idx) => {
-        const id = service.id || service.name_en || `svc-${idx}`;
-        const isChecked = selectedServices.includes(id) || selectedServices.includes(service.name_en);
+    const selectedServiceIds = new Set(
+        (quote.included_services || [])
+            .map((s: any) => (typeof s === "object" ? s.id : s))
+            .filter(Boolean)
+    )
 
+    const fallbackIncluded = (availableServices.length === 0 && Array.isArray(quote.included_services))
+        ? quote.included_services.map((s: any, idx: number) => ({
+            id: s?.id || `included-${idx}`,
+            name_en: s?.name_en || s?.name || "Included Service",
+            default_price: Number(s?.default_price || 0)
+        }))
+        : []
+
+    const includedList = availableServices.length > 0 ? availableServices : fallbackIncluded
+
+    const buildOptionalItems = () => {
+        const map = new Map<string, PolicyService>()
+        optionalServices.forEach((service) => map.set(service.id, service))
+        selectedServices.forEach((id) => {
+            if (!map.has(id) && serviceCatalog.has(id)) {
+                map.set(id, serviceCatalog.get(id)!)
+            }
+        })
+        return Array.from(map.values())
+    }
+
+    const optionalList = buildOptionalItems()
+
+    const includedItems = [
+        { id: "section-services", label: t("Show All Options", "Show All Options"), isSectionHeader: true },
+        { id: "section-included", label: t("Included Services", "Included Services"), isSectionHeader: true },
+        ...includedList.map((service: any, idx) => {
+            const id = service.id || service.name_en || `included-${idx}`;
+            return {
+                id,
+                label: service.name_en || service.name || t("Included Service", "Included Service"),
+                price: Number(service.default_price || 0),
+                checked: true,
+                disabled: true,
+                priceClassName: "text-[10px] uppercase tracking-[0.2em]"
+            };
+        })
+    ]
+
+    const handleOptionalToggle = (serviceId: string, checked: boolean) => {
+        if (!(quote.status === 'draft' || quote.status === 'sent' || quote.status === 'draft_from_client')) return;
+        setSelectedServices((prev) => {
+            const next = checked ? [...prev, serviceId] : prev.filter((id) => id !== serviceId)
+            QuoteAPI.update(quote.id, { selected_services: next })
+                .then((updated) => onServicesUpdated?.(updated))
+                .catch(() => setSelectedServices(prev))
+            return next
+        })
+    }
+
+    const optionalItems = optionalList.map((service) => {
+        const isChecked = selectedServices.includes(service.id)
         return {
-            id: id,
-            label: service.name_en || service,
-            price: service.default_price,
+            id: service.id,
+            label: service.name_en,
+            price: Number(service.default_price || 0),
             checked: isChecked,
-            onCheckedChange: (checked: boolean) => {
-                if (quote.status !== 'draft') return; // Read only if not draft
-                const val = id; // prefer ID
-                setSelectedServices((prev: string[]) =>
-                    checked ? [...prev, val] : prev.filter((v: string) => v !== val && v !== service.name_en)
-                )
-            },
-            disabled: quote.status !== 'draft'
-        };
-    });
+            onCheckedChange: (checked: boolean) => handleOptionalToggle(service.id, checked),
+            disabled: !(quote.status === 'draft' || quote.status === 'sent' || quote.status === 'draft_from_client')
+        }
+    })
+
+    const items = [...includedItems]
+    if (isExpanded) {
+        items.push(
+            { id: "section-optional", label: t("Optional Services", "Optional Services"), isSectionHeader: true },
+            ...optionalItems
+        )
+    }
+
+    const totalServicesAmount = useMemo(() => {
+        const includedTotal = includedList.reduce((sum, s: any) => sum + Number(s.default_price || 0), 0)
+        const optionalTotal = optionalServices.reduce((sum, s) => {
+            if (selectedServiceIds.has(s.id) || selectedServices.includes(s.id)) {
+                return sum + Number(s.default_price || 0)
+            }
+            return sum
+        }, 0)
+        return includedTotal + optionalTotal
+    }, [includedList, optionalServices, selectedServiceIds, selectedServices])
+
+    const adminFeePercent = Number(quote.admin_fee_percent || 0)
+    const discountPercent = Number(quote.admin_discount_percent || quote.discount_percent || 0)
+    const taxPercent = Number(quote.tax_percent || 0)
+
+    const adminFeeAmount = (quoteBase + totalServicesAmount) * (adminFeePercent / 100)
+    const discountBase = quoteBase + totalServicesAmount + adminFeeAmount
+    const discountAmount = discountBase * (discountPercent / 100)
+    const taxableBase = discountBase - discountAmount
+    const taxAmount = taxableBase * (taxPercent / 100)
+    const finalPremium = taxableBase + taxAmount
+
+    const installments = {
+        annual: 1,
+        monthly: 12,
+        quarterly: 4,
+        "semi-annual": 2
+    } as const
+    const frequencyKey = (quote.premium_frequency || "annual") as keyof typeof installments
+    const installmentCount = installments[frequencyKey] || 1
+    const monthlyAmount = finalPremium / installmentCount
+    const annualAmount = monthlyAmount * 12
 
     // 2. Criteria / Details (Append to items or separate?)
     // UniversalEntityCard accepts one list. Let's keep criteria hidden or separate?
@@ -149,10 +240,15 @@ export function QuoteCard({
     }
 
     // --- Financials ---
-    const fees = [
-        { label: t("Company Admin Fee", "Company Admin Fee"), amount: Number(quote.admin_fee || 0) },
-        { label: t("Govt Tax (0%)", "Govt Tax (0%)"), amount: Number(quote.tax_amount || 0) }
-    ].filter(f => f.amount >= 0)
+    const financialEntries = [
+        { label: t("Base Premium Policy Price", "Base Premium Policy Price"), amount: Number(basePolicyPrice || 0) },
+        { label: t("Total Services", "Total Services"), amount: Number(totalServicesAmount || 0) },
+        { label: t("Company Admin Fee", "Company Admin Fee"), amount: Number(adminFeeAmount || 0) },
+        { label: t("Total Discount", "Total Discount"), amount: -Math.abs(discountAmount || 0) },
+        { label: `${t("Govt Tax", "Govt Tax")} (${taxPercent}%)`, amount: Number(taxAmount || 0) },
+        { label: t("Amount (Monthly)", "Amount (Monthly)"), amount: monthlyAmount, isTotal: true },
+        { label: t("Amount (Annual)", "Amount (Annual)"), amount: annualAmount }
+    ]
 
     // --- Actions ---
     const renderActions = () => (
@@ -247,75 +343,36 @@ export function QuoteCard({
                                 </AvatarFallback>
                             </Avatar>
 
-                            <div className="flex flex-col">
-                                {/* Client Name - Reduced Size */}
-                                <span className="text-sm font-bold text-slate-800 uppercase tracking-tight leading-tight">
-                                    {quote.client_name}
-                                </span>
+                        <div className="flex flex-col">
+                            {/* Client Name - Reduced Size */}
+                            <span className="text-sm font-bold text-slate-800 uppercase tracking-tight leading-tight">
+                                {quote.client_name}
+                            </span>
 
-                                {/* Policy Type */}
-                                <span className="text-xs font-bold uppercase tracking-wide text-[#00539F] mt-1">
-                                    {policyTypeName}
-                                </span>
-
-                                {/* Quote Number */}
-                                <span className="text-[10px] font-medium text-slate-500 mt-0.5">
-                                    #{quote.quote_number}
-                                </span>
+                            {/* Policy Type */}
+                            <span className="text-xs font-bold uppercase tracking-wide text-[#00539F] mt-1">
+                                {policyTypeName}
+                            </span>
+                            <div className="mt-1 text-[10px] uppercase tracking-tight text-gray-400 flex items-center gap-2">
+                                <span>{t("Base Price", "Base Price")}:</span>
+                                <span className="font-black text-[#00539F]">{formatCurrency(basePolicyPrice)}</span>
                             </div>
+
+                            {/* Quote Number */}
+                            <span className="text-[10px] font-medium text-slate-500 mt-0.5">
+                                #{quote.quote_number}
+                            </span>
+                        </div>
                         </div>
                     </div>
                 )
             }}
             items={items}
-            financials={[
-                ...fees.map(f => ({ label: f.label, amount: f.amount })),
-                {
-                    label: <span className="text-[10px] font-bold uppercase tracking-wider">{t("Amount", "Amount")} ({t(quote.premium_frequency, quote.premium_frequency)})</span>,
-                    amount: currentPremium, // UniversalEntityCard handles formatting if number, but we might want custom styling
-                    // To enforce smaller size on amount, we can pass a ReactNode if supported, or rely on UniversalEntityCard's default.
-                    // Step 819 added item.priceClassName, but financials uses its own rendering.
-                    // UniversalEntityCard line 180: className={cn(fee.isTotal && "text-xl font-black text-[#00539F]")}
-                    // It forces text-xl.
-                    // To override, I can pass a ReactNode for amount.
-                    // amount: <span className="text-lg font-black text-[#00539F]">{formatCurrency(currentPremium)}</span>
-                    // But I need formatCurrency. I can just pass the number for now and accept text-xl, OR wrap it.
-                    // The request says "Reduce the size of Total Premium... and its amount". text-xl is big.
-                    // I will check if I can import formatCurrency or just pass a node.
-                    // I'll wrap it.
-                }
-            ].map(f => {
-                // Formatting Amount if it's the Total line to override styles
-                if (f.label.toString().includes('Amount')) {
-                    return {
-                        ...f,
-                        isTotal: false, // Turn off default total styling to use our own or just accept standard list styling?
-                        // User wants consistent design.
-                        // If I use isTotal: true, it gets text-xl. User wants reduced size.
-                        // So I will set isTotal: false and bold it myself in label/amount props?
-                        // UniversalEntityCard renders non-total items as "text-gray-400".
-                        // I will pass ReactNode for label and amount to control style fully.
-                        amount: (
-                            <span className="text-base font-black text-[#00539F]">
-                                {/* We need formatPrice or formatCurrency here. formatPrice is avail from useLanguage? No, standard formatCurrency from utils? */}
-                                {/* I need to import formatCurrency from utils if I use it inline. */}
-                                {/* I'll use isTotal: true but change UniversalEntityCard to allow size override? No, better to custom render. */}
-                                {/* UniversalEntityCard renders: typeof fee.amount === 'number' ? formatCurrency(fee.amount) : fee.amount */}
-                                {/* So if I pass a Node, it renders the Node. */}
-                                {/* useLanguage provides formatPrice. */}
-                                {/* I will use formatPrice if available or just let it render. */}
-                                {/* Wait, I can't call formatPrice inside the object definition easily unless I calculate it before. */}
-                                {/* I will use useLanguage().formatPrice(currentPremium). */}
-                            </span>
-                        )
-                    }
-                }
-                return f;
-            })}
+            financials={financialEntries}
             // Wait, mapping inside the array prop is messy. I will construct the array before.
 
             footer={{
-                validUntil: new Date(quote.valid_until).toLocaleDateString()
+                validUntil: formatDate(quote.valid_until)
             }}
             actions={renderActions()}
             className={quote.status as string === 'archived' ? 'opacity-60 grayscale' : ''}

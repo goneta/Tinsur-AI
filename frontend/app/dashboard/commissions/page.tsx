@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatDate } from "@/lib/utils";
 
 interface Commission {
     id: string;
@@ -136,7 +137,7 @@ export default function CommissionsPage() {
                             ) : (
                                 commissions.map((c) => (
                                     <TableRow key={c.id}>
-                                        <TableCell>{new Date(c.created_at).toLocaleDateString()}</TableCell>
+                                        <TableCell>{formatDate(c.created_at)}</TableCell>
                                         <TableCell className="font-bold">{formatMoney(c.amount)}</TableCell>
                                         <TableCell>
                                             <Badge variant={c.status === 'paid' ? 'default' : 'secondary'} className="gap-1">

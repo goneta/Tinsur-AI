@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, FormProvider } from "react-hook-form";
 import { QuoteAPI } from "@/lib/api/quotes";
 import { clientApi } from "@/lib/client-api";
-import { QuoteCalculationResponse } from "@/types/quote";
+import { portalApi } from "@/lib/portal-api";
+import { Quote, QuoteCalculationResponse } from "@/types/quote";
 import { PremiumPolicyType } from "@/lib/premium-policy-api";
 import { RiskFactorForm } from "./risk-factor-form";
 import { PremiumPolicyCard } from "./premium-policy-card";
@@ -69,6 +70,14 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getCompanySettings } from "@/lib/settings-api";
 import { CompanySettings } from "@/types/settings";
+import { useAuth } from "@/lib/auth";
+
+interface QuoteWizardProps {
+    initialClientId?: string;
+    onQuoteCreated?: (quote: Quote) => void;
+    initialVehicleId?: string;
+    onExit?: () => void;
+}
 
 const FEATURES_MAP: Record<string, { en: string; fr: string; price: number }> = {
     "comprehensive": { en: "Comprehensive cover", fr: "Couverture tous risques", price: 0.00 },
@@ -118,10 +127,13 @@ interface WizardValues {
     };
 }
 
-export function QuoteWizard() {
+export function QuoteWizard({ initialClientId, onQuoteCreated, initialVehicleId, onExit }: QuoteWizardProps = {}) {
     const router = useRouter();
     const { toast } = useToast();
-    const { t, language } = useLanguage();
+    const { t, language, setCurrency } = useLanguage();
+    const { user } = useAuth();
+    const isClientUser = user?.role === 'client';
+    const isPublicMarketplace = isClientUser && !user?.company_id;
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [clients, setClients] = useState<any[]>([]);
@@ -150,6 +162,8 @@ export function QuoteWizard() {
     const [selectedFees, setSelectedFees] = useState<string[]>([]);
     const [selectedTaxes, setSelectedTaxes] = useState<string[]>([]);
     const [selectedDiscounts, setSelectedDiscounts] = useState<string[]>([]);
+    const [servicesLoading, setServicesLoading] = useState(false);
+    const [servicesLoadError, setServicesLoadError] = useState<string | null>(null);
 
     // New Redesign States
     const [selectedClient, setSelectedClient] = useState<any | null>(null);
@@ -157,6 +171,7 @@ export function QuoteWizard() {
     const [clientDrivers, setClientDrivers] = useState<any[]>([]);
     const [showAllServices, setShowAllServices] = useState(false);
     const [allServices, setAllServices] = useState<PolicyService[]>([]);
+    const initialVehicleSelected = useRef(false);
 
     const methods = useForm<WizardValues>({
         defaultValues: {
@@ -187,7 +202,7 @@ export function QuoteWizard() {
     const clientId = watch("client_id");
 
     const wrapperFormatCurrency = (amount: number) => {
-        const currency = companySettings?.currency || "GBP";
+        const currency = companySettings?.currency || "XOF";
         const localeMap: Record<string, string> = {
             'en': 'en-GB',
             'fr': 'fr-FR',
@@ -196,6 +211,9 @@ export function QuoteWizard() {
         const locale = localeMap[language] || 'en-GB';
         return formatCurrency(amount, currency, locale);
     };
+    const currencySymbol = (companySettings?.currency === 'XOF' || companySettings?.currency === 'FCFA')
+        ? 'FCFA'
+        : (companySettings?.currency || 'XOF');
 
     const handleCalculate = () => {
         onCalculate(methods.getValues());
@@ -244,16 +262,31 @@ export function QuoteWizard() {
             try {
                 const settings = await getCompanySettings();
                 setCompanySettings(settings);
+                if (settings?.currency) {
+                    setCurrency(settings.currency);
+                }
             } catch (e) {
                 console.error("Failed to load company settings", e);
             }
         }
         async function loadAllServices() {
+            if (!user?.company_id) {
+                setAllServices([]);
+                setServicesLoading(false);
+                setServicesLoadError(null);
+                return;
+            }
             try {
-                const services = await policyServiceApi.getAll();
+                setServicesLoading(true);
+                setServicesLoadError(null);
+                const services = await policyServiceApi.getAll({ company_id: user.company_id });
                 setAllServices(services);
             } catch (e) {
                 console.error("Failed to load services", e);
+                setServicesLoadError("Failed to load services");
+                setAllServices([]);
+            } finally {
+                setServicesLoading(false);
             }
         }
         loadClients();
@@ -261,7 +294,7 @@ export function QuoteWizard() {
         loadCompanySettings();
         loadAllServices();
         loadCompanySettings();
-    }, [setValue]);
+    }, [setValue, user?.company_id]);
 
     // Filter Clients
     useEffect(() => {
@@ -278,16 +311,98 @@ export function QuoteWizard() {
     }, [clientSearch, clients]);
 
     // Step 1 -> Step 2: Select Vehicle
-    const handleClientSelect = async (selectedId: string) => {
+    const fetchClientDetails = useCallback(async (selectedId: string) => {
+        if (isClientUser) {
+            return clientApi.getMyClient();
+        }
+        return clientApi.getClient(selectedId);
+    }, [isClientUser]);
+
+    const matchPoliciesForClient = useCallback(async (clientId: string) => {
+        if (isPublicMarketplace) {
+            return await QuoteAPI.matchPoliciesPublic({ client_id: clientId });
+        }
+        return await QuoteAPI.matchPolicies(clientId);
+    }, [isPublicMarketplace]);
+
+    const processMatchResult = useCallback((result: any) => {
+        if (isPublicMarketplace) {
+            const companies = result.companies || [];
+            if (companies.length === 0) {
+                setNoPolicyMessage(result.message || "No eligible policies found");
+                setNoPolicyOpen(true);
+                return;
+            }
+
+            const flattened = companies.flatMap(company => company.policies.map(policy => ({
+                ...policy,
+                company_name: company.company_name,
+                company_primary_color: company.company_primary_color,
+                company_currency: company.company_currency
+            })));
+
+            const recommendedCompany = companies.find(c => c.recommended_id);
+            setEligiblePolicies(flattened);
+            setRecommendedPolicyId(
+                recommendedCompany?.recommended_id
+                    ? String(recommendedCompany.recommended_id)
+                    : (flattened[0]?.id ?? null)
+            );
+            setMissingFields([]);
+            setMissingInfoOpen(false);
+            setNoPolicyOpen(false);
+            setNoPolicyMessage("");
+            setSelectedPolicy(null);
+            setStep(2);
+            return;
+        }
+
+        if (result.status === "success" && result.data && result.data.length > 0) {
+            const annotated = result.data.map(policy => ({
+                ...policy,
+                company_name: companySettings?.name,
+                company_currency: companySettings?.currency,
+                company_primary_color: companySettings?.primary_color
+            }));
+            setEligiblePolicies(annotated);
+            setRecommendedPolicyId(
+                result.recommended_id
+                    ? String(result.recommended_id)
+                    : (annotated[0]?.id ?? null)
+            );
+            setMissingFields([]);
+            setMissingInfoOpen(false);
+            setNoPolicyOpen(false);
+            setNoPolicyMessage("");
+            setSelectedPolicy(null);
+            setStep(2);
+        } else if (result.status === "no_policies") {
+            setNoPolicyMessage(result.message || "No eligible policies found");
+            setNoPolicyOpen(true);
+        } else if (result.status === "missing_info") {
+            setMissingFields(result.missing_fields || []);
+            setMissingInfoOpen(true);
+        }
+    }, [
+        isPublicMarketplace,
+        companySettings,
+        setEligiblePolicies,
+        setRecommendedPolicyId,
+        setStep,
+        setSelectedPolicy,
+        setNoPolicyMessage,
+        setNoPolicyOpen,
+        setMissingFields,
+        setMissingInfoOpen
+    ]);
+
+    const handleClientSelect = useCallback(async (selectedId: string) => {
         setLoading(true);
-        setValue("client_id", selectedId);
-
         try {
-            // Fetch client details
-            const client = await clientApi.getClient(selectedId);
+            const client = await fetchClientDetails(selectedId);
             setSelectedClient(client);
+            setValue("client_id", client.id);
 
-            // Fetch vehicles if any
             if (client.automobile_details && client.automobile_details.length > 0) {
                 const vehicle = client.automobile_details[0];
                 setClientVehicles([{
@@ -296,16 +411,15 @@ export function QuoteWizard() {
                     make: vehicle.vehicle_make,
                     model: vehicle.vehicle_model,
                     registrationNumber: vehicle.vehicle_registration,
-                    vehicleType: 'Manual', // Default
+                    vehicleType: 'Manual',
                     usage: vehicle.vehicle_usage || 'Domestic',
                     mileage: vehicle.vehicle_mileage?.toString() || '0',
-                    imageUrl: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=400' // Mock image
+                    imageUrl: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=400'
                 }]);
             } else {
                 setClientVehicles([]);
             }
 
-            // Drivers - select current client as main driver by default
             setClientDrivers([{
                 id: client.id,
                 fullName: `${client.first_name} ${client.last_name}`,
@@ -317,19 +431,12 @@ export function QuoteWizard() {
 
             setValue("driver_ids", [client.id]);
 
-            // Policy matching
-            const result = await QuoteAPI.matchPolicies(selectedId);
-            if (result.status === "success") {
-                setEligiblePolicies(result.data);
-                setRecommendedPolicyId(result.recommended_id);
-                setStep(2); // Move to Select Vehicle
-            } else if (result.status === "no_policies") {
-                setNoPolicyMessage(result.message);
-                setNoPolicyOpen(true);
-            } else if (result.status === "missing_info") {
-                setMissingFields(result.missing_fields || []);
-                setMissingInfoOpen(true);
-            }
+            setEligiblePolicies([]);
+            setRecommendedPolicyId(null);
+            setCalculation(null);
+
+            const result = await matchPoliciesForClient(client.id);
+            processMatchResult(result);
         } catch (e: any) {
             console.error("Error in handleClientSelect:", e);
             const detail = e.response?.data?.detail;
@@ -337,9 +444,48 @@ export function QuoteWizard() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [
+        toast,
+        setValue,
+        setSelectedClient,
+        setClientVehicles,
+        setClientDrivers,
+        setEligiblePolicies,
+        setRecommendedPolicyId,
+        setStep,
+        fetchClientDetails,
+        matchPoliciesForClient,
+        processMatchResult,
+        setCalculation
+    ]);
 
     // Step 2 -> Step 3: Policy Selected
+    const initialClientSelected = useRef(false);
+    useEffect(() => {
+        if (initialClientSelected.current) return;
+        if (isClientUser) {
+            initialClientSelected.current = true;
+            handleClientSelect(initialClientId || "me");
+            return;
+        }
+        if (initialClientId) {
+            initialClientSelected.current = true;
+            handleClientSelect(initialClientId);
+        }
+    }, [initialClientId, isClientUser, handleClientSelect]);
+
+    useEffect(() => {
+        if (!initialVehicleId) {
+            initialVehicleSelected.current = false;
+            return;
+        }
+        if (initialVehicleSelected.current) return;
+        if (clientVehicles.some(vehicle => vehicle.id === initialVehicleId)) {
+            setValue("vehicle_id", initialVehicleId);
+            initialVehicleSelected.current = true;
+        }
+    }, [initialVehicleId, clientVehicles, setValue]);
+
     const handlePolicySelect = (policy: PremiumPolicyType) => {
         setSelectedPolicy(policy);
         setValue("policy_type_id", policy.id);
@@ -361,22 +507,39 @@ export function QuoteWizard() {
         }
 
         try {
-            const result = await QuoteAPI.calculate({
-                client_id: data.client_id,
-                policy_type_id: data.policy_type_id,
-                coverage_amount: data.coverage_amount,
-                premium_frequency: data.premium_frequency,
-                duration_months: data.duration_months,
+            const result = isClientUser
+                ? await portalApi.calculateQuote({
+                    client_id: data.client_id,
+                    policy_type_id: data.policy_type_id,
+                    coverage_amount: data.coverage_amount,
+                    premium_frequency: data.premium_frequency,
+                    duration_months: data.duration_months,
+                    risk_factors: contextData,
+                    selected_services: data.selected_services,
+                    financial_overrides: {
+                        base_rate: selectedBaseRateId ? quoteElements.find(e => e.id === selectedBaseRateId)?.value : undefined,
+                        risk_multiplier: selectedMultipliers.map(id => quoteElements.find(e => e.id === id)?.value).filter(Boolean),
+                        fixed_fee: selectedFees.map(id => quoteElements.find(e => e.id === id)?.value).filter(Boolean),
+                        company_discount: selectedDiscounts.map(id => quoteElements.find(e => e.id === id)?.value).filter(Boolean),
+                        admin_discount_percent: data.discount_percent
+                    }
+                })
+                : await QuoteAPI.calculate({
+                    client_id: data.client_id,
+                    policy_type_id: data.policy_type_id,
+                    coverage_amount: data.coverage_amount,
+                    premium_frequency: data.premium_frequency,
+                    duration_months: data.duration_months,
                 risk_factors: contextData,
                 selected_services: data.selected_services,
-                financial_overrides: {
-                    base_rate: selectedBaseRateId ? quoteElements.find(e => e.id === selectedBaseRateId)?.value : undefined,
-                    risk_multiplier: selectedMultipliers.map(id => quoteElements.find(e => e.id === id)?.value).filter(Boolean),
-                    fixed_fee: selectedFees.map(id => quoteElements.find(e => e.id === id)?.value).filter(Boolean),
-                    company_discount: selectedDiscounts.map(id => quoteElements.find(e => e.id === id)?.value).filter(Boolean),
-                    admin_discount_percent: data.discount_percent
-                }
-            });
+                    financial_overrides: {
+                        base_rate: selectedBaseRateId ? quoteElements.find(e => e.id === selectedBaseRateId)?.value : undefined,
+                        risk_multiplier: selectedMultipliers.map(id => quoteElements.find(e => e.id === id)?.value).filter(Boolean),
+                        fixed_fee: selectedFees.map(id => quoteElements.find(e => e.id === id)?.value).filter(Boolean),
+                        company_discount: selectedDiscounts.map(id => quoteElements.find(e => e.id === id)?.value).filter(Boolean),
+                        admin_discount_percent: data.discount_percent
+                    }
+                });
             setCalculation(result);
         } catch (e) {
             toast({ title: "Calculation Failed", description: "Could not calculate premium.", variant: "destructive" });
@@ -458,10 +621,20 @@ export function QuoteWizard() {
             // if (data.created_by) payload.created_by = data.created_by;
             console.log("Payload:", payload);
 
-            await QuoteAPI.create(payload);
-
-            toast({ title: "Success", description: `Quote ${status === 'draft' ? 'saved' : 'created'} successfully` });
-            router.push('/dashboard/quotes');
+            const createdQuote = isClientUser
+                ? await portalApi.createQuote(payload)
+                : await QuoteAPI.create(payload);
+            if (onQuoteCreated) {
+                toast({ title: "Success", description: "Quote saved successfully." });
+                onQuoteCreated(createdQuote);
+            } else {
+                toast({ title: "Success", description: `Quote ${status === 'draft' ? 'saved' : 'created'} successfully` });
+            }
+            if (onExit) {
+                onExit();
+            } else if (!onQuoteCreated) {
+                router.push('/dashboard/quotes');
+            }
             // router.refresh(); // Removed to prevent potential race/reload issues
         } catch (e: any) {
             console.error("Quote Creation Error:", e);
@@ -534,7 +707,16 @@ export function QuoteWizard() {
                     <form className="space-y-6 h-full flex flex-col">
 
                         {/* STEP 1: CLIENT SELECTION */}
-                        {step === 1 && (
+                        {step === 1 && isClientUser && (
+                            <div className="space-y-6 animate-in fade-in duration-500">
+                                <div className="flex flex-col items-center justify-center py-20 text-slate-400 bg-slate-50 rounded-[30px] border border-dashed border-slate-200">
+                                    <Loader2 className="h-12 w-12 mb-4 animate-spin" />
+                                    <p className="font-bold text-lg">Loading your profile...</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {step === 1 && !isClientUser && (
                             <div className="space-y-6 animate-in fade-in duration-500">
                                 <div className="space-y-2">
                                     <Label className="text-sm font-black uppercase tracking-widest text-[#00539F]">{t('quote.wizard.find_client')}</Label>
@@ -588,7 +770,11 @@ export function QuoteWizard() {
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-2xl font-black text-slate-900">Select Vehicle</h3>
-                                    <Button type="button" variant="outline" className="rounded-xl border-slate-200 font-bold" onClick={() => setStep(1)}>Change Client</Button>
+                                    {!isClientUser && (
+                                        <Button type="button" variant="outline" className="rounded-xl border-slate-200 font-bold" onClick={() => setStep(1)}>
+                                            Change Client
+                                        </Button>
+                                    )}
                                 </div>
 
                                 {clientVehicles.length === 0 ? (
@@ -823,7 +1009,13 @@ export function QuoteWizard() {
                                                 </div>
 
                                                 <div>
-                                                    <h4 className="text-xl font-black text-slate-900 leading-tight">{policy.name}</h4>
+                                                    <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                                        {companySettings?.name || t("Your Company", "Your Company")}
+                                                    </div>
+                                                    <h4 className="text-xl font-black text-slate-900 leading-tight mt-1">{policy.name}</h4>
+                                                    <div className="text-sm font-black text-[#00539F] mt-1">
+                                                        {wrapperFormatCurrency(Number(policy.price || 0))}
+                                                    </div>
                                                     <p className="text-sm font-medium text-slate-500 mt-2 line-clamp-2">{policy.description}</p>
                                                 </div>
 
@@ -849,7 +1041,23 @@ export function QuoteWizard() {
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {allServices.length > 0 ? (
+                                    {servicesLoading ? (
+                                        <div className="col-span-full py-20 text-center bg-slate-50 rounded-[40px] border-2 border-dashed border-slate-200">
+                                            <div className="h-20 w-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+                                                <Loader2 className="h-10 w-10 text-slate-300 animate-spin" />
+                                            </div>
+                                            <h4 className="text-xl font-black text-slate-900 uppercase tracking-widest">Loading Services</h4>
+                                            <p className="text-slate-400 font-bold mt-2">Fetching available options...</p>
+                                        </div>
+                                    ) : servicesLoadError ? (
+                                        <div className="col-span-full py-20 text-center bg-slate-50 rounded-[40px] border-2 border-dashed border-slate-200">
+                                            <div className="h-20 w-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+                                                <AlertTriangle className="h-10 w-10 text-slate-300" />
+                                            </div>
+                                            <h4 className="text-xl font-black text-slate-900 uppercase tracking-widest">Unable to Load Services</h4>
+                                            <p className="text-slate-400 font-bold mt-2">Please try again in a moment.</p>
+                                        </div>
+                                    ) : allServices.length > 0 ? (
                                         allServices.map(service => {
                                             const isIncluded = selectedPolicy.services?.some((s: any) => s.id === service.id);
                                             const isSelected = watch("selected_services")?.includes(service.id);
@@ -922,7 +1130,7 @@ export function QuoteWizard() {
                                             <Label className="text-sm font-black text-slate-900 uppercase tracking-widest">Compulsory Excess</Label>
                                         </div>
                                         <div className="relative">
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">$</div>
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">{currencySymbol}</div>
                                             <Input
                                                 type="number"
                                                 className="h-14 pl-10 rounded-2xl border-slate-100 font-bold focus:border-[#00539F] bg-slate-50/50"
@@ -944,7 +1152,7 @@ export function QuoteWizard() {
                                             <Label className="text-sm font-black text-slate-900 uppercase tracking-widest">Voluntary Excess</Label>
                                         </div>
                                         <div className="relative">
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">$</div>
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">{currencySymbol}</div>
                                             <Input
                                                 type="number"
                                                 className="h-14 pl-10 rounded-2xl border-slate-100 font-bold focus:border-[#00539F] bg-slate-50/50"
@@ -966,7 +1174,7 @@ export function QuoteWizard() {
                                             <Label className="text-sm font-black text-slate-900 uppercase tracking-widest">Accidental Damage</Label>
                                         </div>
                                         <div className="relative">
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">$</div>
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">{currencySymbol}</div>
                                             <Input
                                                 type="number"
                                                 className="h-14 pl-10 rounded-2xl border-slate-100 font-bold focus:border-[#00539F] bg-slate-50/50"
@@ -988,7 +1196,7 @@ export function QuoteWizard() {
                                             <Label className="text-sm font-black text-slate-900 uppercase tracking-widest">Fire & Theft</Label>
                                         </div>
                                         <div className="relative">
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">$</div>
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">{currencySymbol}</div>
                                             <Input
                                                 type="number"
                                                 className="h-14 pl-10 rounded-2xl border-slate-100 font-bold focus:border-[#00539F] bg-slate-50/50"
@@ -1010,7 +1218,7 @@ export function QuoteWizard() {
                                             <Label className="text-sm font-black text-slate-900 uppercase tracking-widest">Theft of Keys</Label>
                                         </div>
                                         <div className="relative">
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">$</div>
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">{currencySymbol}</div>
                                             <Input
                                                 type="number"
                                                 className="h-14 pl-10 rounded-2xl border-slate-100 font-bold focus:border-[#00539F] bg-slate-50/50"
@@ -1032,7 +1240,7 @@ export function QuoteWizard() {
                                             <Label className="text-sm font-black text-slate-900 uppercase tracking-widest">Replacement Locks</Label>
                                         </div>
                                         <div className="relative">
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">$</div>
+                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">{currencySymbol}</div>
                                             <Input
                                                 type="number"
                                                 className="h-14 pl-10 rounded-2xl border-slate-100 font-bold focus:border-[#00539F] bg-slate-50/50"
@@ -1333,14 +1541,20 @@ export function QuoteWizard() {
                         <ArrowLeft className="mr-2 h-4 w-4" /> Go Back
                     </Button>
                 ) : (
-                    <Button
-                        variant="ghost"
-                        onClick={() => router.push('/dashboard/quotes')}
-                        className="text-slate-400 font-black uppercase tracking-widest text-xs hover:text-slate-600 hover:bg-white transition-all px-8 h-12 rounded-2xl"
-                    >
-                        Exit Wizard
-                    </Button>
-                )}
+                <Button
+                    variant="ghost"
+                    onClick={() => {
+                        if (onExit) {
+                            onExit();
+                            return;
+                        }
+                        router.push('/dashboard/quotes');
+                    }}
+                    className="text-slate-400 font-black uppercase tracking-widest text-xs hover:text-slate-600 hover:bg-white transition-all px-8 h-12 rounded-2xl"
+                >
+                    Exit Wizard
+                </Button>
+            )}
             </CardFooter>
 
             {/* ERROR DIALOGS */}

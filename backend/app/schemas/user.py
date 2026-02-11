@@ -36,7 +36,7 @@ class UserUpdate(BaseModel):
 class UserInDB(UserBase):
     """User in database schema."""
     id: uuid.UUID
-    company_id: uuid.UUID
+    company_id: Optional[uuid.UUID] = None
     is_active: bool
     is_verified: bool
     mfa_enabled: bool

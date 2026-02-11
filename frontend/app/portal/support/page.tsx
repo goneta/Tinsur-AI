@@ -19,6 +19,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { portalApi, Ticket } from '@/lib/portal-api';
+import { formatDate } from '@/lib/utils';
 import { SupportChatWidget } from '@/components/support/support-chat-widget';
 
 export default function ClientSupportPage() {
@@ -93,16 +94,6 @@ export default function ClientSupportPage() {
         } finally {
             setSending(false);
         }
-    }
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
     }
 
     return (

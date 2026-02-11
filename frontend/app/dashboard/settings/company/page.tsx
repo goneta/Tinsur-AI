@@ -41,7 +41,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useLanguage } from "@/contexts/language-context"
 
 export default function CompanySettingsPage() {
-    const { t } = useLanguage()
+    const { t, setCurrency: setAppCurrency } = useLanguage()
     const router = useRouter()
     const { toast } = useToast()
     const [loading, setLoading] = useState(false)
@@ -87,6 +87,9 @@ export default function CompanySettingsPage() {
             setRegistrationNumber(settings.registration_number || "")
             setLogoUrl(settings.logo_url || "")
             setCurrency(settings.currency)
+            if (settings.currency) {
+                setAppCurrency(settings.currency)
+            }
             setCountry(settings.country || "")
             setPrimaryColor(settings.primary_color || "#000000")
             setPrimaryColor(settings.primary_color || "#000000")
@@ -128,6 +131,9 @@ export default function CompanySettingsPage() {
                 government_tax_percent: parseFloat(governmentTaxPercent),
                 admin_fee: parseFloat(adminFee),
             })
+            if (currency) {
+                setAppCurrency(currency)
+            }
 
             toast({
                 title: "Settings saved",

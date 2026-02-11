@@ -14,6 +14,8 @@ export interface Quote {
     arrangement_fee?: number;
     extra_fee?: number;
     admin_fee?: number; // New
+    admin_fee_percent?: number;
+    admin_discount_percent?: number;
     tax_amount?: number; // New
     tax_percent?: number; // New
     total_financed_amount?: number;
@@ -32,6 +34,7 @@ export interface Quote {
     is_expired: boolean;
     client_name: string;
     created_by_name: string;
+    policy_type_name?: string;
 }
 
 export interface QuoteCreate {
@@ -59,6 +62,7 @@ export interface QuoteUpdate {
     status?: string;
     details?: Record<string, any>;
     notes?: string;
+    selected_services?: string[];
 }
 
 export type QuoteUpdateRequest = QuoteUpdate;

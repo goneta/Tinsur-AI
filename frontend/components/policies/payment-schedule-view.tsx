@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Policy } from "@/types/policy";
 import { Client } from '@/types/client';
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { Printer, Download, Loader2, ArrowLeft } from "lucide-react";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -241,7 +241,7 @@ export function PaymentScheduleView({
 
                     {/* Footer Date */}
                     <div className="mt-[30px] pt-[15px] border-t-2 border-[#003da5] text-[11px] text-[#666]">
-                        Document généré le : {new Date().toLocaleDateString('fr-FR')}
+                        Document généré le : {formatDate(new Date())}
                     </div>
                 </div>
             </div>

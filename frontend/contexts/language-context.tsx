@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import { translationApi } from '@/lib/translation-api';
+import { getCompanySettings } from '@/lib/settings-api';
 import enTranslations from '@/messages/en.json';
 import frTranslations from '@/messages/fr.json';
 
@@ -92,6 +93,30 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         if (savedCurrency) {
             setCurrencyState(savedCurrency);
         }
+    }, []);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+        let cancelled = false;
+
+        async function loadCompanyCurrency() {
+            try {
+                const settings = await getCompanySettings();
+                if (!cancelled && settings?.currency) {
+                    setCurrencyState(settings.currency);
+                    localStorage.setItem('app_currency', settings.currency);
+                }
+            } catch (e) {
+                // Ignore if not authorized or not available (e.g., client role)
+            }
+        }
+
+        loadCompanyCurrency();
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     const setCurrency = (curr: string) => {

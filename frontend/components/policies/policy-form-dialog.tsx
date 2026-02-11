@@ -17,6 +17,7 @@ import { api } from '@/lib/api';
 import { policyServiceApi, PolicyService } from '@/lib/policy-service-api';
 import { useAuth } from '@/lib/auth';
 import { useLanguage } from '@/contexts/language-context';
+import { formatCurrency } from '@/lib/utils';
 
 import { Policy, PolicyCreateRequest } from '@/types/policy';
 import { Client } from '@/types/client';
@@ -394,7 +395,7 @@ export function PolicyFormDialog({
                                                                 {service.name_fr && <p className="text-xs text-muted-foreground">{service.name_fr}</p>}
                                                             </div>
                                                             <Badge variant="secondary" className="text-xs">
-                                                                +{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'GBP' }).format(service.default_price)}
+                                                                +{formatCurrency(service.default_price)}
                                                             </Badge>
                                                         </div>
                                                     );
@@ -413,7 +414,7 @@ export function PolicyFormDialog({
                                     <Badge key={s.id} variant="secondary" className="pl-2 pr-1 py-1 flex items-center gap-1">
                                         <span>{s.name}</span>
                                         <span className="ml-1 text-xs text-muted-foreground">
-                                            ({new Intl.NumberFormat('en-US', { style: 'currency', currency: 'GBP' }).format(s.price)})
+                                            ({formatCurrency(s.price)})
                                         </span>
                                         <Button
                                             variant="ghost"

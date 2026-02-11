@@ -178,7 +178,7 @@ export function QuoteDetails({ id }: { id: string }) {
                     <CardContent className="space-y-4 pt-6">
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-muted-foreground">Base Policy Price</span>
-                            <span className="font-medium">{formatCurrency(quote.final_premium)}</span>
+                            <span className="font-medium">{formatCurrency(quote.premium_amount || quote.final_premium)}</span>
                         </div>
 
                         {/* Excess Display */}

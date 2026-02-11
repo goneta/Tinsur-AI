@@ -3,6 +3,7 @@ Authentication endpoints.
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+import uuid
 
 from app.core.database import get_db
 from app.core.security import decode_token, create_access_token

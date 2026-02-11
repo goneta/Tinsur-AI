@@ -194,19 +194,37 @@ def update_quote(
     current_user: User = Depends(get_current_user)
 ):
     """Update a quote."""
-    Repo = QuoteRepository(db)
-    
+    repo = QuoteRepository(db)
+    quote_service = QuoteService(repo)
+
     quote = repo.get_by_id(quote_id)
-    if not quote or quote.company_id != current_user.company_id:
+    if not quote:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Quote not found"
         )
-    
+
+    # Auth: company staff or the owning client
+    if current_user.role == "client":
+        from app.models.client import Client
+        client_profile = db.query(Client).filter(Client.user_id == current_user.id).first()
+        if not client_profile or quote.client_id != client_profile.id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quote not found")
+    else:
+        if quote.company_id != current_user.company_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quote not found")
+
+    data = quote_data.model_dump(exclude_unset=True)
+
+    # Recalculate if selected services are updated
+    if "selected_services" in data:
+        selected_services = data.pop("selected_services") or []
+        return quote_service.recalculate_quote_services(quote, selected_services)
+
     # Update fields
-    for field, value in quote_data.model_dump(exclude_unset=True).items():
+    for field, value in data.items():
         setattr(quote, field, value)
-    
+
     return repo.update(quote)
 
 

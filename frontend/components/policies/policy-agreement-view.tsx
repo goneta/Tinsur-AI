@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Policy } from "@/types/policy";
 import { Client } from '@/types/client';
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { Printer, Download, Loader2, ArrowLeft } from "lucide-react";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -328,7 +328,7 @@ export function PolicyAgreementView({
                     </div>
 
                     <div className="mt-[30px] text-[11px] text-[#666] border-t-2 border-[#003da5] pt-[15px]">
-                        Document généré le : <span id="date">{new Date().toLocaleDateString('fr-FR')}</span>
+                        Document généré le : <span id="date">{formatDate(new Date())}</span>
                     </div>
                 </div>
             </div>

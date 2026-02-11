@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { referralApi, Referral, ReferralStats } from "@/lib/referral-api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -361,7 +361,7 @@ function CollaborationContent() {
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell>{ref.reward_amount ? formatCurrency(ref.reward_amount) : '-'}</TableCell>
-                                                    <TableCell>{new Date(ref.created_at).toLocaleDateString()}</TableCell>
+                                                    <TableCell>{formatDate(ref.created_at)}</TableCell>
                                                 </TableRow>
                                             ))
                                         )}

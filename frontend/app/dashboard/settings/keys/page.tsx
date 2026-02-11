@@ -15,6 +15,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { formatDate } from "@/lib/utils"
 import {
     Dialog,
     DialogContent,
@@ -233,7 +234,7 @@ export default function ApiKeysPage() {
                                     </TableCell>
                                     <TableCell className="font-mono text-xs">{key.key_prefix}...</TableCell>
                                     <TableCell>{key.agent_id || "-"}</TableCell>
-                                    <TableCell>{new Date(key.created_at).toLocaleDateString()}</TableCell>
+                                    <TableCell>{formatDate(key.created_at)}</TableCell>
                                     <TableCell>
                                         {key.is_active ? (
                                             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Active</Badge>

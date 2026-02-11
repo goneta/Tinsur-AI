@@ -8,13 +8,14 @@ import { quoteApi } from '@/lib/quote-api';
 import { claimApi } from '@/lib/claim-api';
 import { paymentApi } from '@/lib/payment-api';
 import { Client } from '@/types/client';
+import { Quote } from '@/types/quote';
 
 export default function InsuranceDetailsPage() {
     const [loading, setLoading] = useState(true);
     const [client, setClient] = useState<Client | null>(null);
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [vehicles, setVehicles] = useState<PortalVehicle[]>([]);
-    const [quotes, setQuotes] = useState<any[]>([]);
+    const [quotes, setQuotes] = useState<Quote[]>([]);
     const [policies, setPolicies] = useState<any[]>([]);
     const [claims, setClaims] = useState<any[]>([]);
     const [payments, setPayments] = useState<any[]>([]);
@@ -113,24 +114,7 @@ export default function InsuranceDetailsPage() {
                     claimApi.getClaims({ client_id: clientData.id }),
                     paymentApi.getPayments({ client_id: clientData.id, page: 1, page_size: 100 })
                 ]);
-
-                // Map Quotes
-                setQuotes(qs.quotes.map(q => ({
-                    id: q.id,
-                    vehicle: portalVehicles.find(v => v.id === (q.details?.vehicle_id || '')) || defaultVehicle,
-                    reference: q.quote_number,
-                    coverLevel: q.details?.cover_level || 'Standard',
-                    coverType: 'Comprehensive',
-                    basePremium: `£${q.final_premium}`,
-                    premium: `£${q.final_premium}`,
-                    expiresAt: (q.created_at && !isNaN(new Date(q.created_at).getTime()))
-                        ? new Date(new Date(q.created_at).setMonth(new Date(q.created_at).getMonth() + 1)).toISOString().split('T')[0]
-                        : new Date().toISOString().split('T')[0],
-                    drivers: [`${clientData.first_name} ${clientData.last_name}`],
-                    usage: 'Social, Domestic & Pleasure',
-                    status: q.status,
-                    included_services: q.details?.selected_services || ['comprehensive']
-                })));
+                setQuotes(qs.quotes);
 
                 // Map Policies
                 setPolicies(ps.policies.map(p => ({

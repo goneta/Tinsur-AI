@@ -78,8 +78,8 @@ class PremiumPolicyService:
 
         # 4. Merge with Overrides and Content Validation
         if overrides:
-            driver_details = overrides.get('driver_details', {})
-            vehicle_details = overrides.get('vehicle_details', {})
+            driver_details = overrides.get('driver_details') or {}
+            vehicle_details = overrides.get('vehicle_details') or {}
             
             # Map Driver details
             if 'age' in driver_details:

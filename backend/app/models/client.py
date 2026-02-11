@@ -1,7 +1,7 @@
 """
 Client model for insurance clients.
 """
-from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Date, Text, Numeric, JSON, Integer, Table
+from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Date, Text, Numeric, JSON, Integer, Table, select
 from sqlalchemy.orm import relationship
 import uuid
 from app.core.guid import GUID
@@ -9,6 +9,7 @@ from datetime import datetime
 from app.core.time import utcnow
 
 from app.core.database import Base
+from sqlalchemy.ext.hybrid import hybrid_property
 
 
 # Junction table for many-to-many relationship between clients and companies
@@ -104,3 +105,22 @@ class Client(Base):
         if self.client_type == 'individual':
             return f"{self.first_name} {self.last_name}" if self.first_name and self.last_name else self.email
         return self.business_name or self.email
+
+    @hybrid_property
+    def company_id(self):
+        if getattr(self, 'companies', None):
+            return self.companies[0].id
+        return None
+
+    @company_id.expression
+    def company_id(cls):
+        return (
+            select(client_company.c.company_id)
+            .where(client_company.c.client_id == cls.id)
+            .limit(1)
+            .scalar_subquery()
+        )
+
+    @property
+    def company_ids(self):
+        return [company.id for company in self.companies] if self.companies else []

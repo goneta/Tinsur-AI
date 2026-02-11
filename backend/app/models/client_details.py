@@ -37,6 +37,7 @@ class ClientAutomobile(Base):
 
     
     # Driver Details (Main Driver)
+    driver_name = Column(String(100), nullable=True)
     last_name = Column(String(100), nullable=True) # Name
     first_name = Column(String(100), nullable=True) # Forenames
     driver_dob = Column(Date, nullable=True)

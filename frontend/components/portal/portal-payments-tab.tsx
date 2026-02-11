@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { portalApi, PortalPayment } from '@/lib/portal-api';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import {
     CreditCard,
     Calendar,
@@ -138,7 +138,7 @@ export function PortalPaymentsTab({ onMakePayment }: PortalPaymentsTabProps) {
                                                 <div className="flex items-center gap-4 text-sm text-gray-400 font-bold">
                                                     <span className="flex items-center gap-1.5">
                                                         <Calendar className="h-4 w-4" />
-                                                        {new Date(payment.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                                        {formatDate(payment.created_at)}
                                                     </span>
                                                     <span>•</span>
                                                     <span>Policy: {payment.policy_number_display || 'N/A'}</span>

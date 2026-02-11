@@ -3,16 +3,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check, Edit2 } from "lucide-react";
 import { QuoteData } from "@/types/ai-agent";
+import { formatCurrency } from "@/lib/utils";
 
 export function QuotePreview({ data, onAction }: { data: QuoteData, onAction?: (action: string, data: any) => void }) {
     if (!data) return null;
 
-    const formatCurrency = (amount?: number) => {
-        if (amount === undefined) return "$0.00";
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-        }).format(amount);
+    const formatAmount = (amount?: number) => {
+        if (amount === undefined) return formatCurrency(0);
+        return formatCurrency(amount);
     };
 
     return (
@@ -49,7 +47,7 @@ export function QuotePreview({ data, onAction }: { data: QuoteData, onAction?: (
                     {data.vehicle_value !== undefined && (
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-gray-400">Vehicle Value:</span>
-                            <span className="font-medium text-gray-600">{formatCurrency(data.vehicle_value)}</span>
+                        <span className="font-medium text-gray-600">{formatAmount(data.vehicle_value)}</span>
                         </div>
                     )}
                     {data.vehicle_age !== undefined && (
@@ -99,28 +97,28 @@ export function QuotePreview({ data, onAction }: { data: QuoteData, onAction?: (
                     <div className="space-y-2">
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-gray-400">Coverage Amount</span>
-                            <span className="font-medium text-gray-600">{formatCurrency(data.coverage_amount)}</span>
+                        <span className="font-medium text-gray-600">{formatAmount(data.coverage_amount)}</span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-gray-400">Base Premium</span>
-                            <span className="font-medium text-gray-600">{formatCurrency(data.base_premium)}</span>
+                        <span className="font-medium text-gray-600">{formatAmount(data.base_premium)}</span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-gray-400">Risk Adjustment</span>
                             <span className="font-bold text-red-500">
-                                {typeof data.risk_adjustment === 'number' ? formatCurrency(data.risk_adjustment) : (data.risk_adjustment || 'Included')}
+                                {typeof data.risk_adjustment === 'number' ? formatAmount(data.risk_adjustment) : (data.risk_adjustment || 'Included')}
                             </span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-gray-400">Discount ({data.discount_percent?.toFixed(2) || '0.00'}%)</span>
-                            <span className="font-bold text-green-500">{formatCurrency(data.discount_amount)}</span>
+                            <span className="font-bold text-green-500">{formatAmount(data.discount_amount)}</span>
                         </div>
                     </div>
 
                     <div className="pt-4 border-t flex flex-col items-end">
                         <div className="flex items-baseline gap-4">
                             <span className="text-lg font-bold text-gray-800">Final Premium</span>
-                            <span className="text-2xl font-black text-gray-900">{formatCurrency(data.premium_amount)}</span>
+                            <span className="text-2xl font-black text-gray-900">{formatAmount(data.premium_amount)}</span>
                         </div>
                         <span className="text-[10px] text-gray-400 mt-1 lowercase italic">
                             {data.payment_frequency || 'monthly payment'}

@@ -100,12 +100,14 @@ foreach ($Agent in $RegistryJson) {
         # Convert path separators for Windows
         $WinPath = $AgentPath -replace "/", "\"
         $FullAgentPath = Join-Path $BackendPath $WinPath
+        $ModulePath = ($AgentPath -replace "/__main__\.py$", "") -replace "/", "."
         
         if (Test-Path $FullAgentPath) {
             Write-Log "Starting $AgentName on port $AgentPort..."
+            $AgentLogPath = Join-Path $LogPath "$AgentName.log"
             
             # Start agent in a new minimized window
-            Start-Process -FilePath "powershell" -ArgumentList "-NoExit", "-Command", "$env:PYTHONPATH='.'; python $WinPath" -WorkingDirectory $BackendPath -WindowStyle Minimized
+            Start-Process -FilePath "powershell" -ArgumentList "-NoExit", "-Command", "$env:PYTHONPATH='.'; $env:PORT='$AgentPort'; python -m $ModulePath *> '$AgentLogPath'" -WorkingDirectory $BackendPath -WindowStyle Minimized
             
             if (Wait-For-Port $AgentPort) {
                 Write-Log "$AgentName is UP on port $AgentPort." -Color Green

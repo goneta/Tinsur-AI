@@ -12,9 +12,9 @@ class QuoteBase(BaseModel):
     """Base schema for quote."""
     client_id: UUID
     policy_type_id: UUID
-    coverage_amount: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
-    discount_percent: Decimal = Field(default=0, ge=0, le=100, decimal_places=2)
-    tax_percent: Decimal = Field(default=0, ge=0, le=100, decimal_places=2)
+    coverage_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
+    discount_percent: Decimal = Field(default=0, ge=0, le=100, multiple_of=Decimal('0.01'))
+    tax_percent: Decimal = Field(default=0, ge=0, le=100, multiple_of=Decimal('0.01'))
     premium_frequency: str = Field(default='annual', pattern='^(monthly|quarterly|semi-annual|annual)$')
     duration_months: int = Field(default=12, ge=1, le=120)
     details: Optional[Dict[str, Any]] = {}
@@ -25,7 +25,7 @@ class QuoteCalculationRequest(BaseModel):
     """Schema for quote calculation request (AI-powered)."""
     client_id: UUID
     policy_type_id: UUID
-    coverage_amount: Decimal = Field(..., ge=0, decimal_places=2)
+    coverage_amount: Decimal = Field(..., ge=0, multiple_of=Decimal('0.01'))
     premium_frequency: str = Field(default='annual')
     duration_months: int = Field(default=12, ge=1)
     
@@ -50,16 +50,17 @@ class QuoteCreate(QuoteBase):
 
 class QuoteUpdate(BaseModel):
     """Schema for updating a quote."""
-    coverage_amount: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
-    premium_amount: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
-    discount_percent: Optional[Decimal] = Field(None, ge=0, le=100, decimal_places=2)
-    final_premium: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
+    coverage_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
+    premium_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
+    discount_percent: Optional[Decimal] = Field(None, ge=0, le=100, multiple_of=Decimal('0.01'))
+    final_premium: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
     premium_frequency: Optional[str] = None
     duration_months: Optional[int] = Field(None, ge=1, le=120)
-    risk_score: Optional[Decimal] = Field(None, ge=0, le=100, decimal_places=2)
+    risk_score: Optional[Decimal] = Field(None, ge=0, le=100, multiple_of=Decimal('0.01'))
     status: Optional[str] = Field(None, pattern='^(draft|draft_from_client|sent|accepted|policy_created|submitted|under_review|approved|rejected|expired|archived)$')
     details: Optional[Dict[str, Any]] = None
     notes: Optional[str] = None
+    selected_services: Optional[List[UUID]] = None
 
 
 class QuoteResponse(QuoteBase):
@@ -133,4 +134,4 @@ class QuoteToPolicyConversion(BaseModel):
     """Schema for converting quote to policy."""
     start_date: date
     payment_method: str = Field(..., pattern='^(stripe|mobile_money|bank_transfer|cash)$')
-    initial_payment_amount: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
+    initial_payment_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))

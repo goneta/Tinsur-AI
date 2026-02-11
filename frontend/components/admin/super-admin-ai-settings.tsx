@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { useLanguage } from "@/contexts/language-context"
+import { formatDate } from "@/lib/utils"
 import {
     Table,
     TableBody,
@@ -175,7 +176,7 @@ export function SuperAdminAISettings() {
                                     logs.map((log) => (
                                         <TableRow key={log.id}>
                                             <TableCell className="text-xs">
-                                                {new Date(log.created_at).toLocaleString()}
+                                                {formatDate(log.created_at)}
                                             </TableCell>
                                             <TableCell className="font-mono text-[10px] max-w-[100px] truncate">
                                                 {log.company_id}

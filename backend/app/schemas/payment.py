@@ -41,7 +41,7 @@ class BankTransferPaymentMethod(PaymentMethodBase):
 class PaymentBase(BaseModel):
     """Base schema for payment."""
     policy_id: UUID
-    amount: Decimal = Field(..., ge=0, decimal_places=2)
+    amount: Decimal = Field(..., ge=0, multiple_of=Decimal('0.01'))
     currency: str = Field(default='XOF', max_length=3)
 
 
@@ -93,13 +93,13 @@ class PaymentListResponse(BaseModel):
 class PaymentProcessRequest(BaseModel):
     """Schema for processing a payment."""
     policy_id: UUID
-    amount: Decimal = Field(..., ge=0, decimal_places=2)
+    amount: Decimal = Field(..., ge=0, multiple_of=Decimal('0.01'))
     payment_details: Dict[str, Any]  # Contains method-specific details
 
 
 class PaymentRefundRequest(BaseModel):
     """Schema for payment refund."""
-    refund_amount: Decimal = Field(..., ge=0, decimal_places=2)
+    refund_amount: Decimal = Field(..., ge=0, multiple_of=Decimal('0.01'))
     reason: str = Field(..., min_length=10)
 
 

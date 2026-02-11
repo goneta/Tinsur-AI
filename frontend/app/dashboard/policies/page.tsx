@@ -16,6 +16,7 @@ import { policyApi } from '@/lib/policy-api';
 import { premiumPolicyApi, PremiumPolicyType } from '@/lib/premium-policy-api';
 import { QuoteAPI } from '@/lib/api/quotes';
 import { Policy } from '@/types/policy';
+import { formatDate } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { PolicyFormDialog } from '@/components/policies/policy-form-dialog';
@@ -133,8 +134,8 @@ export default function PoliciesPage() {
             registrationNumber: policy.details?.vehicle_registration || policy.details?.registration_number || 'N/A',
             policyNumber: policy.policy_number,
             status: policy.status,
-            activeDate: policy.start_date ? new Date(policy.start_date).toLocaleDateString() : 'N/A',
-            premium: `£${policy.premium_amount}`, // Format override if formatPrice available
+            activeDate: policy.start_date ? formatDate(policy.start_date) : 'N/A',
+            premium: formatPrice(policy.premium_amount),
             premiumAmount: policy.premium_amount, // Pass raw for monthly calc
             coverLevel: t(policyTypeNames[policy.policy_type_id] || 'Standard', policyTypeNames[policy.policy_type_id] || 'Standard'),
             type: policyTypeNames[policy.policy_type_id], // Pass raw type name for logic

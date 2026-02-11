@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Heart, Users, Award, TrendingUp } from 'lucide-react';
 import api from '@/lib/api';
+import { formatDate } from '@/lib/utils';
 
 interface LoyaltyStats {
     total_points: number;
@@ -126,7 +127,7 @@ export default function LoyaltyPage() {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-xs text-muted-foreground">
-                                            {new Date(item.updated_at).toLocaleDateString()}
+                                            {formatDate(item.updated_at)}
                                         </TableCell>
                                     </TableRow>
                                 ))}

@@ -12,6 +12,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { UNIFIED_ENTITY_FIELDS, CLIENT_ADMIN_FIELDS, FieldDefinition } from '@/config/field-definitions';
 import { formatApiError } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import { formatDate } from '@/lib/utils';
 
 type EntityType = 'client' | 'driver';
 
@@ -344,7 +345,7 @@ export function UnifiedEntityForm({ type, mode, entity, clientId, onUpdate, onBa
                                             renderInput(field)
                                         ) : (
                                             <span className="text-gray-900">
-                                                {field.type === 'date' && value ? new Date(String(value)).toLocaleDateString() : (value || '-')}
+                                                {field.type === 'date' && value ? formatDate(String(value)) : (value || '-')}
                                             </span>
                                         )}
                                     </TableCell>

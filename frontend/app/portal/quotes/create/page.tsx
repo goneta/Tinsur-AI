@@ -1,21 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { SalesChatWidget } from "@/components/quote/sales-chat-widget";
-import { PortalQuoteWizard } from "@/components/portal/portal-quote-wizard";
+import { QuoteWizard } from "@/components/quotes/quote-wizard";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Sparkles, ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { FileText, Sparkles, ArrowLeft, Loader2 } from "lucide-react";
+import { clientApi } from "@/lib/client-api";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function PortalCreateQuotePage() {
     const router = useRouter();
-    const [mode, setMode] = useState<'select' | 'chat'>('select');
-    const [manualOpen, setManualOpen] = useState(false);
+    const { toast } = useToast();
+    const [mode, setMode] = useState<'select' | 'chat' | 'manual'>('select');
+    const [clientId, setClientId] = useState<string | null>(null);
+    const [clientLoading, setClientLoading] = useState(true);
 
-    // If manual wizard closes, we just stay on select mode or redirect? 
-    // Usually user might want to go back to dashboard.
-    // For now, staying on select is fine.
+    useEffect(() => {
+        let isMounted = true;
+        const loadClient = async () => {
+            try {
+                const client = await clientApi.getMyClient();
+                if (isMounted) {
+                    setClientId(client.id);
+                }
+            } catch (error: any) {
+                console.error("Failed to load client for quote creation:", error);
+                toast({
+                    title: "Unable to load profile",
+                    description: "We could not confirm your client profile. Refresh the page and try again.",
+                    variant: "destructive"
+                });
+            } finally {
+                if (isMounted) {
+                    setClientLoading(false);
+                }
+            }
+        };
+        loadClient();
+        return () => {
+            isMounted = false;
+        };
+    }, [toast]);
 
     if (mode === 'select') {
         return (
@@ -53,7 +80,7 @@ export default function PortalCreateQuotePage() {
                     {/* Manual Option */}
                     <Card
                         className="group border-2 hover:border-slate-400 transition-all cursor-pointer hover:shadow-lg"
-                        onClick={() => setManualOpen(true)}
+                        onClick={() => setMode('manual')}
                     >
                         <CardHeader className="space-y-4">
                             <div className="h-14 w-14 rounded-2xl bg-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
@@ -71,30 +98,54 @@ export default function PortalCreateQuotePage() {
                         </CardContent>
                     </Card>
                 </div>
+            </div>
+        );
+    }
 
-                <PortalQuoteWizard
-                    open={manualOpen}
-                    onOpenChange={setManualOpen}
-                    onSuccess={() => router.push('/portal')}
-                />
+    if (mode === 'chat') {
+        return (
+            <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+                <div className="flex items-center mb-6">
+                    <Button variant="ghost" className="gap-2 pl-0 hover:bg-transparent hover:text-primary" onClick={() => setMode('select')}>
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to Selection
+                    </Button>
+                </div>
+
+                <div className="max-w-4xl mx-auto">
+                    <SalesChatWidget />
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-            <div className="flex items-center mb-6">
+        <div className="flex-1 p-4 md:p-8 pt-6 space-y-6">
+            <div className="flex items-center mb-4">
                 <Button variant="ghost" className="gap-2 pl-0 hover:bg-transparent hover:text-primary" onClick={() => setMode('select')}>
                     <ArrowLeft className="h-4 w-4" />
                     Back to Selection
                 </Button>
             </div>
 
-            <div className="max-w-4xl mx-auto">
-                <SalesChatWidget />
-            </div>
-
-            {/* Render Wizard here too in case they switch? (Unlikely from Chat directly without back) */}
+            {clientLoading ? (
+                <div className="flex items-center justify-center py-20">
+                    <Loader2 className="h-10 w-10 animate-spin text-[#00539F]" />
+                </div>
+            ) : clientId ? (
+                <QuoteWizard
+                    initialClientId={clientId}
+                    onQuoteCreated={() => {
+                        toast({ title: "Quote Created", description: "We redirected you to the portal dashboard." });
+                        router.push('/portal');
+                    }}
+                    onExit={() => setMode('select')}
+                />
+            ) : (
+                <div className="p-8 rounded-[30px] border border-dashed border-gray-200 bg-gray-50 text-center text-gray-500 font-bold uppercase tracking-widest">
+                    Unable to load your client profile. Please refresh the page and try again.
+                </div>
+            )}
         </div>
     );
 }

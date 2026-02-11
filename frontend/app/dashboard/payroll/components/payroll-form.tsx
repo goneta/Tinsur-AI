@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
+import { formatDate } from '@/lib/utils';
 
 interface PayrollFormProps {
     employee: any;
@@ -23,7 +24,7 @@ export function PayrollForm({ employee, onSuccess }: PayrollFormProps) {
             amount: employee.employee_profile?.base_salary || '',
             currency: employee.employee_profile?.currency || 'XOF',
             payment_method: employee.employee_profile?.payment_method || 'bank_transfer',
-            payment_month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' }),
+            payment_month: formatDate(new Date()),
             description: `Salary Payment`
         }
     });
@@ -36,7 +37,7 @@ export function PayrollForm({ employee, onSuccess }: PayrollFormProps) {
     const now = new Date();
     for (let i = -6; i <= 2; i++) {
         const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
-        monthOptions.push(d.toLocaleString('default', { month: 'long', year: 'numeric' }));
+        monthOptions.push(formatDate(d));
     }
 
     const onSubmit = async (data: any) => {
@@ -80,7 +81,7 @@ export function PayrollForm({ employee, onSuccess }: PayrollFormProps) {
                     <Label htmlFor="payment_month">Payment Month</Label>
                     <Select
                         onValueChange={(val) => setValue('payment_month', val)}
-                        defaultValue={new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}
+                        defaultValue={formatDate(new Date())}
                     >
                         <SelectTrigger>
                             <SelectValue placeholder="Select Month" />

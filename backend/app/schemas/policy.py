@@ -12,8 +12,8 @@ class PolicyBase(BaseModel):
     """Base schema for policy."""
     client_id: UUID
     policy_type_id: UUID
-    coverage_amount: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
-    premium_amount: Decimal = Field(..., ge=0, decimal_places=2)
+    coverage_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
+    premium_amount: Decimal = Field(..., ge=0, multiple_of=Decimal('0.01'))
     premium_frequency: str = Field(default='annual', pattern='^(monthly|quarterly|semi-annual|annual)$')
     start_date: date
     end_date: date
@@ -34,8 +34,8 @@ class PolicyUpdate(PolicyBase):
     """Schema for updating a policy."""
     client_id: Optional[UUID] = None
     policy_type_id: Optional[UUID] = None
-    coverage_amount: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
-    premium_amount: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
+    coverage_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
+    premium_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
     premium_frequency: Optional[str] = Field(None, pattern='^(monthly|quarterly|semi-annual|annual)$')
     start_date: Optional[date] = None
     end_date: Optional[date] = None
@@ -83,8 +83,8 @@ class PolicyListResponse(BaseModel):
 class PolicyRenewalRequest(BaseModel):
     """Schema for policy renewal."""
     new_end_date: date
-    premium_amount: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
-    coverage_amount: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
+    premium_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
+    coverage_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
     notes: Optional[str] = None
 
 
@@ -92,7 +92,7 @@ class PolicyCancellationRequest(BaseModel):
     """Schema for policy cancellation."""
     cancellation_reason: str = Field(..., min_length=10)
     effective_date: date
-    refund_amount: Optional[Decimal] = Field(None, ge=0, decimal_places=2)
+    refund_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
 
 
 class EndorsementBase(BaseModel):
@@ -102,7 +102,7 @@ class EndorsementBase(BaseModel):
     effective_date: date
     changes: Dict[str, Any]
     reason: Optional[str] = None
-    premium_adjustment: Decimal = Field(default=0, decimal_places=2)
+    premium_adjustment: Decimal = Field(default=0, multiple_of=Decimal('0.01'))
 
 
 class EndorsementCreate(EndorsementBase):
@@ -115,7 +115,7 @@ class EndorsementUpdate(BaseModel):
     effective_date: Optional[date] = None
     changes: Optional[Dict[str, Any]] = None
     reason: Optional[str] = None
-    premium_adjustment: Optional[Decimal] = Field(None, decimal_places=2)
+    premium_adjustment: Optional[Decimal] = Field(None, multiple_of=Decimal('0.01'))
     status: Optional[str] = Field(None, pattern='^(draft|pending_approval|approved|rejected|active)$')
 
 

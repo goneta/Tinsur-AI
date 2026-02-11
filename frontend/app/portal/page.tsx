@@ -13,11 +13,10 @@ import {
 } from 'lucide-react';
 import { portalApi, DashboardStats } from '@/lib/portal-api';
 import { policyApi } from '@/lib/policy-api';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { PortalClaimDialog } from '@/components/portal/portal-claim-dialog';
 import { PortalPaymentDialog } from '@/components/portal/portal-payment-dialog';
 import { PortalPaymentsTab } from '@/components/portal/portal-payments-tab';
-import { PortalQuoteWizard } from '@/components/portal/portal-quote-wizard';
 import { PortalExcessDialog } from '@/components/portal/portal-excess-dialog';
 import { PortalShareModal } from '@/components/portal/portal-share-modal';
 import { PortalSettingsTab } from '@/components/portal/portal-settings-tab';
@@ -35,7 +34,6 @@ export default function ClientPortalPage() {
 
     const [claimDialogOpen, setClaimDialogOpen] = useState(false);
     const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-    const [quoteWizardOpen, setQuoteWizardOpen] = useState(false);
     const [excessDialogOpen, setExcessDialogOpen] = useState(false);
     const [activeSubTab, setActiveSubTab] = useState<'home' | 'documents' | 'upload' | 'payment' | 'settings'>('home');
     const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -199,7 +197,7 @@ export default function ClientPortalPage() {
                             {/* Center: Renewal Date */}
                             <div className="flex-1 flex justify-center px-4">
                                 <h3 className="text-lg font-bold text-white tracking-tight text-center">
-                                    {t('portal.renewal_date', 'Renewal date:')} {activePolicy?.renewal_date ? new Date(activePolicy.renewal_date).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '25 May 2026'}
+                                    {t('portal.renewal_date', 'Renewal date:')} {activePolicy?.renewal_date ? formatDate(activePolicy.renewal_date) : '25/05/2026'}
                                 </h3>
                             </div>
 
@@ -297,13 +295,13 @@ export default function ClientPortalPage() {
                                         <div className="flex justify-between items-baseline py-2 border-b border-gray-100/50">
                                             <span className="text-base text-gray-400 font-bold">{t('portal.start_date', 'Start date:')}</span>
                                             <span className="text-base text-black font-black">
-                                                {activePolicy?.start_date ? new Date(activePolicy.start_date).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '25 May 2025'}
+                                                {activePolicy?.start_date ? formatDate(activePolicy.start_date) : '25/05/2025'}
                                             </span>
                                         </div>
                                         <div className="flex justify-between items-baseline py-2 border-b border-gray-100/50">
                                             <span className="text-base text-gray-400 font-bold">{t('portal.renewal_date', 'Renewal date:')}</span>
                                             <span className="text-base text-black font-black">
-                                                {activePolicy?.renewal_date ? new Date(activePolicy.renewal_date).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '25 May 2026'}
+                                                {activePolicy?.renewal_date ? formatDate(activePolicy.renewal_date) : '25/05/2026'}
                                             </span>
                                         </div>
                                     </div>
@@ -554,11 +552,6 @@ export default function ClientPortalPage() {
             <PortalPaymentDialog
                 open={paymentDialogOpen}
                 onOpenChange={setPaymentDialogOpen}
-                onSuccess={fetchStats}
-            />
-            <PortalQuoteWizard
-                open={quoteWizardOpen}
-                onOpenChange={setQuoteWizardOpen}
                 onSuccess={fetchStats}
             />
             <PortalExcessDialog

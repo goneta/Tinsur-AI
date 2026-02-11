@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { formatDate } from '@/lib/utils';
 import {
     BookOpen,
     History,
@@ -159,7 +160,7 @@ export default function FinancialsPage() {
                 <div className="flex gap-2">
                     <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-md border text-xs text-muted-foreground px-3">
                         <CalendarIcon className="h-3 w-3" />
-                        <span>Filter: {new Date(startDate).toLocaleDateString()} - {new Date(endDate).toLocaleDateString()}</span>
+                        <span>Filter: {formatDate(startDate)} - {formatDate(endDate)}</span>
                     </div>
                     <Button variant="outline" size="sm" onClick={fetchData}>
                         <RefreshCw className="mr-2 h-4 w-4" /> {t('financials.refresh')}
@@ -303,7 +304,7 @@ export default function FinancialsPage() {
                                                 <Fragment key={entry.id}>
                                                     <TableRow className="bg-muted/30 hover:bg-muted/50 transition-colors border-b">
                                                         <TableCell className="font-medium text-xs">
-                                                            {new Date(entry.entry_date).toLocaleDateString()}
+                                                            {formatDate(entry.entry_date)}
                                                         </TableCell>
                                                         <TableCell className="font-semibold">{entry.description}</TableCell>
                                                         <TableCell><Badge variant="outline">{entry.reference}</Badge></TableCell>
