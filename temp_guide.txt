@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guide de Résiliation de Police d'Assurance</title>
+    <style>
+        @page {
+            margin: 2cm;
+            size: A4;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #00539F 0%, #0073CF 100%);
+            color: white;
+            padding: 30px;
+            margin: -20px -20px 30px -20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 28pt;
+            font-weight: 600;
+        }
+        
+        .header p {
+            margin: 0;
+            font-size: 12pt;
+            opacity: 0.95;
+        }
+        
+        h2 {
+            color: #00539F;
+            font-size: 18pt;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 3px solid #00539F;
+        }
+        
+        h3 {
+            color: #0073CF;
+            font-size: 14pt;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+        
+        .info-box {
+            background-color: #f0f7ff;
+            border-left: 4px solid #00539F;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .success-box {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 10pt;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        
+        th {
+            background-color: #00539F;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .flow-step {
+            background: #f8f9fa;
+            border-left: 4px solid #0073CF;
+            padding: 10px 15px;
+            margin: 8px 0;
+            font-size: 10pt;
+        }
+        
+        .flow-step strong {
+            color: #00539F;
+        }
+        
+        .diagram {
+            background: #f8f9fa;
+            border: 2px solid #00539F;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 12pt;
+        }
+        
+        .diagram-arrow {
+            color: #00539F;
+            font-size: 18pt;
+            margin: 5px 0;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #00539F;
+            font-size: 9pt;
+            color: #666;
+            text-align: center;
+        }
+        
+        .download-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #00539F;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14pt;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        
+        .download-btn:hover {
+            background: #003d73;
+        }
+        
+        @media print {
+            .download-btn {
+                display: none;
+            }
+            body {
+                padding: 0;
+            }
+            .header {
+                margin: 0 0 30px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="download-btn" onclick="window.print()">📥 Télécharger PDF</button>
+
+    <div class="header">
+        <h1>Guide de Résiliation de Police d'Assurance</h1>
+        <p>Processus complet et normes industrielles</p>
+    </div>
+
+    <div class="section">
+        <h2>1. Résiliation de Police – Vue d'Ensemble</h2>
+        <p>La résiliation de police est la fin anticipée d'une police d'assurance avant sa date d'expiration naturelle. Elle peut être initiée par :</p>
+        <ul>
+            <li><strong>Le client</strong> (titulaire de la police)</li>
+            <li><strong>La compagnie d'assurance</strong> (assureur)</li>
+        </ul>
+        <p>Chaque cas présente des conditions légales, des périodes de préavis et des conséquences financières différentes.</p>
+    </div>
+
+    <div class="section">
+        <h2>2. Résiliation Initiée par le Client</h2>
+        
+        <h3>Raisons Courantes</h3>
+        <ul>
+            <li>Police n'est plus nécessaire (véhicule vendu, changement de mode de vie)</li>
+            <li>Couverture moins chère ou meilleure trouvée</li>
+            <li>Insatisfaction du service</li>
+            <li>Couverture en double</li>
+        </ul>
+
+        <h3>Conditions pour la Résiliation Client</h3>
+        <ul>
+            <li>Le client doit être le titulaire de la police</li>
+            <li>La résiliation peut généralement avoir lieu à tout moment</li>
+            <li>L'éligibilité au remboursement dépend de :
+                <ul>
+                    <li>Le temps écoulé depuis le début de la police</li>
+                    <li>Si une réclamation a été faite</li>
+                    <li>Les règles de la période de rétractation</li>
+                </ul>
+            </li>
+            <li>Des frais administratifs peuvent s'appliquer</li>
+        </ul>
+
+        <div class="info-box">
+            <h3>Période de Rétractation (Cooling-Off Period)</h3>
+            <p><strong>Généralement 14 jours, varie selon le pays</strong></p>
+            <p>Si le client résilie pendant la période de rétractation :</p>
+            <ul>
+                <li>La police est annulée avec une pénalité minimale ou nulle</li>
+                <li>Remboursement complet ou remboursement moins frais admin</li>
+                <li>La couverture est considérée comme annulée ou couverte à court terme</li>
+            </ul>
+        </div>
+
+        <h3>Processus de Résiliation Client (Flux Système)</h3>
+        <div class="flow-step"><strong>1.</strong> Le client sélectionne "Annuler la Police" depuis la carte de police</div>
+        <div class="flow-step"><strong>2.</strong> Le système affiche :
+            <ul style="margin: 5px 0;">
+                <li>Options de raison de résiliation</li>
+                <li>Estimation du remboursement (le cas échéant)</li>
+            </ul>
+        </div>
+        <div class="flow-step"><strong>3.</strong> Le client confirme la résiliation</div>
+        <div class="flow-step"><strong>4.</strong> Le statut de la police passe à <em>Annulée (Initiée par le Client)</em></div>
+        <div class="flow-step"><strong>5.</strong> Le système :
+            <ul style="margin: 5px 0;">
+                <li>Arrête la couverture à la date de résiliation</li>
+                <li>Calcule le remboursement (pro-rata ou aucun)</li>
+                <li>Génère les documents de résiliation</li>
+            </ul>
+        </div>
+        <div class="flow-step"><strong>6.</strong> Confirmation de résiliation envoyée au client</div>
+
+        <h3>Règles de Remboursement (Typiques)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Scénario</th>
+                    <th>Remboursement</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Dans la période de rétractation, sans réclamation</td>
+                    <td>Remboursement complet ou quasi-complet</td>
+                </tr>
+                <tr>
+                    <td>Après la période de rétractation, sans réclamation</td>
+                    <td>Remboursement pro-rata</td>
+                </tr>
+                <tr>
+                    <td>Réclamation déjà faite</td>
+                    <td>Aucun remboursement</td>
+                </tr>
+                <tr>
+                    <td>Plan de paiement mensuel</td>
+                    <td>Les paiements s'arrêtent, pas de remboursement</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>3. Résiliation Initiée par la Compagnie d'Assurance</h2>
+        
+        <h3>Raisons Courantes</h3>
+        <ul>
+            <li>Non-paiement des primes</li>
+            <li>Fausse déclaration ou fraude</li>
+            <li>Violation des conditions de la police</li>
+            <li>Risque élevé découvert après souscription</li>
+            <li>Exigence réglementaire ou légale</li>
+        </ul>
+
+        <h3>Conditions pour la Résiliation par l'Assureur</h3>
+        <ul>
+            <li>Doit respecter les périodes de préavis légales</li>
+            <li>Doit fournir une raison claire</li>
+            <li>Ne peut pas résilier arbitrairement</li>
+            <li>Certaines raisons permettent une résiliation immédiate (fraude)</li>
+        </ul>
+
+        <h3>Périodes de Préavis (Typiques)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Raison</th>
+                    <th>Préavis</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Non-paiement</td>
+                    <td>7–14 jours</td>
+                </tr>
+                <tr>
+                    <td>Fausse déclaration</td>
+                    <td>Immédiat</td>
+                </tr>
+                <tr>
+                    <td>Risque accru</td>
+                    <td>14–30 jours</td>
+                </tr>
+                <tr>
+                    <td>Erreur administrative</td>
+                    <td>Immédiat ou correctif</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Processus de Résiliation par l'Assureur (Flux Système)</h3>
+        <div class="flow-step"><strong>1.</strong> Admin/Employé initie la résiliation</div>
+        <div class="flow-step"><strong>2.</strong> Raison de résiliation sélectionnée (obligatoire)</div>
+        <div class="flow-step"><strong>3.</strong> Le système valide :
+            <ul style="margin: 5px 0;">
+                <li>Période de préavis légale</li>
+                <li>Éligibilité au remboursement</li>
+            </ul>
+        </div>
+        <div class="flow-step"><strong>4.</strong> Le statut de la police passe à <em>Résiliation en Attente</em></div>
+        <div class="flow-step"><strong>5.</strong> Le client est notifié (email + portail)</div>
+        <div class="flow-step"><strong>6.</strong> La couverture se termine à la date effective</div>
+        <div class="flow-step"><strong>7.</strong> Le statut de la police devient <em>Annulée (Initiée par l'Assureur)</em></div>
+        <div class="flow-step"><strong>8.</strong> Documents de résiliation générés et stockés</div>
+    </div>
+
+    <div class="section">
+        <h2>4. Différences Clés : Résiliation Client vs Assureur</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Aspect</th>
+                    <th>Client Résilie</th>
+                    <th>Assureur Résilie</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Qui initie</td>
+                    <td>Client</td>
+                    <td>Compagnie d'assurance</td>
+                </tr>
+                <tr>
+                    <td>Préavis requis</td>
+                    <td>Généralement aucun</td>
+                    <td>Obligatoire</td>
+                </tr>
+                <tr>
+                    <td>Remboursement possible</td>
+                    <td>Oui (conditions s'appliquent)</td>
+                    <td>Oui (sauf fraude)</td>
+                </tr>
+                <tr>
+                    <td>Raison requise</td>
+                    <td>Optionnelle</td>
+                    <td>Obligatoire</td>
+                </tr>
+                <tr>
+                    <td>Sensibilité légale</td>
+                    <td>Moyenne</td>
+                    <td>Élevée</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>5. Statuts de Police Liés à la Résiliation</h2>
+        <div class="success-box">
+            <ul style="margin: 5px 0;">
+                <li><strong>Active</strong> – Police en cours</li>
+                <li><strong>Résiliation en Attente</strong> – Processus de résiliation initié</li>
+                <li><strong>Annulée – Client</strong> – Résiliée par le titulaire</li>
+                <li><strong>Annulée – Assureur</strong> – Résiliée par la compagnie</li>
+                <li><strong>Suspendue</strong> – Temporaire, non annulée</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>6. Documents Générés lors de la Résiliation</h2>
+        <ul>
+            <li>Confirmation de résiliation</li>
+            <li>Relevé de calcul de remboursement (le cas échéant)</li>
+            <li>Programme de police mis à jour</li>
+            <li>Preuve de date de fin de couverture</li>
+        </ul>
+        <div class="info-box">
+            <p><strong>Note :</strong> Tous les documents doivent apparaître dans <em>Voir Documents → Votre Compte</em></p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>7. Meilleures Pratiques pour Votre Plateforme</h2>
+        
+        <h3>UX (Expérience Utilisateur)</h3>
+        <div class="success-box">
+            <p><strong>Toujours afficher :</strong></p>
+            <ul style="margin: 5px 0;">
+                <li>Date de résiliation effective</li>
+                <li>Montant du remboursement (le cas échéant)</li>
+            </ul>
+            <p><strong>Exiger une confirmation avant la résiliation finale</strong></p>
+        </div>
+
+        <h3>Conformité</h3>
+        <div class="warning-box">
+            <p><strong>Enregistrer :</strong></p>
+            <ul style="margin: 5px 0;">
+                <li>Qui a résilié</li>
+                <li>Quand</li>
+                <li>Pourquoi</li>
+            </ul>
+            <p><strong>Stocker les documents de façon permanente</strong></p>
+        </div>
+
+        <h3>Règles Système</h3>
+        <ul>
+            <li>Empêcher les réclamations après la date de résiliation</li>
+            <li>Verrouiller les polices annulées (lecture seule)</li>
+            <li>Ne pas permettre la réactivation (utiliser la réintégration ou nouvelle police)</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>8. Diagramme d'État de Résiliation (Simplifié)</h2>
+        <div class="diagram">
+            <div style="font-size: 14pt; font-weight: bold; color: #28a745;">ACTIVE</div>
+            <div class="diagram-arrow">↓</div>
+            <div style="font-size: 14pt; font-weight: bold; color: #ffc107;">RÉSILIATION EN ATTENTE</div>
+            <div class="diagram-arrow">↓</div>
+            <div style="font-size: 14pt; font-weight: bold; color: #dc3545;">ANNULÉE</div>
+            <div style="font-size: 11pt; margin-top: 10px;">(Client / Assureur)</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><strong>Guide de Résiliation de Police d'Assurance</strong></p>
+        <p>Document conforme aux normes industrielles et meilleures pratiques</p>
+        <p>© 2025 - Tous droits réservés</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,150 @@
+﻿python : INFO:     
+Started server process 
+[34644]
+Au caractère Ligne:1 : 28
++ ... ='backend'; python b
+ackend/agents/a2a_multi_ai
+_agents/__main__.py > s 
+...
++                 ~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (I  
+  NFO:     Started serv   
+ er process [34644]:St    
+ring) [], RemoteExcep    
+tion
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+INFO:     Waiting for 
+application startup.
+INFO:     Application 
+startup complete.
+ERROR:    [Errno 10048] 
+error while attempting to 
+bind on address 
+('0.0.0.0', 8017): une 
+seule utilisation de 
+chaque adresse de socket 
+(protocole/adresse 
+rÚseau/port) est 
+habituellement autorisÚe
+INFO:     Waiting for 
+application shutdown.
+INFO:     Application 
+shutdown complete.
+Traceback (most recent 
+call last):
+  File "C:\Python312\Lib\s
+ite-packages\uvicorn\serve
+r.py", line 164, in 
+startup
+    server = await 
+loop.create_server(
+             
+^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\a
+syncio\base_events.py", 
+line 1572, in 
+create_server
+    raise 
+OSError(err.errno, msg) 
+from None
+OSError: [Errno 10048] 
+error while attempting to 
+bind on address 
+('0.0.0.0', 8017): une 
+seule utilisation de 
+chaque adresse de socket 
+(protocole/adresse 
+rÚseau/port) est 
+habituellement autorisÚe
+
+During handling of the 
+above exception, another 
+exception occurred:
+
+Traceback (most recent 
+call last):
+  File "C:\Users\user\Desk
+top\Insurance SaaS\backend
+\agents\a2a_multi_ai_agent
+s\__main__.py", line 48, 
+in main
+    uvicorn.run(app, 
+host="0.0.0.0", 
+port=8017, 
+log_level="debug")
+  File "C:\Python312\Lib\s
+ite-packages\uvicorn\main.
+py", line 593, in run
+    server.run()
+  File "C:\Python312\Lib\s
+ite-packages\uvicorn\serve
+r.py", line 67, in run
+    return asyncio_run(sel
+f.serve(sockets=sockets), 
+loop_factory=self.config.g
+et_loop_factory())
+           ^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\a
+syncio\runners.py", line 
+194, in run
+    return 
+runner.run(main)
+           
+^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\a
+syncio\runners.py", line 
+118, in run
+    return self._loop.run_
+until_complete(task)
+           ^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\a
+syncio\base_events.py", 
+line 674, in 
+run_until_complete
+    self.run_forever()
+  File "C:\Python312\Lib\a
+syncio\windows_events.py",
+ line 322, in run_forever
+    super().run_forever()
+  File "C:\Python312\Lib\a
+syncio\base_events.py", 
+line 641, in run_forever
+    self._run_once()
+  File "C:\Python312\Lib\a
+syncio\base_events.py", 
+line 1987, in _run_once
+    handle._run()
+  File "C:\Python312\Lib\a
+syncio\events.py", line 
+88, in _run
+    self._context.run(self
+._callback, *self._args)
+  File "C:\Python312\Lib\s
+ite-packages\uvicorn\serve
+r.py", line 71, in serve
+    await 
+self._serve(sockets)
+  File "C:\Python312\Lib\s
+ite-packages\uvicorn\serve
+r.py", line 86, in _serve
+    await self.startup(soc
+kets=sockets)
+  File "C:\Python312\Lib\s
+ite-packages\uvicorn\serve
+r.py", line 174, in 
+startup
+    sys.exit(1)
+SystemExit: 1
+Starting a2a_multi_ai_agents on port 8017
+CRITICAL ERROR (BaseException): 1
+

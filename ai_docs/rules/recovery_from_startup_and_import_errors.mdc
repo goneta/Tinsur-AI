@@ -1,0 +1,33 @@
+---
+description: Procedures for resolving import regressions and system lock/port conflicts.
+globs: "**/*"
+alwaysApply: true
+---
+# Recovery: Startup and Import Errors
+
+This rule provides specific solutions for recurring connection and startup issues.
+
+## 1. Import Regression Prevention
+Whenever a model is DELETED or a module is RENAMED/MOVED:
+- **Mandatory Action**: Run a workspace-wide grep for the old name immediately.
+- **Example**: `grep_search(Query="ClientTravel", SearchPath="backend")`
+- **Goal**: Ensure all stale imports and logic dependent on the removed entity are updated. Failure to do this causes immediate backend crash upon reload.
+
+## 2. Port and Process Conflict Resolution
+If Port 3000 (Frontend) or 8000 (Backend) is "In Use" but services are unresponsive:
+- **Cause**: Zombie processes or stale Next.js locks.
+- **Protocol**:
+    1. **Kill Zombies**: Run `taskkill /im node.exe /f` and `taskkill /im python.exe /f`.
+    2. **Clear Cache**: If frontend fails to start, delete the `.next` directory (`rmdir /s /q frontend\.next`).
+    3. **Check .env**: Ensure `NEXT_PUBLIC_API_URL` points to the correct backend port (usually 8000).
+
+## 3. Environment Continuity (Backend)
+- **Problem**: Agents or backend failing with `ModuleNotFoundError` despite being in a venv.
+- **Solution**: 
+    - Verify `PYTHONPATH`. Agents often require `PYTHONPATH=./backend` if run from root.
+    - If `.venv` is corrupt or incomplete, use the global environment (if dependencies are present) or reinstall: `python -m pip install -r backend/requirements.txt`.
+
+## 4. Verification Checklist
+- [ ] Backend health check returns 200: `Invoke-WebRequest -Uri "http://localhost:8000/health"`.
+- [ ] Frontend page loads successfully on Port 3000.
+- [ ] No "ImportError" in any terminal windows/logs.

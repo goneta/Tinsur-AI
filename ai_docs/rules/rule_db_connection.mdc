@@ -1,0 +1,19 @@
+---
+description: Database Connection Reliability Rules
+globs: "backend/**/*"
+---
+# Database Connection Rules
+
+## Context
+Persistent "Connection Refused" (port 5432) errors have occurred, causing login failures.
+
+## Rules
+1.  **Verify Connection Before Start**: Before assuming the backend is functional, verify the database connection.
+    -   Use `backend/scripts/check_db.py` (to be created) or a simple connection test.
+2.  **Diagnose Before Fixing**: If connection fails:
+    -   Check if PostgreSQL service is running (`Get-Service *postgre*`).
+    -   Check if Docker container is running (`docker ps`).
+3.  **Auto-Restart**: If the service/container is down, attempt to start it automatically.
+    -   `Start-Service postgresql-x64-16` (Adjust version as needed).
+    -   `docker start [container_name]`.
+4.  **Schema Validation**: Always ensure models (e.g., `Document`) have all required imports (e.g., `Boolean`) to prevent backend crash loops.

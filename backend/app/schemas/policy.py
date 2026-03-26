@@ -1,0 +1,137 @@
+"""
+Pydantic schemas for policies.
+"""
+from pydantic import BaseModel, ConfigDict, Field
+from typing import Optional, List, Dict, Any
+from datetime import datetime, date
+from uuid import UUID
+from decimal import Decimal
+
+
+class PolicyBase(BaseModel):
+    """Base schema for policy."""
+    client_id: UUID
+    policy_type_id: UUID
+    coverage_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
+    premium_amount: Decimal = Field(..., ge=0, multiple_of=Decimal('0.01'))
+    premium_frequency: str = Field(default='annual', pattern='^(monthly|quarterly|semi-annual|annual)$')
+    start_date: date
+    end_date: date
+    details: Optional[Dict[str, Any]] = {}
+    notes: Optional[str] = None
+
+
+class PolicyCreate(PolicyBase):
+    """Schema for creating a policy."""
+    quote_id: Optional[UUID] = None
+    sales_agent_id: Optional[UUID] = None
+    pos_location_id: Optional[UUID] = None
+    inventory_deductions: Optional[List[Dict[str, Any]]] = None # List of {item_id: UUID, quantity: int}
+    services: Optional[List[Dict[str, Any]]] = None # List of {service_id: UUID, price: Decimal}
+
+
+class PolicyUpdate(PolicyBase):
+    """Schema for updating a policy."""
+    client_id: Optional[UUID] = None
+    policy_type_id: Optional[UUID] = None
+    coverage_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
+    premium_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
+    premium_frequency: Optional[str] = Field(None, pattern='^(monthly|quarterly|semi-annual|annual)$')
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+
+
+class PolicyServiceResponse(BaseModel):
+    """Schema for policy service in response."""
+    id: UUID
+    name_en: str
+    name_fr: Optional[str]
+    price: Decimal # effective price on policy
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PolicyResponse(PolicyBase):
+    """Schema for policy response."""
+    id: UUID
+    company_id: UUID
+    policy_number: str
+    quote_id: Optional[UUID]
+    sales_agent_id: Optional[UUID]
+    pos_location_id: Optional[UUID]
+    status: str
+    policy_document_url: Optional[str]
+    qr_code_data: Optional[str]
+    created_by: UUID
+    created_at: datetime
+    updated_at: datetime
+    is_active: bool
+    days_until_expiry: Optional[int]
+    client_name: str
+    created_by_name: str
+    # services: List[PolicyServiceResponse] = [] # Commented out for now until strict typed response handling is verified
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PolicyListResponse(BaseModel):
+    """Schema for policy list response."""
+    policies: List[PolicyResponse]
+    total: int
+    page: int = 1
+    page_size: int = 50
+
+
+class PolicyRenewalRequest(BaseModel):
+    """Schema for policy renewal."""
+    new_end_date: date
+    premium_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
+    coverage_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
+    notes: Optional[str] = None
+
+
+class PolicyCancellationRequest(BaseModel):
+    """Schema for policy cancellation."""
+    cancellation_reason: str = Field(..., min_length=10)
+    effective_date: date
+    refund_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
+
+
+class EndorsementBase(BaseModel):
+    """Base schema for endorsement."""
+    policy_id: UUID
+    endorsement_type: str = Field(..., pattern='^(coverage_change|beneficiary_change|premium_adjustment|term_extension)$')
+    effective_date: date
+    changes: Dict[str, Any]
+    reason: Optional[str] = None
+    premium_adjustment: Decimal = Field(default=0, multiple_of=Decimal('0.01'))
+
+
+class EndorsementCreate(EndorsementBase):
+    """Schema for creating an endorsement."""
+    pass
+
+
+class EndorsementUpdate(BaseModel):
+    """Schema for updating an endorsement."""
+    effective_date: Optional[date] = None
+    changes: Optional[Dict[str, Any]] = None
+    reason: Optional[str] = None
+    premium_adjustment: Optional[Decimal] = Field(None, multiple_of=Decimal('0.01'))
+    status: Optional[str] = Field(None, pattern='^(draft|pending_approval|approved|rejected|active)$')
+
+
+class EndorsementResponse(EndorsementBase):
+    """Schema for endorsement response."""
+    id: UUID
+    company_id: UUID
+    endorsement_number: str
+    issued_date: date
+    new_premium: Optional[Decimal]
+    status: str
+    document_url: Optional[str]
+    approved_by: Optional[UUID]
+    approved_at: Optional[datetime]
+    rejection_reason: Optional[str]
+    created_by: UUID
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(from_attributes=True)

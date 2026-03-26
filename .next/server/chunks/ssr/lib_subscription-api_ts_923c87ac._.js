@@ -1,0 +1,3 @@
+module.exports=[2554,a=>{"use strict";var b=a.i(53250);a.s(["subscriptionApi",0,{getStatus:async()=>(await b.default.get("/subscription/status")).data,updatePlan:async a=>(await b.default.post("/subscription/plan",{ai_plan:a})).data,updateCompanyKey:async a=>(await b.default.post("/subscription/keys",{api_key:a})).data,updateSystemKey:async(a,c)=>(await b.default.post("/subscription/system/keys",{provider:a,api_key:c})).data,topupDev:async(a,c)=>(await b.default.post("/dev/topup-dev",null,{params:{amount:c,company_id:a}})).data,getUsageStats:async()=>(await b.default.get("/subscription/usage/stats")).data,initiateTopup:async a=>(await b.default.post("/subscription/topup",a)).data}])}];
+
+//# sourceMappingURL=lib_subscription-api_ts_923c87ac._.js.map

@@ -1,0 +1,9 @@
+#### Handle Missing Quote Columns (MANDATORY)
+**File:** `handle_missing_quote_columns_migration.mdc`
+
+**Summary:** If seed or queries fail due to missing quote snapshot columns, add a minimal migration.
+
+**Checklist:**
+- [ ] When SQLite error mentions `quotes.admin_fee_percent` or `quotes.admin_discount_percent`, add a targeted migration.
+- [ ] Make migration idempotent (check columns before add).
+- [ ] Re-run `alembic upgrade head` then re-run seed.

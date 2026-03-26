@@ -1,0 +1,8 @@
+# pack-refs with: peeled fully-peeled sorted 
+0134ad525398e865cc21230a47a65af39b1e2dac refs/heads/kenbot_branche
+56f695f4cf62a07702274a8cd525585d2a7956b8 refs/remotes/origin/codexbranch
+d58eefc91351150975c47382bb32d8cfbb81fb24 refs/remotes/origin/dev
+dfeb4700673b1ca76d1da791ce0da3aeea7e938b refs/remotes/origin/kenbot_branche
+2cd3fcf6c8f015f503f756a1264fc627c6dee8a4 refs/remotes/origin/main
+cc4275a992f141a01b001f997eaca043465340ab refs/remotes/origin/master
+5deac4ff6e6acb6a845328f5113d24fcc0d6e5f5 refs/remotes/origin/staging

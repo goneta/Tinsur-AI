@@ -1,0 +1,56 @@
+---
+description: Fix missing UI component imports and prevent future occurrences
+globs: "**/*.{ts,tsx}"
+---
+# Missing UI Component Resolution
+
+This rule applies when encountering "Module not found: Can't resolve '@/components/ui/[component]'" errors.
+
+## Root Cause
+A component file is referenced but doesn't exist in the `components/ui` directory, typically because:
+1. The component was never created
+2. The component file was deleted or moved
+3. The import path is incorrect
+
+## Resolution Steps
+
+### 1. Identify the Missing Component
+From the error message, extract the component name (e.g., `radio-group`, `select`, `input`).
+
+### 2. Check if Component Exists
+```powershell
+Test-Path frontend/components/ui/[component-name].tsx
+```
+
+### 3. Create the Missing Component
+If the component doesn't exist:
+- For Radix UI primitives (radio-group, select, dialog, etc.):
+  - Use the shadcn/ui pattern
+  - Import from `@radix-ui/react-[component]`
+  - Apply consistent styling with `cn()` utility
+  - Export both base component and sub-components
+
+- For basic HTML elements (input, button, label):
+  - Create simple wrapper with Tailwind classes
+  - Use `React.forwardRef` for ref forwarding
+  - Include proper TypeScript types
+
+### 4. Install Required Dependencies
+If using Radix UI:
+```powershell
+cd frontend
+npm install @radix-ui/react-[component-name]
+```
+
+## Prevention
+Before importing a UI component:
+1. Verify the component file exists in `components/ui/`
+2. Check the component is exported correctly
+3. Ensure all dependencies are installed
+
+## Common Missing Components
+- `radio-group` → `@radix-ui/react-radio-group`
+- `select` → `@radix-ui/react-select`
+- `dialog` → `@radix-ui/react-dialog`
+- `dropdown-menu` → `@radix-ui/react-dropdown-menu`
+- `toast` → `@radix-ui/react-toast`

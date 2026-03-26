@@ -1,0 +1,38 @@
+---
+description: Prevent type mismatches between Zod schemas and react-hook-form resolvers
+globs: **/*.tsx, **/*.ts
+alwaysApply: false
+---
+
+# Zod Resolver Type Mismatch Rule
+
+## Root Cause
+A common TypeScript error occurs when using `zodResolver` with `react-hook-form` where the inferred Zod type does not match the expected form values. This often happens because `z.string().default(...)` creates a schema where the input type can be `undefined` (because of the default), but the output type is `string`. `react-hook-form`'s `useForm` might infer types that conflict with this behavior, especially when `defaultValues` are not explicitly providing the value.
+
+## Corrective Action
+When you encounter a type mismatch error in `useForm<FormType>({ resolver: zodResolver(schema) ... })`:
+1.  **Remove `.default()` from the schema** if the field is bound to a controlled input. Instead, enforce the requirement in the schema (e.g., `min(1, "Required")`).
+2.  **Provide explicit `defaultValues`** in the `useForm` hook configuration. This ensures the initial state matches the required type.
+3.  **Ensure Schema Alignment**: Verify that `z.infer<typeof schema>` strictly matches the `FormType` interface passed to `useForm`.
+
+## Preventive Guidelines
+1.  **Explicit Defaults in Hook**: Always prefer setting default values in the `useForm` `defaultValues` object rather than using Zod's `.default()` transformer for form fields.
+    ```typescript
+    // BAD
+    const schema = z.object({
+      role: z.string().default('user')
+    });
+    
+    // GOOD
+    const schema = z.object({
+      role: z.string().min(1)
+    });
+    
+    useForm({
+      defaultValues: {
+        role: 'user'
+      }
+    })
+    ```
+2.  **Type Assertion**: If necessary, explicitly cast `defaultValues` to the form type to ensure type safety: `defaultValues: initialData || { ... } as ClientFormData`.
+3.  **Check Resolver Types**: Before running the build, check if generic types passed to `useForm` match the Zod schema inference.

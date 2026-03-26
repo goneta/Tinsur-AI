@@ -1,0 +1,28 @@
+---
+description: Prevent "Module not found" errors by verifying component existence and dependencies before import.
+globs: ["frontend/components/ui/**/*.tsx", "frontend/app/**/*.tsx"]
+---
+
+# Verify Component Integrity
+
+## Context
+"Module not found" errors occur when code imports a component (e.g., `import { useToast } from "@/components/ui/use-toast"`) that does not exist in the filesystem, or when a component exists but its underlying dependencies (e.g., `@radix-ui/react-toast`) are missing.
+
+## Requirements
+
+1.  **Verify Existence Before Import**:
+    *   Before adding an import statement for a local component, run `list_dir` or `Test-Path` to confirm the file exists.
+    *   **Do not assume** a component exists just because it is standard (e.g., `use-toast` in shadcn).
+
+2.  **Verify Dependencies**:
+    *   If using a UI library component (shadcn/ui, Radix), check `package.json` to ensure the required underlying package is installed.
+    *   Example: `Toast` requires `@radix-ui/react-toast`.
+
+3.  **Repair Protocol**:
+    *   If missing:
+        1.  Try installing via CLI: `npx shadcn-ui@latest add [component]`
+        2.  If CLI fails (hangs/errors): Manually install dependencies (`npm install @radix-ui/...`) and create the component file manually using standard implementations.
+
+## Validation
+*   **Pre-Build Check**: Run `ls -R components/ui` (or equivalent) to audit available components.
+*   **Build Check**: If `npm run build` fails with "Module not found", **STOP**. Do not modify code to remove the import. Fix the missing file/dependency instead.

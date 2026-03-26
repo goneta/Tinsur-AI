@@ -1,0 +1,225 @@
+"""
+FastAPI dependencies for authentication and authorization.
+"""
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
+from typing import Optional
+import uuid
+from jose import JWTError
+from pydantic import ValidationError
+from datetime import datetime
+from app.core.time import utcnow
+
+from app.core.database import get_db
+from app.core.security import decode_token
+from app.models.user import User
+from app.schemas.auth import TokenData
+
+security = HTTPBearer()
+security_optional = HTTPBearer(auto_error=False)
+
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+) -> User:
+    """Get current authenticated user from JWT token."""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    token = credentials.credentials
+    print(f"DEBUG_AUTH: Received token starting with {token[:10]}")
+    try:
+        payload = decode_token(token)
+        if payload is None:
+            print("DEBUG: Token decode returned None")
+            raise credentials_exception
+        
+        print(f"DEBUG_AUTH: Decoded payload for sub {payload.get('sub')}")
+        
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            print("DEBUG: Token payload missing 'sub' claim")
+            raise credentials_exception
+        
+        token_data = TokenData(
+            user_id=user_id,
+            email=payload.get("email"),
+            role=payload.get("role"),
+            company_id=payload.get("company_id")
+        )
+    except (JWTError, ValidationError, ValueError) as e:
+        msg = f"DEBUG: Token validation exception: {type(e).__name__}: {e}"
+        print(msg)
+        try:
+            with open("auth_error.log", "a") as f:
+                f.write(f"{utcnow()} - {msg}\n")
+        except:
+            pass
+        raise credentials_exception
+    
+    from sqlalchemy.orm import joinedload
+    
+    # Safe UUID conversion for DB lookup
+    try:
+        db_user_id = uuid.UUID(token_data.user_id) if token_data.user_id else None
+    except (ValueError, AttributeError):
+        db_user_id = None
+        
+    if not db_user_id:
+        print(f"DEBUG: Invalid UUID format for user_id: {token_data.user_id}")
+        raise credentials_exception
+
+    user = db.query(User).options(joinedload(User.company)).filter(User.id == db_user_id).first()
+    if user is None:
+        msg = f"DEBUG: User not found for ID {token_data.user_id}"
+        print(msg)
+        try:
+            with open("auth_error.log", "a") as f:
+                f.write(f"{utcnow()} - {msg}\n")
+        except:
+            pass
+        raise credentials_exception
+    
+    print(f"DEBUG_AUTH: User found: {user.email}, is_active: {user.is_active}")
+    
+    if not user.is_active:
+        print(f"DEBUG_AUTH: User {user.email} is INACTIVE")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Inactive user"
+        )
+    
+    return user
+
+
+async def get_optional_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_optional),
+    db: Session = Depends(get_db)
+) -> Optional[User]:
+    """
+    Get current user if token is valid, otherwise return None.
+    Does NOT raise 401.
+    """
+    if not credentials:
+        return None
+
+    token = credentials.credentials
+    try:
+        payload = decode_token(token)
+        if payload is None:
+            return None
+        
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            return None
+        
+        token_data = TokenData(
+            user_id=user_id,
+            email=payload.get("email"),
+            role=payload.get("role"),
+            company_id=payload.get("company_id")
+        )
+    except (JWTError, ValidationError, ValueError):
+        return None
+    
+    from sqlalchemy.orm import joinedload
+    
+    # Safe UUID conversion
+    try:
+        db_user_id = uuid.UUID(token_data.user_id) if token_data.user_id else None
+    except (ValueError, AttributeError):
+        return None
+        
+    if not db_user_id:
+        return None
+
+    user = db.query(User).options(joinedload(User.company)).filter(User.id == db_user_id).first()
+    
+    if user and user.is_active:
+        return user
+    
+    return None
+
+
+
+async def get_current_active_user(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    """Get current active user."""
+    return current_user
+
+
+def require_role(allowed_roles: list[str]):
+    """Dependency to check if user has required role."""
+    async def role_checker(current_user: User = Depends(get_current_user)) -> User:
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Insufficient permissions. Required roles: {allowed_roles}"
+            )
+        return current_user
+    return role_checker
+
+
+def require_permission(permission_code: str):
+    """Dependency to check if user has a specific permission via RBAC."""
+    async def permission_checker(
+        current_user: User = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ) -> User:
+        # 1. Super Admin bypass
+        if current_user.role == "super_admin":
+            return current_user
+            
+        # 2. Check Role in DB
+        from app.models.rbac import Role
+        # Check if user's role string maps to an RBAC Role
+        role_record = db.query(Role).filter(Role.name == current_user.role).first()
+        
+        if not role_record:
+            # Fallback: if role not in DB, deny or use legacy checks?
+            # For now, deny strict permissions if RBAC is active
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Role configuration not found for '{current_user.role}'"
+            )
+            
+        # 3. Check Permissions
+        has_perm = any(p.code == permission_code for p in role_record.permissions)
+        if not has_perm:
+             raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Missing permission: {permission_code}"
+            )
+
+        return current_user
+    return permission_checker
+
+
+# Pre-defined role dependencies
+require_admin = require_role(["super_admin", "company_admin"])
+require_manager = require_role(["super_admin", "company_admin", "manager"])
+require_agent = require_role(["super_admin", "company_admin", "manager", "agent"])
+
+
+async def get_current_client(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get the client associated with the current user."""
+    from app.models.client import Client
+    
+    # Check if user is linked to a client
+    client = db.query(Client).filter(Client.user_id == current_user.id).first()
+    
+    if not client:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is not associated with any client profile"
+        )
+        
+    return client

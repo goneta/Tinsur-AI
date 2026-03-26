@@ -1,0 +1,39 @@
+---
+description: Prevent API validation errors by ensuring input schemas do not require fields that are calculated by the backend.
+globs: ["backend/app/schemas/*.py"]
+---
+
+# Schema vs. Computed Logic Rule
+
+## Context
+A common source of 422 Validation Errors is requiring fields in a `Create` or `Update` schema that the frontend cannot or should not provide because they are computed by the backend (e.g., `final_premium`, `expiration_date`, `id`, `created_at`).
+
+## Rule: computed fields must NOT be required in Input Schemas
+
+1.  **Analyze the Service Method**:
+    *   Look at the Service/Controller logic handling the request.
+    *   Does it calculate a value? (e.g., `premium = calculate(...)`)
+    *   If YES, that field must NOT be in the Input Schema (or must be Optional/ignored).
+
+2.  **Input Schema (`*Create`, `*Update`)**:
+    *   **Exclude**: calculated totals, security tokens, expiration dates (unless manually set), internal status flags.
+    *   **Include**: User-provided inputs only (e.g., `client_id`, `items`, `configuration`).
+
+3.  **Output Schema (`*Response`)**:
+    *   **Include**: Everything. The frontend needs to see the calculated results.
+
+## Root Cause Analysis (Example)
+**What Happened:**
+- `QuoteCreate` required `premium_amount` and `valid_until`.
+- Frontend sent only `client_id` and `risk_factors`.
+- Backend Service calculates premium and valid_until.
+- **Fail**: API returned 422 because frontend didn't send what backend was going to overwrite anyway.
+
+**Correct Approach:**
+- Remove `premium_amount` and `valid_until` from `QuoteCreate`.
+- Keep them in `QuoteResponse`.
+
+## Verification Checklist
+- [ ] **Check Schema**: Does `Create` schema require fields?
+- [ ] **Check Logic**: Does business logic calculate these fields?
+- [ ] **Action**: If Logic calculates, remove from Schema.

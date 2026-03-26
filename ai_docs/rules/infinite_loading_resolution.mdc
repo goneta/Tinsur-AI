@@ -1,0 +1,34 @@
+---
+description: Procedures for resolving "website keeps loading non stop" or infinite loading states.
+globs: ["backend/**/*", "frontend/**/*"]
+---
+
+# Infinite Loading Resolution
+
+## Context
+"Website keeps loading non stop" indicates that the frontend is waiting for an API response that never comes. This is almost always due to the Backend Server being hung/deadlocked, even if it appears to be running.
+
+## Detection
+1.  **Symptom**: Frontend spinners persist indefinitely.
+2.  **Verification**: 
+    - Attempt to fetch the OpenAPI schema: `python -c "import requests; print(requests.get('http://localhost:8000/openapi.json', timeout=2).status_code)"`
+    - If it timeouts or hangs, the backend is DEAD.
+
+## Remediation (The Fix)
+Do not attempt to debug the running process. It is faster to restart.
+
+1.  **Kill All Python Processes**:
+    - Windows: `taskkill /F /IM python.exe`
+    - Linux/Mac: `pkill -f python` or `killall python`
+    
+2.  **Restart Server**:
+    - `python -m uvicorn app.main:app --reload`
+    
+3.  **Verify**:
+    - Wait for "Application startup complete" log.
+    - Refresh the website.
+
+## Prevention
+- Avoid heavy computation in the main thread.
+- Ensure database connections are released.
+- Check for circular dependencies if startup fails immediately after restart.

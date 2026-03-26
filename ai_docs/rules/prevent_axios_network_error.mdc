@@ -1,0 +1,35 @@
+---
+description: Procedures for preventing and debugging Axios "Network Error" failures.
+globs: "frontend/**/*"
+alwaysApply: true
+---
+# Prevention: Axios Network Errors
+
+This rule outlines how to minimize and debug "Network Error" issues in the frontend-backend communication.
+
+## 1. Local Development URL Consistency
+- **Mandatory**: Use `http://localhost:8000` instead of `http://127.0.0.1:8000` as the default `API_URL` on Windows environments. This prevents IPv4/IPv6 mismatches that often trigger "Network Error".
+- **Check**: Ensure `frontend/lib/api.ts` has a stable fallback or is correctly overridden by `.env.local`.
+
+## 2. Enhanced Error Diagnostics
+- **Interceptors**: Always include a response interceptor in Axios that logs the full request context (URL, Method, Headers) specifically when `error.message === 'Network Error'`.
+- **Reason**: Axios "Network Error" provides almost no information by default. Custom logging is essential to see what URL was actually hit.
+
+## 3. Validation Safety (422 Errors)
+- **Pydantic Serialization**: Boolean and Date fields in Pydantic models (especially those with `Optional`) will crash the request or return 422 if they receive empty strings (`""`) or are `NULL` in the database but mandatory in the schema.
+- **Optional Dates**: If a date field is optional in the frontend form, ensure it is sent as `null` or omitted if it is empty. Never send `""` for a `date` or `datetime` field.
+- **Backend Defaults**: Always provide defaults in Pydantic schemas (e.g., `company_id: Optional[UUID] = None`) for fields that are populated by the backend after validation.
+- **Boolean Defaults**: Ensure all boolean fields in database-backed schemas have default values to prevent serialization crashes on legacy data.
+
+## 4. Diagnostic Steps
+- **Issue**: If a list refresh fails immediately after a successful mutation, the backend might have crashed or become unresponsive during the write operation.
+- **Critical Insight**: On Windows/Uvicorn, a Pydantic `ValidationError` during response serialization (e.g. in `get_clients`) can cause the backend to drop the connection abruptly, which Axios reports as a vague "Network Error" instead of a 500. Common culprits are `NULL` values in non-optional fields like `status`, `kyc_status`, `pep_status`, or `consent_accepted`.
+- **Action**: 
+    1. Verify backend logs for any unhandled exceptions or Pydantic `ValidationError` during the preceding `POST/PUT` or the following `GET` request.
+    2. Check for missing mandatory fields in the database that don't match the response schema.
+    3. Check for port conflicts (zombie processes) if the error persists across different pages.
+
+## 5. Verification Checklist
+- [ ] Backend is reachable via `localhost` (not just `127.0.0.1`).
+- [ ] Browser console shows detailed context for any detected `AxiosError: Network Error`.
+- [ ] No zombie `python.exe` or `node.exe` processes are interfering with port binding.

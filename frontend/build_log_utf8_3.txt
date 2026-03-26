@@ -1,0 +1,77 @@
+﻿
+> tinsur-ai-frontend@0.1.0 build
+> next build
+
+Ôû▓ Next.js 16.1.4 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+Ô£ô Compiled successfully in 59s
+  Running TypeScript ...
+node.exe : Failed to compile.
+Au caractère Ligne:1 : 1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Users\user\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpec 
+   ified: (Failed to compile.:String  
+  ) [], RemoteException
+    + FullyQualifiedErrorId : NativeC 
+   ommandError
+ 
+
+./components/quotes/quote-wizard.tsx:3
+59:17
+Type error: Object literal may only 
+specify known properties, and 
+'selected_services' does not exist in 
+type 'QuoteCalculationRequest'.
+
+[0m [90m 357 |[39m                 
+duration_months[33m:[39m data[33m.
+[39mduration_months[33m,[39m
+ [90m 358 |[39m                 
+risk_factors[33m:[39m 
+contextData[33m,[39m
+[31m[1m>[22m[39m[90m 359 |[39m  
+               
+selected_services[33m:[39m data[33m
+.[39mselected_services[33m,[39m
+ [90m     |[39m                 
+[31m[1m^[22m[39m
+ [90m 360 |[39m                 
+financial_overrides[33m:[39m {
+ [90m 361 |[39m                     
+base_rate[33m:[39m 
+selectedBaseRateId [33m?[39m 
+quoteElements[33m.[39mfind(e 
+[33m=>[39m e[33m.[39mid 
+[33m===[39m selectedBaseRateId)[33m
+?[39m[33m.[39mvalue [33m:[39m 
+undefined[33m,[39m
+ [90m 362 |[39m                     
+risk_multiplier[33m:[39m 
+selectedMultipliers[33m.[39mmap(id 
+[33m=>[39m 
+quoteElements[33m.[39mfind(e 
+[33m=>[39m e[33m.[39mid 
+[33m===[39m id)[33m?[39m[33m.[39
+mvalue)[33m.[39mfilter([33mBoolean
+[39m)[33m,[39m[0m
+Next.js build worker exited with 
+code: 1 and signal: null
+npm error Lifecycle script `build` 
+failed with error:
+npm error code 1
+npm error path C:\Users\user\Desktop\T
+insur.AI\frontend
+npm error workspace 
+tinsur-ai-frontend@0.1.0
+npm error location C:\Users\user\Deskt
+op\Tinsur.AI\frontend
+npm error command failed
+npm error command 
+C:\WINDOWS\system32\cmd.exe /d /s /c 
+next build

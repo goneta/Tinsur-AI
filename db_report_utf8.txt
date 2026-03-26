@@ -1,0 +1,27 @@
+﻿
+--- Database: insurance.db ---
+users: 5
+clients: 3
+quotes: 3
+policies: 2
+premium_policies: Table not found
+premium_policy_types: 5
+translations: Table not found
+
+--- Database: backend/insurance.db ---
+users: 52
+clients: 46
+quotes: 54
+policies: 35
+premium_policies: Table not found
+premium_policy_types: 0
+translations: 0
+
+--- Database: backend/app/insurance.db ---
+users: 4
+clients: 1
+quotes: 4
+policies: 0
+premium_policies: Table not found
+premium_policy_types: 3
+translations: Table not found

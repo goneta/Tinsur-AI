@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assurance Auto <compagnie_dassurance> <nom_police_premium> - Déclaration de Fait</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 210mm;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            font-size: 11pt;
+            line-height: 1.4;
+        }
+        .header {
+            border-bottom: 3px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 18pt;
+            color: #00539F;
+        }
+        .policy-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .section {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+        .section-title {
+            background-color: #00539F;
+            color: white;
+            padding: 8px;
+            font-weight: bold;
+            font-size: 11pt;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        td, th {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .label {
+            font-weight: bold;
+            width: 50%;
+        }
+        .value {
+            width: 50%;
+        }
+        .footer {
+            font-size: 8pt;
+            border-top: 2px solid #000;
+            padding-top: 10px;
+            margin-top: 30px;
+            color: #666;
+        }
+        .important-notes {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .important-notes h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .download-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #00539F;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            font-size: 14pt;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .download-btn:hover {
+            background-color: #003d73;
+        }
+        @media print {
+            .download-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="download-btn" onclick="downloadPDF()">📥 Télécharger</button>
+
+    <div class="header">
+        <h1>Assurance Auto <compagnie_dassurance> <nom_police_premium> - Déclaration de Fait</h1>
+    </div>
+
+    <div class="policy-info">
+        <span>Numéro de Police : <numero_police></span>
+        <span>Date de Début de Couverture : <date_debut_couverture></span>
+    </div>
+
+    <div class="section">
+        <div class="section-title">1. VOS COORDONNÉES</div>
+        <table>
+            <tr>
+                <td class="label">Noms complets du Titulaire de Police</td>
+                <td class="value"><titre_civilite_titulaire>. <prenom_titulaire> <deuxieme_prenom_titulaire> <nom_titulaire></td>
+            </tr>
+            <tr>
+                <td class="label">Code Postal du lieu de stationnement du véhicule</td>
+                <td class="value"><code_postal_stationnement></td>
+            </tr>
+            <tr>
+                <td class="label">Adresse du Titulaire de Police</td>
+                <td class="value"><numero_rue_titulaire> <nom_rue_titulaire><br><quartier_titulaire><br><ville_titulaire><br><code_postal_titulaire></td>
+            </tr>
+            <tr>
+                <td class="label">Où le véhicule est-il garé la nuit ?</td>
+                <td class="value"><lieu_stationnement_nuit></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">2. DÉTAILS DU VÉHICULE</div>
+        <table>
+            <tr>
+                <td class="label">Marque & Modèle</td>
+                <td class="value"><marque_vehicule> <modele_vehicule> <version_vehicule></td>
+            </tr>
+            <tr>
+                <td class="label">Numéro d'immatriculation</td>
+                <td class="value"><numero_immatriculation_vehicule></td>
+            </tr>
+            <tr>
+                <td class="label">Année d'immatriculation</td>
+                <td class="value"><annee_immatriculation_vehicule></td>
+            </tr>
+            <tr>
+                <td class="label">Année d'achat</td>
+                <td class="value"><annee_achat_vehicule></td>
+            </tr>
+            <tr>
+                <td class="label">8 sièges ou moins</td>
+                <td class="value"><nombre_sieges_8_ou_moins></td>
+            </tr>
+            <tr>
+                <td class="label">Kilométrage annuel estimé</td>
+                <td class="value"><kilometrage_annuel_estime></td>
+            </tr>
+            <tr>
+                <td class="label">Cylindrée</td>
+                <td class="value"><cylindree_vehicule></td>
+            </tr>
+            <tr>
+                <td class="label">Conduite à droite</td>
+                <td class="value"><conduite_a_droite></td>
+            </tr>
+            <tr>
+                <td class="label">Carburant</td>
+                <td class="value"><type_carburant></td>
+            </tr>
+            <tr>
+                <td class="label">Transmission</td>
+                <td class="value"><type_transmission></td>
+            </tr>
+            <tr>
+                <td class="label">Vous/votre époux(se)/partenaire civil(e)/partenaire possédez la voiture</td>
+                <td class="value"><proprietaire_vehicule></td>
+            </tr>
+            <tr>
+                <td class="label">Vous/votre époux(se)/partenaire civil(e)/partenaire êtes le propriétaire enregistré de la voiture</td>
+                <td class="value"><proprietaire_enregistre_vehicule></td>
+            </tr>
+            <tr>
+                <td class="label">Le véhicule a été adapté, modifié ou altéré par rapport aux spécifications originales du fabricant qui modifient ses performances ou son apparence</td>
+                <td class="value"><vehicule_modifie></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">3. COUVERTURE REQUISE</div>
+        <table>
+            <tr>
+                <td class="label">Tous risques</td>
+                <td class="value"><couverture_tous_risques></td>
+            </tr>
+            <tr>
+                <td class="label">Franchise volontaire</td>
+                <td class="value"><devise><franchise_volontaire></td>
+            </tr>
+            <tr>
+                <td class="label">Vol, incendie et responsabilité civile</td>
+                <td class="value"><couverture_vol_incendie_rc></td>
+            </tr>
+            <tr>
+                <td class="label">Responsabilité civile uniquement</td>
+                <td class="value"><couverture_rc_uniquement></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">4. UTILISATION REQUISE</div>
+        <table>
+            <tr>
+                <th>Classe Un</th>
+                <th>Classe Deux</th>
+                <th>Classe Trois</th>
+            </tr>
+            <tr>
+                <td>Usage domestique et de loisir excluant les trajets domicile-travail</td>
+                <td>Usage domestique et de loisir incluant les trajets domicile-travail</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td style="background-color: <bg_color_classe_usage_1>; font-weight: <font_weight_classe_usage_1>;"><reponse_classe_usage_1></td>
+                <td style="background-color: <bg_color_classe_usage_2>; font-weight: <font_weight_classe_usage_2>;"><reponse_classe_usage_2></td>
+                <td style="background-color: <bg_color_classe_usage_3>; font-weight: <font_weight_classe_usage_3>;"><reponse_classe_usage_3></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">5. DÉTAILS DU BONUS</div>
+        <table>
+            <tr>
+                <td class="label">Nombre d'années de bonus</td>
+                <td class="value"><annees_bonus_sans_sinistre></td>
+            </tr>
+            <tr>
+                <td class="label">Bonus protégé</td>
+                <td class="value"><bonus_protege></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">6. CONDUCTEURS REQUIS</div>
+        <p><strong>Vous-même uniquement / Vous et le(s) conducteur(s) nommé(s) ci-dessous :</strong> <type_conducteurs_autorises></p>
+        
+        <table>
+            <tr>
+                <th>Détails</th>
+                <th>Conducteur 1 (Vous)</th>
+                <th>Conducteur 2</th>
+            </tr>
+            <tr>
+                <td class="label">Nom du conducteur</td>
+                <td><nom_conducteur_1></td>
+                <td><titre_civilite_conducteur2> <prenom_conducteur2> <nom_conducteur2></td>
+            </tr>
+            <tr>
+                <td class="label">Sexe</td>
+                <td><sexe_conducteur1></td>
+                <td><sexe_conducteur2></td>
+            </tr>
+            <tr>
+                <td class="label">Situation matrimoniale</td>
+                <td><situation_matrimoniale_conducteur1></td>
+                <td><situation_matrimoniale_conducteur2></td>
+            </tr>
+            <tr>
+                <td class="label">Relation avec le Conducteur 1</td>
+                <td><relation_conducteur1></td>
+                <td><relation_conducteur2></td>
+            </tr>
+            <tr>
+                <td class="label">Âge</td>
+                <td><age_conducteur1></td>
+                <td><age_conducteur2></td>
+            </tr>
+            <tr>
+                <td class="label">Profession - Temps plein</td>
+                <td><profession_conducteur1></td>
+                <td><profession_conducteur2></td>
+            </tr>
+            <tr>
+                <td class="label">Type d'entreprise</td>
+                <td><type_entreprise_conducteur1></td>
+                <td><type_entreprise_conducteur2></td>
+            </tr>
+            <tr>
+                <td class="label">Type de permis détenu</td>
+                <td><type_permis_conducteur1></td>
+                <td><type_permis_conducteur2></td>
+            </tr>
+            <tr>
+                <td class="label">Nombre d'années de détention du permis</td>
+                <td><annees_permis_conducteur1> ans</td>
+                <td><annees_permis_conducteur2> ans</td>
+            </tr>
+            <tr>
+                <td class="label">Date à partir de laquelle le conducteur réside au Royaume-Uni</td>
+                <td><date_residence_uk_conducteur1></td>
+                <td><date_residence_uk_conducteur2></td>
+            </tr>
+            <tr>
+                <td class="label">Le conducteur utilisera le véhicule pour les trajets domicile-travail</td>
+                <td><trajet_travail_conducteur1></td>
+                <td><trajet_travail_conducteur2></td>
+            </tr>
+            <tr>
+                <td class="label">Le conducteur est l'utilisateur principal</td>
+                <td><utilisateur_principal_conducteur1></td>
+                <td><utilisateur_principal_conducteur2></td>
+            </tr>
+            <tr>
+                <td class="label">Le conducteur a accès à un autre véhicule</td>
+                <td><acces_autre_vehicule_conducteur1></td>
+                <td><acces_autre_vehicule_conducteur2></td>
+            </tr>
+            <tr>
+                <td class="label">Le conducteur a déjà eu une police d'assurance annulée ou invalidée par un assureur précédent pour quelque raison que ce soit</td>
+                <td><police_annulee_conducteur1></td>
+                <td><police_annulee_conducteur2></td>
+            </tr>
+            <tr>
+                <td class="label">Le conducteur a été impliqué dans des accidents, a eu une voiture volée ou a eu des dommages au cours des 5 dernières années</td>
+                <td><accidents_5_ans_conducteur1></td>
+                <td><accidents_5_ans_conducteur2></td>
+            </tr>
+            <tr>
+                <td class="label">Le conducteur a été condamné pour des infractions au code de la route ou a eu des points de pénalité au cours des 5 dernières années</td>
+                <td><infractions_5_ans_conducteur1></td>
+                <td><infractions_5_ans_conducteur2></td>
+            </tr>
+            <tr>
+                <td class="label">Le conducteur a été condamné pour des infractions non routières</td>
+                <td><infractions_non_routieres_conducteur1></td>
+                <td><infractions_non_routieres_conducteur2></td>
+            </tr>
+            <tr>
+                <td class="label">Le conducteur a informé la DVLA de toute condition médicale à déclarer et ils ont accepté de délivrer un permis</td>
+                <td><condition_medicale_dvla_conducteur1></td>
+                <td><condition_medicale_dvla_conducteur2></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">7. ACCIDENTS, SINISTRES OU PERTES</div>
+        <table>
+            <tr>
+                <th>Nom du conducteur</th>
+                <th>Date de l'incident</th>
+                <th>Brève description de ce qui s'est passé</th>
+                <th>En faute ?</th>
+            </tr>
+            <tr>
+                <td colspan="4" style="text-align: center; font-weight: bold;"><historique_accidents></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">8. CONDAMNATIONS, MENTIONS ET AMENDES FORFAITAIRES</div>
+        <table>
+            <tr>
+                <th>Nom du conducteur</th>
+                <th>Date de condamnation</th>
+                <th>Code d'infraction</th>
+                <th>Durée de toute interdiction</th>
+            </tr>
+            <tr>
+                <td colspan="4" style="text-align: center; font-weight: bold;"><historique_condamnations></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="important-notes">
+        <h3>Notes importantes</h3>
+        <p>Il est essentiel que vous lisiez les informations ci-dessus car elles représentent un enregistrement de vos réponses à nos questions. Vous devez informer <compagnie_dassurance> immédiatement si l'une des informations est incorrecte ou manquante - ne pas le faire peut affecter votre capacité à faire une réclamation ou invalider complètement votre police. Vous devez également informer <compagnie_dassurance> immédiatement si l'une des informations ci-dessus change pendant la durée de votre police. Vous serez informé de tout changement de votre prime ou des conditions que nous exigeons. Ce document doit être conservé en lieu sûr et lu conjointement avec votre Livret de Police, votre Annexe de Police et votre Certificat d'Assurance Automobile.</p>
+        
+        <p><strong>Fausses déclarations, fausses représentations ou rétention d'informations</strong></p>
+        <p>Faire une fausse déclaration, faire de fausses représentations ou retenir des informations à l'administrateur pourrait entraîner l'annulation de votre contrat d'assurance (comme si la police n'avait jamais existé), le rejet de toutes les réclamations en vertu de votre police et la conservation de toutes les primes que vous avez payées. Il est de votre responsabilité de vous assurer que toutes les informations qui ont été fournies par vous, ou qui ont été fournies en votre nom, sont vraies et complètes. S'il y a des erreurs sur votre Déclaration de Fait, votre Annexe ou votre Certificat d'Assurance Automobile, ou si les informations ne sont pas correctes, votre police peut être annulée.</p>
+        
+        <p>Veuillez contacter immédiatement notre ligne de Service Clientèle si vous avez le moindre doute que les détails de votre police ne sont pas corrects afin de vous assurer, ainsi que tout autre conducteur couvert par votre police, de continuer à bénéficier de la protection complète de votre police.</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">UTILISATION REQUISE - Votre sélection est indiquée à la section 4</div>
+        <p><strong>Usage domestique et de loisir incluant les trajets domicile-travail</strong><br>
+        Utilisation à des fins domestiques et de loisir, y compris les trajets domicile-travail. EXCLUANT l'utilisation à des fins commerciales, toute fin liée au commerce automobile, le transport de passagers ou de marchandises contre rémunération, ou pour la location, les courses, les compétitions, les rallyes, les essais, le rythme ou les tests de vitesse.</p>
+        
+        <p><strong>Usage domestique et de loisir excluant les trajets domicile-travail</strong><br>
+        Utilisation à des fins domestiques et de loisir. EXCLUANT l'utilisation pour les trajets domicile-travail, à des fins commerciales, toute fin liée au commerce automobile, le transport de passagers ou de marchandises contre rémunération, ou pour la location, les courses, les compétitions, les rallyes, les essais, le rythme ou les tests de vitesse.</p>
+        
+        <p><strong>Usage professionnel Classe 1</strong><br>
+        Utilisation à des fins domestiques et de loisir et par le Titulaire de Police et l'époux(se)/partenaire civil(e)/partenaire du Titulaire de Police, chacun en personne dans le cadre de leur activité commerciale ou profession. EXCLUANT l'utilisation pour les voyages commerciaux, toute fin liée au commerce automobile, le transport de passagers ou de marchandises contre rémunération, ou pour la location, les courses, les compétitions, les rallyes, les essais, le rythme ou les tests de vitesse.</p>
+        
+        <p><strong>Usage Classe 2</strong><br>
+        Utilisation à des fins domestiques et de loisir et pour l'activité commerciale du Titulaire de Police et de l'employeur du Titulaire de Police. EXCLUANT l'utilisation pour les voyages commerciaux, toute fin liée au commerce automobile, le transport de passagers ou de marchandises contre rémunération, ou pour la location, les courses, les compétitions, les rallyes, les essais, le rythme ou les tests de vitesse.</p>
+        
+        <p><strong>Usage Classe 3</strong><br>
+        Utilisation à des fins domestiques et de loisir et pour l'activité commerciale du Titulaire de Police. EXCLUANT l'utilisation pour toute fin liée au commerce automobile, le transport de passagers ou de marchandises contre rémunération, ou pour la location, les courses, les compétitions, les rallyes, les essais, le rythme ou les tests de vitesse.</p>
+    </div>
+
+    <div class="footer">
+        <p><reference_document_version> - <horodatage_emission_document></p>
+        <p>L'assurance auto <compagnie_dassurance> et les produits d'assurance complémentaires en option sont organisés et administrés par <compagnie_dassurance> agissant en tant qu'intermédiaire d'assurance. L'assurance auto <compagnie_dassurance> est souscrite par <nom_entite_souscripteur>, <adresse_ligne1_souscripteur>, <adresse_ligne2_souscripteur>, <ville_souscripteur>, <region_souscripteur>, <code_postal_souscripteur>. Numéro d'enregistrement <numero_enregistrement_souscripteur> <pays_enregistrement_souscripteur>.</p>
+        <p>Les produits complémentaires en option sont souscrits par les assureurs indiqués dans la section Couverture supplémentaire de l'Annexe.</p>
+        <p><compagnie_dassurance> est un nom commercial de <nom_entite_legale>. Enregistrée en <pays_siege_social> sous le n° <numero_enregistrement_siege_social>. Siège social : <adresse_siege_social_complete>.</p>
+        <p>Autorisée et réglementée par la <nom_autorite_regulation>.</p>
+        <p>Nous pouvons surveiller et enregistrer les appels à des fins de formation, pour améliorer la qualité de notre service et pour détecter et prévenir la fraude.</p>
+    </div>
+
+    <script>
+        function downloadPDF() {
+            const button = document.querySelector('.download-btn');
+            button.style.display = 'none';
+            window.print();
+            setTimeout(() => {
+                button.style.display = 'block';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

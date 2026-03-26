@@ -1,0 +1,77 @@
+"""
+Document model for file management and collaboration.
+"""
+from sqlalchemy import Column, String, DateTime, ForeignKey, Enum, Integer, Boolean, Text
+from sqlalchemy import Column, String, DateTime, ForeignKey, Enum, Integer, Boolean, Text
+from sqlalchemy.orm import relationship
+import uuid
+from app.core.guid import GUID
+from datetime import datetime
+import enum
+from app.core.time import utcnow
+
+from app.core.database import Base
+
+class DocumentLabel(str, enum.Enum):
+    QUOTE = 'Quote'
+    POLICY = 'Policy'
+    RECEIPT = 'Receipt'
+    PAYSLIP = 'Payslip'
+    DOCUMENT = 'Document'
+    ADS = 'Ads'
+    DRIVING_LICENCE = 'Driving Licence'
+    CAR_PAPERS = 'Car Papers'
+    PHOTO = 'Photo'
+    AGREEMENT = 'Agreement'
+    INCIDENT_PHOTO = 'Incident Photo'
+    IDENTIFICATION = 'Identification'
+    OTHER = 'Other'
+
+    @classmethod
+    def _missing_(cls, value):
+        # Graceful fallback for string values stored in DB instead of Enum names
+        for member in cls:
+            if member.value == value:
+                return member
+        return cls.OTHER
+
+class Document(Base):
+    """Model for storing document metadata."""
+    __tablename__ = "documents"
+    
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    policy_id = Column(GUID(), ForeignKey("policies.id", ondelete="CASCADE"), nullable=True, index=True)
+    client_id = Column(GUID(), ForeignKey("clients.id", ondelete="CASCADE"), nullable=True, index=True)
+    template_id = Column(GUID(), ForeignKey("document_templates.id", ondelete="SET NULL"), nullable=True)
+    
+    name = Column(String(255), nullable=False)
+    file_url = Column(String(500), nullable=False)
+    file_type = Column(String(50)) # pdf, jpg, etc.
+    file_size = Column(Integer) # in bytes
+
+    verification_code = Column(String(16), unique=True, index=True)
+    qr_payload = Column(Text)
+    
+    label = Column(Enum(DocumentLabel), default=DocumentLabel.DOCUMENT)
+    
+    # Visibility: If PUBLIC, acts as a dataset entry. If PRIVATE, relies on InterCompanyShare.
+    # Visibility & Sharing Defaults
+    visibility = Column(String(20), default='PRIVATE') # 'PUBLIC', 'PRIVATE'
+    scope = Column(String(20), default='B2B') # 'B2B', 'B2C', etc.
+    is_shareable = Column(Boolean, default=False)
+    reshare_rule = Column(String(1), default='C') # 'A', 'B', 'C'
+    
+    uploaded_by = Column(GUID(), ForeignKey("users.id"))
+    created_at = Column(DateTime, default=utcnow)
+    
+    # Relationships
+    company = relationship("Company", back_populates="documents")
+    policy = relationship("Policy")
+    client = relationship("Client")
+    template = relationship("DocumentTemplate")
+    uploader = relationship("User")
+    shares = relationship("InterCompanyShare", back_populates="document", cascade="all, delete-orphan")
+    
+    def __repr__(self):
+        return f"<Document {self.name} ({self.label})>"

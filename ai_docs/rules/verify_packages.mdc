@@ -1,0 +1,27 @@
+---
+description: Verify NPM/Python packages are installed before importing
+globs: ["**/*.tsx", "**/*.ts", "**/*.py"]
+---
+
+# Package Verification Rule
+
+Before importing a third-party library in code:
+
+1.  **Check `package.json`** (Frontend) or `requirements.txt`/`pyproject.toml` (Backend).
+2.  If the package is missing, you MUST:
+    *   Explicitly install it using `npm install <package>` or `pip install <package>`.
+    *   OR ask the user for permission if unsure.
+3.  **Do not assume** common libraries (like `react-markdown`, `date-fns`, `axios`) are pre-installed unless you verify.
+
+## Example (Good)
+```typescript
+// Checked package.json, 'lodash' is missing.
+// Action: Run 'npm install lodash'
+import _ from 'lodash';
+```
+
+## Example (Bad)
+```typescript
+// Importing without checking
+import { motion } from 'framer-motion'; // Error: Module not found if not installed
+```

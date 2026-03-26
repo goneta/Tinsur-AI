@@ -1,0 +1,49 @@
+﻿python : C:\Users\user\Desktop\Tinsur
+.AI\backend\google\adk\agents\__init_
+_.py:4: FutureWarning: 
+Au caractère Ligne:1 : 1
++ python backend/scripts/verify_self_
+service.py > final_test.log 2>&1;  
+...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpe 
+   cified: (C:\Users\user\D...Futur  
+  eWarning: :String) [], RemoteExc   
+ eption
+    + FullyQualifiedErrorId : Native 
+   CommandError
+ 
+
+All support for the 
+`google.generativeai` package has 
+ended. It will no longer be 
+receiving 
+updates or bug fixes. Please switch 
+to the `google.genai` package as 
+soon as possible.
+See README for more details:
+
+https://github.com/google-gemini/depr
+ecated-generative-ai-python/blob/main
+/README.md
+
+  import google.generativeai as genai
+C:\Python312\Lib\site-packages\proto\
+marshal\rules\enums.py:37: 
+UserWarning: Unrecognized 
+FinishReason enum value: 12
+  warnings.warn(
+­ƒº¬ Verifying Self-Service Actions...
+======================================
+
+­ƒö╣ Test 1: Scheduling a Callback
+ÔØô Query: Can I schedule a callback for tomorrow at 2 PM to talk about my premium increase?
+­ƒñû Response: Error calling Gemini in support_agent: Invalid operation: The `response.text` quick accessor requires the response to contain a valid `Part`, but none were returned. The candidate's [finish_reason](ht...
+ÔØî FAILURE: Callback not scheduled correctly.
+
+­ƒö╣ Test 2: Canceling a Policy
+ÔØô Query: I want to cancel my policy POL-C6C30D42 because I sold the vehicle.
+­ƒñû Full Response:
+Error calling Gemini in support_agent: Invalid operation: The `response.text` quick accessor requires the response to contain a valid `Part`, but none were returned. The candidate's [finish_reason](https://ai.google.dev/api/generate-content#finishreason) is 12.
+ÔØî FAILURE: Policy not canceled correctly.

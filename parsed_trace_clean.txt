@@ -1,0 +1,125 @@
+0:   File "<frozen runpy>", line 198, in _run_module_as_main
+1:   File "<frozen runpy>", line 88, in _run_code
+2:   File "C:\Python312\Lib\site-packages\uvicorn\__main__.py", line 4, in <module>
+4:   File "C:\Python312\Lib\site-packages\click\core.py", line 1485, in __call__
+6:   File "C:\Python312\Lib\site-packages\click\core.py", line 1406, in main
+8:   File "C:\Python312\Lib\site-packages\click\core.py", line 1269, in invoke
+10:   File "C:\Python312\Lib\site-packages\click\core.py", line 824, in invoke
+12:   File "C:\Python312\Lib\site-packages\uvicorn\main.py", line 423, in main
+14:   File "C:\Python312\Lib\site-packages\uvicorn\main.py", line 593, in run
+16:   File "C:\Python312\Lib\site-packages\uvicorn\server.py", line 67, in run
+18:   File "C:\Python312\Lib\asyncio\runners.py", line 194, in run
+20:   File "C:\Python312\Lib\asyncio\runners.py", line 118, in run
+22:   File "C:\Python312\Lib\asyncio\base_events.py", line 674, in run_until_complete
+24:   File "C:\Python312\Lib\asyncio\windows_events.py", line 322, in run_forever
+26:   File "C:\Python312\Lib\asyncio\base_events.py", line 641, in run_forever
+28:   File "C:\Python312\Lib\asyncio\base_events.py", line 1987, in _run_once
+30:   File "C:\Python312\Lib\asyncio\events.py", line 88, in _run
+32:   File "C:\Python312\Lib\site-packages\uvicorn\server.py", line 71, in serve
+34:   File "C:\Python312\Lib\site-packages\uvicorn\server.py", line 78, in _serve
+36:   File "C:\Python312\Lib\site-packages\uvicorn\config.py", line 439, in load
+38:   File "C:\Python312\Lib\site-packages\uvicorn\importer.py", line 19, in import_from_string
+40:   File "C:\Python312\Lib\importlib\__init__.py", line 90, in import_module
+42:   File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+43:   File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+44:   File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+45:   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+46:   File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+47:   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+48:   File "C:\Users\user\Desktop\Tinsur.AI\backend\app\main.py", line 22, in <module>
+50:   File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+51:   File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+52:   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+53:   File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+54:   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+55:   File "C:\Users\user\Desktop\Tinsur.AI\backend\app\core\database.py", line 17, in <module>
+87: INFO:     127.0.0.1:63687 - "GET /api/v1/clients/ HTTP/1.1" 500 Internal Server Error
+88: ERROR:    Exception in ASGI application
+90:   File "C:\Python312\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 409, in run_asgi
+93:   File "C:\Python312\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 60, in __call__
+96:   File "C:\Python312\Lib\site-packages\fastapi\applications.py", line 1139, in __call__
+98:   File "C:\Python312\Lib\site-packages\starlette\applications.py", line 107, in __call__
+100:   File "C:\Python312\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+102:   File "C:\Python312\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+104:   File "C:\Python312\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+106:   File "C:\Python312\Lib\site-packages\starlette\middleware\base.py", line 191, in __call__
+108:   File "C:\Python312\Lib\contextlib.py", line 158, in __exit__
+110:   File "C:\Python312\Lib\site-packages\starlette\_utils.py", line 85, in collapse_excgroups
+112:   File "C:\Python312\Lib\site-packages\starlette\middleware\base.py", line 193, in __call__
+115:   File "C:\Users\user\Desktop\Tinsur.AI\backend\app\main.py", line 44, in log_requests
+118:   File "C:\Python312\Lib\site-packages\starlette\middleware\base.py", line 168, in call_next
+120:   File "C:\Python312\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+122:   File "C:\Python312\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+124:   File "C:\Python312\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+126:   File "C:\Python312\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+128:   File "C:\Python312\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+130:   File "C:\Python312\Lib\site-packages\starlette\routing.py", line 716, in __call__
+132:   File "C:\Python312\Lib\site-packages\starlette\routing.py", line 736, in app
+134:   File "C:\Python312\Lib\site-packages\starlette\routing.py", line 290, in handle
+136:   File "C:\Python312\Lib\site-packages\fastapi\routing.py", line 120, in app
+138:   File "C:\Python312\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+140:   File "C:\Python312\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+142:   File "C:\Python312\Lib\site-packages\fastapi\routing.py", line 106, in app
+145:   File "C:\Python312\Lib\site-packages\fastapi\routing.py", line 452, in app
+148:   File "C:\Python312\Lib\site-packages\fastapi\routing.py", line 278, in serialize_response
+--- MATCH 149 ---
+149:     raise ResponseValidationError(
+--- MATCH 150 ---
+150: fastapi.exceptions.ResponseValidationError: 5 validation errors:
+151:   {'type': 'string_type', 'loc': ('response', 0, 'country'), 'msg': 'Input should be a valid string', 'input': None}
+152:   {'type': 'string_type', 'loc': ('response', 0, 'kyc_status'), 'msg': 'Input should be a valid string', 'input': None}
+153:   {'type': 'bool_type', 'loc': ('response', 0, 'pep_status'), 'msg': 'Input should be a valid boolean', 'input': None}
+154:   {'type': 'bool_type', 'loc': ('response', 0, 'consent_accepted'), 'msg': 'Input should be a valid boolean', 'input': None}
+155:   {'type': 'string_type', 'loc': ('response', 0, 'risk_profile'), 'msg': 'Input should be a valid string', 'input': None}
+156: 
+157:   File "C:\Users\user\Desktop\Tinsur.AI\backend\app\api\v1\endpoints\clients.py", line 125, in get_clients
+158:     GET /api/v1/clients/
+159: 2026-01-12 23:06:00,651 - app.main - ERROR - DEBUG_REQ: GET http://localhost:8000/api/v1/clients
+160: 2026-01-12 23:06:00,652 - app.main - ERROR - DEBUG_RES: GET http://localhost:8000/api/v1/clients - 307
+161: INFO:     127.0.0.1:63690 - "GET /api/v1/clients HTTP/1.1" 307 Temporary Redirect
+162: 2026-01-12 23:06:00,654 - app.main - ERROR - DEBUG_REQ: GET http://localhost:8000/api/v1/clients/
+163: INFO:     127.0.0.1:63690 - "GET /api/v1/clients/ HTTP/1.1" 500 Internal Server Error
+164: ERROR:    Exception in ASGI application
+165: Traceback (most recent call last):
+166:   File "C:\Python312\Lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 409, in run_asgi
+167:     result = await app(  # type: ignore[func-returns-value]
+168:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+169:   File "C:\Python312\Lib\site-packages\uvicorn\middleware\proxy_headers.py", line 60, in __call__
+172:   File "C:\Python312\Lib\site-packages\fastapi\applications.py", line 1139, in __call__
+174:   File "C:\Python312\Lib\site-packages\starlette\applications.py", line 107, in __call__
+176:   File "C:\Python312\Lib\site-packages\starlette\middleware\errors.py", line 186, in __call__
+178:   File "C:\Python312\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+180:   File "C:\Python312\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+182:   File "C:\Python312\Lib\site-packages\starlette\middleware\base.py", line 191, in __call__
+184:   File "C:\Python312\Lib\contextlib.py", line 158, in __exit__
+186:   File "C:\Python312\Lib\site-packages\starlette\_utils.py", line 85, in collapse_excgroups
+188:   File "C:\Python312\Lib\site-packages\starlette\middleware\base.py", line 193, in __call__
+191:   File "C:\Users\user\Desktop\Tinsur.AI\backend\app\main.py", line 44, in log_requests
+194:   File "C:\Python312\Lib\site-packages\starlette\middleware\base.py", line 168, in call_next
+196:   File "C:\Python312\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+198:   File "C:\Python312\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+200:   File "C:\Python312\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+202:   File "C:\Python312\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+204:   File "C:\Python312\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+206:   File "C:\Python312\Lib\site-packages\starlette\routing.py", line 716, in __call__
+208:   File "C:\Python312\Lib\site-packages\starlette\routing.py", line 736, in app
+210:   File "C:\Python312\Lib\site-packages\starlette\routing.py", line 290, in handle
+212:   File "C:\Python312\Lib\site-packages\fastapi\routing.py", line 120, in app
+214:   File "C:\Python312\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+216:   File "C:\Python312\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+218:   File "C:\Python312\Lib\site-packages\fastapi\routing.py", line 106, in app
+221:   File "C:\Python312\Lib\site-packages\fastapi\routing.py", line 452, in app
+224:   File "C:\Python312\Lib\site-packages\fastapi\routing.py", line 278, in serialize_response
+--- MATCH 225 ---
+225:     raise ResponseValidationError(
+--- MATCH 226 ---
+226: fastapi.exceptions.ResponseValidationError: 5 validation errors:
+227:   {'type': 'string_type', 'loc': ('response', 0, 'country'), 'msg': 'Input should be a valid string', 'input': None}
+228:   {'type': 'string_type', 'loc': ('response', 0, 'kyc_status'), 'msg': 'Input should be a valid string', 'input': None}
+229:   {'type': 'bool_type', 'loc': ('response', 0, 'pep_status'), 'msg': 'Input should be a valid boolean', 'input': None}
+230:   {'type': 'bool_type', 'loc': ('response', 0, 'consent_accepted'), 'msg': 'Input should be a valid boolean', 'input': None}
+231:   {'type': 'string_type', 'loc': ('response', 0, 'risk_profile'), 'msg': 'Input should be a valid string', 'input': None}
+232: 
+233:   File "C:\Users\user\Desktop\Tinsur.AI\backend\app\api\v1\endpoints\clients.py", line 125, in get_clients
+234:     GET /api/v1/clients/
+235: 

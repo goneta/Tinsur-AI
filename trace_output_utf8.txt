@@ -1,0 +1,35 @@
+17:   fied: (  File "<f   
+25:   File "<frozen 
+28:   File "C:\Python312\L
+33:   File "C:\Python312\L
+40:   File "C:\Python312\L
+46:   File "C:\Python312\L
+53:   File "C:\Python312\L
+60:   File "C:\Python312\L
+65:   File "C:\Python312\L
+70:   File "C:\Python312\L
+79:   File "C:\Python312\L
+84:   File "C:\Python312\L
+90:   File "C:\Python312\L
+95:   File "C:\Python312\L
+101:   File "C:\Python312\L
+106:   File "C:\Python312\L
+111:   File "C:\Python312\L
+117:   File "C:\Python312\L
+123:   File "C:\Python312\L
+128:   File "C:\Python312\L
+135:   File "C:\Python312\L
+143:   File "C:\Python312\L
+150:   File "<frozen import
+154:   File "<frozen import
+158:   File "<frozen import
+162:   File "<frozen import
+166:   File "<frozen import
+170:   File "<frozen import
+174:   File "C:\Users\user\
+181:   File "<frozen import
+185:   File "<frozen import
+189:   File "<frozen import
+193:   File "<frozen import
+197:   File "<frozen import
+201:   File "C:\Users\user\

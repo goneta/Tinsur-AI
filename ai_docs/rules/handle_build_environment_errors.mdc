@@ -1,0 +1,36 @@
+---
+description: Handle frontend build environment errors
+globs: ["frontend/**", "package.json"]
+---
+# Handle Build Environment Errors
+
+## Context
+Build scripts (e.g., `npm run build`) may fail due to environment corruption, missing dependencies, or caching issues, even when the code is correct. This is often flagged as an "environment error" or "module not found" with truncated output.
+
+## Trigger Rules
+- Build fails with "module not found" despite file existing.
+- Build fails with truncated or garbled output.
+- Agent suspects "environment error".
+
+## Mandatory Recovery Process
+If a build fails and code appears correct:
+
+1.  **Clean Environment**:
+    - Remove `.next` folder.
+    - Remove `node_modules`.
+    - Remove `package-lock.json` (optional, but good for full reset).
+
+2.  **Re-install Dependencies**:
+    - Run `npm install` to ensure all packages are fresh and linked correctly.
+
+3.  **Verify Environment**:
+    - Check `.env.local` exists (if required).
+    - Check Node version if relevant.
+
+4.  **Retry Build**:
+    - Run `npm run build` again.
+
+## Checklist
+- [ ] Performed clean install (`rm -rf node_modules && npm i`)?
+- [ ] cleared next.js cache (`rm -rf .next`)?
+- [ ] Verified `.env` files?

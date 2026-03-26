@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attestation d'Assurance Auto <compagnie_dassurance> <nom_police_premium></title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #00539F;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .contact-info {
+            background: #f5f5f5;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            background: #00539F;
+            color: white;
+            padding: 8px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            font-size: 12px;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .info-item {
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        .info-label {
+            font-weight: bold;
+            font-size: 11px;
+            color: #666;
+        }
+        .info-value {
+            font-size: 13px;
+            margin-top: 3px;
+        }
+        .footer {
+            font-size: 9px;
+            color: #666;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            line-height: 1.4;
+        }
+        .download-btn {
+            background: #00539F;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 20px 0;
+            display: block;
+        }
+        .download-btn:hover {
+            background: #003d7a;
+        }
+        @media print {
+            .download-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Assurance Auto <compagnie_dassurance> <nom_police_premium> - Attestation</h1>
+    </div>
+
+    <div class="contact-info">
+        <strong>Service Client</strong> <telephone_service_client><br>
+        <strong>Pour Déclarer un Sinistre</strong> <url_declaration_sinistre> ou <telephone_declaration_sinistre>
+    </div>
+
+    <button class="download-btn" onclick="window.print()">📥 Télécharger / Imprimer ce document</button>
+
+    <div class="section">
+        <div class="section-title">Informations sur le Titulaire de la Police</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Nom complet du Titulaire</div>
+                <div class="info-value"><titre_civilite_titulaire> <prenom_titulaire> <nom_titulaire></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Numéro de Police</div>
+                <div class="info-value"><numero_police></div>
+            </div>
+            <div class="info-item" style="grid-column: 1 / -1;">
+                <div class="info-label">Adresse du Titulaire</div>
+                <div class="info-value">
+                    <adresse_ligne1_titulaire><br>
+                    <adresse_ligne2_titulaire><br>
+                    <ville_titulaire><br>
+                    <code_postal_titulaire>
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Raison de l'émission</div>
+                <div class="info-value"><raison_emission_police></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Votre Référence</div>
+                <div class="info-value"><reference_client></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Date de Prise d'Effet</div>
+                <div class="info-value"><heure_effet_police> le <date_effet_police></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Date d'Expiration</div>
+                <div class="info-value"><heure_expiration_police> le <date_expiration_police></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Profession</div>
+                <div class="info-value"><profession_titulaire></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Détails du Véhicule</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Marque et Modèle</div>
+                <div class="info-value"><marque_vehicule> <modele_vehicule></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Numéro d'Immatriculation</div>
+                <div class="info-value"><numero_immatriculation_vehicule></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Détails de la Police</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Couverture</div>
+                <div class="info-value"><type_police></div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Sections de la Police</div>
+                <div class="info-value"><sections_police></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Conducteurs Assurés</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Date de Naissance</th>
+                    <th>Section A<br><small>Franchise Volontaire</small></th>
+                    <th>Section B<br><small>Vol de Clés</small></th>
+                    <th>Pare-brise<br><small>Réparation</small></th>
+                    <th>Pare-brise<br><small>Remplacement</small></th>
+                    <th>Incendie &<br>Vol</th>
+                    <th>Dommages<br>Accidentels</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><titre_civilite_conducteur1> <prenom_conducteur1> <nom_conducteur1></td>
+                    <td><date_naissance_conducteur1></td>
+                    <td><franchise_section_a_conducteur1></td>
+                    <td><franchise_section_b_conducteur1></td>
+                    <td><franchise_parebrise_reparation_conducteur1></td>
+                    <td><franchise_parebrise_remplacement_conducteur1></td>
+                    <td><franchise_incendie_vol_conducteur1></td>
+                    <td><franchise_dommages_accidentels_conducteur1></td>
+                </tr>
+                <tr>
+                    <td><titre_civilite_conducteur2> <prenom_conducteur2> <nom_conducteur2></td>
+                    <td><date_naissance_conducteur2></td>
+                    <td><franchise_section_a_conducteur2></td>
+                    <td><franchise_section_b_conducteur2></td>
+                    <td><franchise_parebrise_reparation_conducteur2></td>
+                    <td><franchise_parebrise_remplacement_conducteur2></td>
+                    <td><franchise_incendie_vol_conducteur2></td>
+                    <td><franchise_dommages_accidentels_conducteur2></td>
+                </tr>
+            </tbody>
+        </table>
+        <p style="font-size: 11px; font-style: italic;">
+            Vous devez payer ces montants pour chaque incident que vous réclamez dans cette section.<br>
+            Les réclamations audio entraîneront des franchises de la Section A ou C selon le type de réclamation.
+        </p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Couverture Supplémentaire</div>
+        <table>
+            <tr>
+                <td><service_supplementaire_1></td>
+                <td><statut_service_supplementaire_1></td>
+            </tr>
+            <tr>
+                <td><service_supplementaire_2></td>
+                <td><statut_service_supplementaire_2></td>
+            </tr>
+            <tr>
+                <td><service_supplementaire_3></td>
+                <td><statut_service_supplementaire_3></td>
+            </tr>
+            <tr>
+                <td><service_supplementaire_4></td>
+                <td><statut_service_supplementaire_4></td>
+            </tr>
+            <tr>
+                <td><strong>Bonus sans Sinistre</strong></td>
+                <td><strong><annees_bonus_sans_sinistre> (<statut_protection_bonus>)</strong></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Avenants à la Police</div>
+        <p style="font-size: 12px; padding: 10px;">(Applicables à votre Police d'Assurance Auto)</p>
+    </div>
+
+    <div style="text-align: center; font-size: 11px; color: #666; margin: 20px 0;">
+        <reference_document_interne> - <horodatage_emission_document>
+    </div>
+
+    <div class="footer">
+        *Ce numéro peut être inclus dans le cadre de toute minute d'appel inclusive fournie par votre opérateur téléphonique.<br><br>
+        
+        L'assurance auto <compagnie_dassurance> et les produits d'assurance complémentaires optionnels sont organisés et administrés par <compagnie_dassurance> agissant en tant qu'intermédiaire d'assurance. L'assurance auto <compagnie_dassurance> est souscrite par <compagnie_souscripteur>, <compagnie_adresse>. Numéro d'enregistrement <numero_enregistrement_compagnie> <pays_enregistrement_compagnie>.<br><br>
+        
+        Les produits complémentaires optionnels sont souscrits par les assureurs indiqués dans la section Couverture Supplémentaire de l'Attestation.<br><br>
+        
+        <compagnie_dassurance> est un nom commercial de <entite_legale_compagnie>. Enregistré en <pays_siege_social> No. <numero_enregistrement_siege>. Siège social : <adresse_siege_social>. Autorisé et réglementé par la <autorite_regulation>.<br><br>
+        
+        Nous pouvons surveiller et enregistrer les appels à des fins de formation, pour améliorer la qualité de notre service et pour détecter et prévenir la fraude.
+    </div>
+</body>
+</html>

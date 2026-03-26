@@ -1,0 +1,72 @@
+﻿
+> tinsur-ai-frontend@0.1.0 build
+> next build
+
+Ôû▓ Next.js 16.1.4 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+Ô£ô Compiled successfully in 65s
+  Running TypeScript ...
+node.exe : Failed to compile.
+Au caractère Ligne:1 : 1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Users\user\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpec 
+   ified: (Failed to compile.:String  
+  ) [], RemoteException
+    + FullyQualifiedErrorId : NativeC 
+   ommandError
+ 
+
+./components/settings/ai-subscription-
+settings.tsx:288:59
+Type error: Argument of type 'number 
+| TooltipIndex' is not assignable to 
+parameter of type 
+'SetStateAction<number | null>'.
+  Type 'string' is not assignable to 
+type 'SetStateAction<number | null>'.
+
+[0m [90m 286 |[39m                 
+                    
+onMouseMove[33m=[39m{(state) 
+[33m=>[39m {
+ [90m 287 |[39m                     
+                    [36mif[39m 
+(state[33m.[39mactiveTooltipIndex 
+[33m!==[39m undefined) {
+[31m[1m>[22m[39m[90m 288 |[39m  
+                                      
+     setHoveredBar(state[33m.[39mact
+iveTooltipIndex)[33m;[39m
+ [90m     |[39m                     
+                                      
+[31m[1m^[22m[39m
+ [90m 289 |[39m                     
+                    }
+ [90m 290 |[39m                     
+                }}
+ [90m 291 |[39m                     
+                
+onMouseLeave[33m=[39m{() 
+[33m=>[39m 
+setHoveredBar([36mnull[39m)}[0m
+Next.js build worker exited with 
+code: 1 and signal: null
+npm error Lifecycle script `build` 
+failed with error:
+npm error code 1
+npm error path C:\Users\user\Desktop\T
+insur.AI\frontend
+npm error workspace 
+tinsur-ai-frontend@0.1.0
+npm error location C:\Users\user\Deskt
+op\Tinsur.AI\frontend
+npm error command failed
+npm error command 
+C:\WINDOWS\system32\cmd.exe /d /s /c 
+next build

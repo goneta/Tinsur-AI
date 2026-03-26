@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Police d'Assurance Automobile <compagnie_dassurance></title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        .header {
+            background-color: #00539F;
+            color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .info-box {
+            border: 2px solid #00539F;
+            padding: 15px;
+            margin: 20px 0;
+            background-color: #f8f9fa;
+        }
+        .checkmark {
+            color: #00539F;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #00539F;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        td {
+            padding: 10px;
+        }
+        .highlight {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+        .section-title {
+            color: #00539F;
+            font-size: 1.3em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #00539F;
+            padding-bottom: 5px;
+        }
+        .optional-extras {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .extra-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #f8f9fa;
+        }
+        .purchased {
+            background-color: #d4edda;
+            border-color: #28a745;
+        }
+        .footer {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Assurance Automobile</h1>
+        <h2>Votre police d'assurance automobile en un coup d'œil</h2>
+        <p><date_emission_document></p>
+    </div>
+
+    <div class="info-box">
+        <h3>Bonjour <prenom_titulaire> <deuxieme_prenom_titulaire></h3>
+        <p><strong>Tout est réglé, votre <marque_vehicule> est couverte chez nous</strong></p>
+        <p>Merci, nous sommes ravis que vous ayez assuré votre voiture chez nous pour les <duree_police_mois> prochains mois.</p>
+        <p>Votre couverture <nom_police_premium> personnalisée a été mise en place comme demandé.</p>
+    </div>
+
+    <table>
+        <tr>
+            <th>Numéro de police</th>
+            <td><numero_police></td>
+        </tr>
+        <tr>
+            <th>Numéro d'immatriculation</th>
+            <td><numero_immatriculation_vehicule></td>
+        </tr>
+        <tr>
+            <th>Date de début</th>
+            <td><date_effet_police></td>
+        </tr>
+        <tr>
+            <th>Prime annuelle</th>
+            <td><devise><prime_annuelle_totale></td>
+        </tr>
+        <tr>
+            <th>Titulaire de la police</th>
+            <td><titre_civilite_titulaire>. <initiale_prenom_titulaire> <initiale_deuxieme_prenom_titulaire> <nom_titulaire><br><numero_rue_titulaire> <nom_rue_titulaire><br><quartier_titulaire><br><ville_titulaire><br><code_postal_titulaire></td>
+        </tr>
+    </table>
+
+    <div class="section-title">Votre couverture personnalisée</div>
+    <p>Nous vous avons fourni une large gamme de fonctionnalités et d'avantages inclus dans votre police en standard. Cela comprend :</p>
+    <ul>
+        <li><span class="checkmark">✓</span> <avantage_inclus_1></li>
+        <li><span class="checkmark">✓</span> <avantage_inclus_2></li>
+        <li><span class="checkmark">✓</span> <avantage_inclus_3></li>
+    </ul>
+
+    <div class="section-title">Vos choix d'options supplémentaires :</div>
+    <div class="optional-extras">
+        <div class="extra-item <classe_css_option_1>">
+            <strong><nom_option_supplementaire_1></strong><br>
+            <statut_option_supplementaire_1>
+        </div>
+        <div class="extra-item <classe_css_option_2>">
+            <strong><nom_option_supplementaire_2></strong><br>
+            <statut_option_supplementaire_2>
+        </div>
+        <div class="extra-item <classe_css_option_3>">
+            <strong><nom_option_supplementaire_3></strong><br>
+            <statut_option_supplementaire_3>
+        </div>
+        <div class="extra-item <classe_css_option_4>">
+            <strong><nom_option_supplementaire_4></strong><br>
+            <statut_option_supplementaire_4>
+        </div>
+        <div class="extra-item <classe_css_option_5>">
+            <strong><nom_option_supplementaire_5></strong><br>
+            <statut_option_supplementaire_5>
+        </div>
+        <div class="extra-item <classe_css_option_6>">
+            <strong><nom_option_supplementaire_6></strong><br>
+            <statut_option_supplementaire_6>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <p><strong>Votre couverture sera valable du <date_effet_police> au <date_expiration_police></strong></p>
+        <p>La prime annuelle de votre police est de <strong><devise><prime_annuelle_totale></strong>, ce qui inclut la taxe sur les primes d'assurance.</p>
+    </div>
+
+    <div class="section-title">Détails de paiement</div>
+    <table>
+        <tr>
+            <th>Paiements mensuels réguliers</th>
+            <td><devise><montant_paiement_mensuel></td>
+        </tr>
+        <tr>
+            <th>Date de prélèvement</th>
+            <td>Le <jour_prelevement_mensuel> de chaque mois ou juste après</td>
+        </tr>
+        <tr>
+            <th>TAE (Taux Annuel Effectif)</th>
+            <td><taux_annuel_effectif>%</td>
+        </tr>
+        <tr>
+            <th>Nombre de paiements</th>
+            <td><nombre_paiements_mensuels> paiements mensuels</td>
+        </tr>
+        <tr>
+            <th>Montant total du crédit</th>
+            <td><devise><montant_total_credit></td>
+        </tr>
+        <tr>
+            <th>Taux d'intérêt fixe</th>
+            <td><taux_interet_fixe>%</td>
+        </tr>
+        <tr>
+            <th>Intérêts totaux dus</th>
+            <td><devise><interets_totaux_dus></td>
+        </tr>
+        <tr>
+            <th>Montant total à payer</th>
+            <td><devise><montant_total_a_payer></td>
+        </tr>
+        <tr>
+            <th>Durée du contrat de crédit</th>
+            <td><duree_contrat_credit_mois> mois</td>
+        </tr>
+    </table>
+
+    <div class="highlight">
+        <strong>⚠️ IMPORTANT :</strong> Nous avons joint deux exemplaires du contrat de prêt à durée déterminée, qui détaille les conditions de votre plan de prélèvement automatique, y compris le fait que si vous manquez un paiement, nous pouvons annuler votre police.
+    </div>
+
+    <div class="section-title">Calendrier de paiement</div>
+    <table>
+        <tr>
+            <th>Détails du compte</th>
+            <th>Information</th>
+        </tr>
+        <tr>
+            <td>Nom du compte</td>
+            <td><prenom_titulaire> <deuxieme_prenom_titulaire> <nom_titulaire></td>
+        </tr>
+        <tr>
+            <td>Numéro de compte</td>
+            <td><numero_compte_bancaire></td>
+        </tr>
+        <tr>
+            <td>Code de tri</td>
+            <td><code_tri_bancaire></td>
+        </tr>
+        <tr>
+            <td>Date du premier prélèvement</td>
+            <td><date_premier_prelevement></td>
+        </tr>
+        <tr>
+            <td>Jour du mois de prélèvement</td>
+            <td><jour_prelevement_mensuel></td>
+        </tr>
+        <tr>
+            <td>Montant à prélever</td>
+            <td><devise><montant_paiement_mensuel></td>
+        </tr>
+        <tr>
+            <td>Fréquence de prélèvement</td>
+            <td><frequence_prelevement></td>
+        </tr>
+        <tr>
+            <td>Numéro de référence</td>
+            <td><reference_prelevement></td>
+        </tr>
+        <tr>
+            <td>Numéro d'utilisateur de service</td>
+            <td><numero_utilisateur_service></td>
+        </tr>
+    </table>
+
+    <div class="section-title">3 choses à savoir sur votre couverture</div>
+    <ol>
+        <li>
+            <strong>Documents joints.</strong> Nous avons inclus les documents suivants qui pourraient vous être utiles : <liste_documents_joints>. Veuillez examiner ces documents avec le contrat de crédit à la consommation qui détaille les conditions de votre plan de prélèvement automatique pour vous assurer que les informations sont correctes et vérifier que le niveau de couverture répond à vos besoins.
+        </li>
+        <li>
+            <strong>Vérifiez quelle autre couverture vous avez déjà.</strong> Nous voulons vous aider à tirer le meilleur parti de votre couverture. Si vous avez des polices d'assurance ailleurs, il est utile de vous assurer que ces avantages ne se chevauchent pas avec votre couverture personnalisée sélectionnée.
+        </li>
+        <li>
+            <strong>Modifications de vos termes et conditions de police.</strong> Nous avons récemment mis à jour nos termes et conditions de police, le document joint intitulé « Changements importants à vos termes et conditions » décrit utilement les principaux changements et comment ils vous affectent.
+        </li>
+    </ol>
+
+    <div class="section-title">Bonus sans sinistre</div>
+    <p>Une réduction sur le coût de votre assurance a été appliquée en fonction du nombre d'années de bonus sans sinistre que vous avez. Nous pouvons vous demander d'envoyer une preuve de cela avant le <date_limite_preuve_bss>, qui peut être téléchargée dans votre compte d'assurance.</p>
+
+    <div class="section-title">Votre renouvellement automatique facile</div>
+    <p>Nous avons rendu le renouvellement de votre assurance automobile facile et sans stress. C'est pourquoi votre police sera automatiquement renouvelée chez nous l'année prochaine. Avec le renouvellement automatique, vous pouvez :</p>
+    <ul>
+        <li><span class="checkmark">✓</span> Être rassuré en sachant que vous ne serez pas laissé sans assurance</li>
+        <li><span class="checkmark">✓</span> Gagner du temps, sachant que vous n'avez pas besoin de nous contacter</li>
+        <li><span class="checkmark">✓</span> Vous détendre, car nous vous enverrons un rappel utile concernant votre renouvellement automatique environ <delai_rappel_renouvellement> jours avant votre date de renouvellement</li>
+    </ul>
+
+    <div class="section-title">Comment faire une réclamation</div>
+    <p><strong>Site web :</strong> <url_declaration_sinistre><br>
+    <strong>Téléphone :</strong> <telephone_declaration_sinistre><br>
+    Les lignes sont ouvertes <horaires_ouverture_sinistre></p>
+
+    <div class="section-title">Comment nous contacter</div>
+    <p><strong>En ligne :</strong> Connectez-vous à votre compte d'assurance sur <url_compte_client><br>
+    <strong>Téléphone :</strong> <telephone_service_client><br>
+    Voir le site web pour les horaires d'ouverture</p>
+
+    <div class="highlight">
+        <strong>PAIEMENTS MANQUÉS - IMPORTANT !</strong> N'oubliez pas que si vous manquez un paiement, cela pourrait avoir de graves conséquences. Cela pourrait nous amener à intenter une action en justice contre vous, et cela pourrait affecter votre capacité à obtenir un crédit (par exemple, une carte de crédit ou un prêt hypothécaire) à l'avenir. Cela pourrait également augmenter le montant que vous payez pour le crédit.
+    </div>
+
+    <div class="section-title">Droit de rétractation</div>
+    <p>Votre droit de rétractation commence le lendemain de la réception de la copie de votre contrat de crédit que nous vous envoyons pour conserver et se termine après une période de <delai_retractation> jours calendaires à compter du lendemain de la date à laquelle vous recevez votre copie du contrat de crédit.</p>
+
+    <div class="section-title">Annulation de votre prélèvement automatique</div>
+    <p>Vous pouvez annuler votre prélèvement automatique à tout moment en avisant votre banque ou société de crédit immobilier. Veuillez noter qu'en annulant votre prélèvement automatique, vous annulez également le contrat de crédit. Si vous annulez votre prélèvement automatique avant que le paiement final ne nous soit versé, le solde impayé devient immédiatement exigible.</p>
+    <p><strong>IMPORTANT :</strong> L'annulation de votre prélèvement automatique n'annule pas votre police.</p>
+
+    <div class="footer">
+        <p><strong><compagnie_dassurance> Assurance Automobile</strong> et les produits d'assurance complémentaires sont arrangés par <compagnie_dassurance> agissant en tant qu'intermédiaire d'assurance et sont souscrits par une gamme sélectionnée d'assureurs. <compagnie_dassurance> est un nom commercial de <nom_entite_legale>. Enregistré en <pays_siege_social> n° <numero_enregistrement_siege_social>. Siège social : <adresse_siege_social_complete>. Autorisé par la <nom_autorite_regulation>.</p>
+        <p>Nous pouvons surveiller et enregistrer les appels à des fins de formation pour améliorer la qualité de notre service et pour détecter et prévenir la fraude.</p>
+        <p><em>Ceci est un contrat juridiquement contraignant.</em></p>
+        <p><strong>Signé par :</strong> <titre_civilite_titulaire>. <prenom_titulaire> <deuxieme_prenom_titulaire> <nom_titulaire> (Client) - <date_signature_client><br>
+        <strong>Signé par :</strong> <compagnie_dassurance>, <titre_signataire_compagnie> - <date_signature_compagnie></p>
+    </div>
+</body>
+</html>

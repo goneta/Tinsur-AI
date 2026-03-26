@@ -1,0 +1,51 @@
+---
+description: Ensure consistency between Backend API response shapes and Frontend Client expectations, specifically regarding List vs Paginated Object responses.
+globs: ["frontend/lib/**/*.ts", "backend/app/api/**/*.py"]
+---
+
+# API Response Consistency Rule
+
+## Context
+A common error (Runtime TypeError: map is not a function) occurs when the Frontend expects an Array (List) from an API call, but the Backend returns a Paginated Object (e.g., `{ items: [], total: 10 }`).
+
+## Requirements
+
+1.  **Check Backend Return Type**:
+    *   Inspect the `response_model` in the FastAPI router (e.g., `List[Model]` vs `ModelListResponse`).
+    *   If `response_model=List[...]`, the response body is `[...]`.
+    *   If `response_model=SomeBoject`, the response body is `{...}`.
+
+2.  **Align Frontend Client**:
+    *   The API client function in `frontend/lib/` must strongly type the response matches the backend.
+    *   If the Component calling the client expects an Array, the Client function **must unwrap** the response if the backend returns a paginated object.
+
+## Example
+
+**Backend (Paginated)**:
+```python
+@router.get("/", response_model=UserListResponse)
+def get_users():
+    return {"users": [...], "total": 100}
+```
+
+**Frontend Client (Correct)**:
+```typescript
+getUsers: async () => {
+    // Correctly types the response object, then unwraps the array
+    const response = await api.get<{ users: User[], total: number }>('/users');
+    return response.data.users; // Returns Array
+}
+```
+
+**Frontend Client (Incorrect - Causes Error)**:
+```typescript
+getUsers: async () => {
+    // Incorrectly assumes response.data is the array
+    const response = await api.get<User[]>('/users');
+    return response.data; // Returns Object, crashing .map() usage
+}
+```
+
+## Validation
+*   Before modifying API clients, verify the actual JSON response of the endpoint (using curl or backend code inspection).
+*   If `response.data.map is not a function` error usage occurs, check if `response.data` is an object wrapping the array.

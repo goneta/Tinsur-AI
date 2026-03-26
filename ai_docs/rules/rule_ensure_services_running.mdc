@@ -1,0 +1,30 @@
+---
+description: Ensure all backend and frontend services are running when encountering connection errors.
+globs: **/*.ts, **/*.py
+---
+
+# Rule: Ensure Services Running
+
+When encountering "Connection Failed", "Network Error", or "500 Internal Server Error" during application usage:
+
+1. **Verify Backend Status**:
+   - The Main API should be running on **Port 8000**.
+   - Check using: `curl http://localhost:8000/health`
+
+2. **Verify Agent Status**:
+   - The Claims Agent should be running on **Port 8019**.
+   - Other agents (Quote, Policy) run on 8020, 8021 etc.
+
+3. **Verify Frontend Status**:
+   - The Next.js frontend runs on **Port 3000**.
+
+4. **Resolution**:
+   - **DO NOT** try to debug code immediately if services are simply down.
+   - **ALWAYS** advise the user to run the Master Startup Script first:
+     ```powershell
+     .\start_all.ps1
+     ```
+   - This script launches all required components (Backend, Agent Mesh, Frontend).
+
+## Context
+The application is a distributed system requiring multiple processes. A common "bug" is simply one service (like the Claims Agent) not being started.

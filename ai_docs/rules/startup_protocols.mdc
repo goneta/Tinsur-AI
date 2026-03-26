@@ -1,0 +1,37 @@
+---
+description: Mandatory protocols for starting and verifying the application stack.
+globs: "**/*"
+---
+# Startup Protocols
+
+This rule defines the mandatory steps to start the Insurance SaaS application and verify its health.
+
+## 1. Startup Script
+Use the provided PowerShell script to launch both services in new windows:
+```powershell
+.\start_app.ps1
+```
+
+## 2. Manual Startup
+If the script fails, start services manually in separate terminals:
+
+### Backend (Port 8000)
+```powershell
+cd backend
+$env:PYTHONPATH='.'
+python -m uvicorn app.main:app --reload --port 8000
+```
+*Health Check*: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### Frontend (Port 3000)
+```powershell
+cd frontend
+npm run dev
+```
+*Access*: [http://localhost:3000](http://localhost:3000)
+
+## 3. Verification
+Before reporting "Connection Refused":
+1.  Run `netstat -an | findstr "8000 3000"` to confirm ports are listening.
+2.  Check the terminal logs for crash errors (e.g., "ImportError", "SyntaxError").
+3.  Ensure no other service is blocking these ports.

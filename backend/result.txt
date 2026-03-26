@@ -1,0 +1,4 @@
+Found 1 claims for policy f8d22593-6a69-4a7b-aa3e-147b31885862
+ - Claim CLM-EE3114F0: Amount=1500.00 (Type: <class 'decimal.Decimal'>), Desc=I damaged my bumper, cost is 1500, Status=approved
+   ^ MATCH FOUND
+SUCCESS: Claim verification passed.

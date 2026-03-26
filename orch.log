@@ -1,0 +1,8 @@
+INFO:     Started server process [31292]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8025 (Press CTRL+C to quit)
+Starting a2a_multi_ai_agents on port 8025
+INFO:     127.0.0.1:53644 - "POST /send-message HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53523 - "POST /send-message HTTP/1.1" 200 OK
+^C

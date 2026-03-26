@@ -1,0 +1,89 @@
+﻿python : Traceback 
+(most recent call 
+last):
+Au caractère Ligne:1 
+: 137
++ ... agents\a2a_quot
+e_agent"; python -c 
+"from pydantic 
+import BaseModel; `
++                    
+          ~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Traceba   
+ ck (most recent     
+call last)::Stri    
+ng) [], RemoteEx    
+ception
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+  File "<string>", 
+line 2, in <module>
+  File "C:\Users\user
+\Desktop\Insurance Sa
+aS\backend\agents\a2a
+_quote_agent\agent_ex
+ecutor.py", line 7, 
+in <module>
+    from 
+app.core.database 
+import SessionLocal
+  File "C:\Users\user
+\Desktop\Insurance Sa
+aS\backend\app\core\d
+atabase.py", line 
+10, in <module>
+    from 
+app.core.config 
+import settings
+  File "C:\Users\user
+\Desktop\Insurance Sa
+aS\backend\app\core\c
+onfig.py", line 66, 
+in <module>
+    settings = 
+Settings()
+               
+^^^^^^^^^^
+  File "C:\Python312\
+Lib\site-packages\pyd
+antic_settings\main.p
+y", line 194, in 
+__init__
+    super().__init__(
+  File "C:\Python312\
+Lib\site-packages\pyd
+antic\main.py", line 
+250, in __init__
+    validated_self = 
+self.__pydantic_valid
+ator__.validate_pytho
+n(data, 
+self_instance=self)
+                     
+^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+^^^^^^
+pydantic_core._pydant
+ic_core.ValidationErr
+or: 1 validation 
+error for Settings
+GOOGLE_API_KEY
+  Extra inputs are 
+not permitted [type=e
+xtra_forbidden, input
+_value='AIzaSyCdRkgtS
+v9uf6GPtpj0WfOqGDVVnX
+XxOs0', 
+input_type=str]
+    For further 
+information visit htt
+ps://errors.pydantic.
+dev/2.12/v/extra_forb
+idden

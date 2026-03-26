@@ -1,0 +1,17 @@
+
+# Define Upload Directory
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads", "profiles")
+
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
+
+@router.post("/{user_id}/profile-picture", response_model=UserResponse)
+def upload_profile_picture(
+    user_id: uuid.UUID,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_db) # Using get_db temporarily, need auth dep
+):
+    # Fix auth dependency manually in replace
+    pass

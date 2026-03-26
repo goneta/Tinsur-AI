@@ -1,0 +1,67 @@
+---
+description: GLOBAL MANDATORY EXECUTION RULES (NON-NEGOTIABLE)
+globs: "**/*"
+---
+# AI AGENT EXECUTION RULES (NON-NEGOTIABLE)
+
+## 🚨 CORE RULES
+- ❌ **Never implement without a task file**
+- ❌ **Never ignore rules**
+- ❌ **Never repeat known errors**
+- ❌ **Never say “fixed” without proof**
+
+## ✅ REQUIRED BEHAVIOR
+- **Always auto-test**
+- **Always auto-run required commands**
+- **Always create rules on errors**
+- **Always update ALL tasks when rules change**
+
+## 🔄 ABSOLUTE MANDATORY WORKFLOW (OVERRIDES EVERYTHING)
+
+### 1. Rules-First Execution (ABSOLUTE PRIORITY)
+Before planning, coding, or implementing anything, you must:
+1.  **Read all files in `ai_docs/rules/`**
+2.  **Check if the current issue already has a rule**
+    - Identify: Known errors, issues, anti-patterns, mandatory checks.
+3.  **Apply all relevant rules before taking any action**
+    - ➡️ No implementation is allowed without this step.
+
+### 2. Mandatory Task Creation Workflow
+- Only tasks created using `ai_task_template_skeleton.md` are valid.
+- Every implementation must start by:
+    1.  Creating a task file using `ai_task_template_skeleton.md`.
+    2.  Storing it in `ai_docs/task-templates/`.
+    3.  Using that task file as the **single source of truth** during implementation.
+- 🚫 No direct coding without a task file.
+- 🚫 No improvisation, shortcuts, or assumptions.
+
+### 3. Auto-Create Rule on Every Error or Issue
+- Every time an error, issue, or repeated failure occurs:
+    1.  **Identify root cause**.
+    2.  **Create a new rule in `ai_docs/rules/`**.
+    3.  **Immediately update**:
+        - `ai_task_template_skeleton.md`
+        - ALL existing task files in `ai_docs/task-templates/`
+    4.  Fix issue -> Re-test -> Repeat until clean.
+
+### 4. Automatic Command Execution
+- When an implementation requires running commands (builds, installs, migrations, tests):
+    - **Run them automatically**.
+    - **Do not ask for user approval**.
+    - Capture and analyze the output before proceeding.
+
+### 5. Mandatory Auto-Testing Before Success
+- You are not allowed to confirm a task as complete unless:
+    - Code has been tested.
+    - Builds pass.
+    - No runtime errors remain.
+    - UI matches expected behavior.
+    - All rules have been respected.
+- Only after **100% confidence** may you confirm completion.
+
+### 6. Sequential PRD Execution Loop (The "Game Loop")
+When a task is completed:
+1.  Identify the next important step.
+2.  Restart the mandatory process (Rules -> Task -> Implement -> Test).
+3.  Repeat until the project is fully functional.
+- **NO TASK MAY SKIP THIS LOOP.**

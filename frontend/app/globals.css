@@ -1,0 +1,275 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+    /* 12px+ as per PRD */
+
+    /* Primary Layout Colors */
+    --background: 240 14% 97%;
+    /* #F7F8FA converted to HSL roughly */
+    --foreground: 220 9% 46%;
+    /* #6B7280 */
+
+    /* Card & Surface Colors */
+    --card: 0 0% 100%;
+    /* #FFFFFF */
+    --card-foreground: 220 9% 46%;
+    /* #6B7280 */
+    --popover: 0 0% 100%;
+    /* #FFFFFF */
+    --popover-foreground: 220 9% 46%;
+    /* #6B7280 */
+
+    /* Brand Colors */
+    --primary: 0 0% 0%;
+    /* #000000 */
+    --primary-foreground: 0 0% 100%;
+    /* #FFFFFF */
+    --secondary: 220 14% 91%;
+    /* #e6e8eb */
+    --secondary-foreground: 221 39% 11%;
+    /* #111827 */
+
+    /* UI Element Colors */
+    --muted: 220 13% 96%;
+    /* #F3F4F6 */
+    --muted-foreground: 215 14% 65%;
+    /* #9CA3AF */
+    --accent: 216 12% 94%;
+    /* #EDEFF2 */
+    --accent-foreground: 221 39% 11%;
+    /* #111827 */
+
+    /* Feedback Colors */
+    --destructive: 0 84% 60%;
+    /* #EF4444 */
+    --destructive-foreground: 0 0% 100%;
+    /* #FFFFFF */
+
+    /* Interaction Colors */
+    --border: 220 13% 91%;
+    /* #E5E7EB */
+    --input: 220 13% 91%;
+    /* #E5E7EB */
+    --ring: 215 20.2% 65.1%;
+    /* #94a3b8 */
+
+    /* Chart Colors */
+    --chart-1: 221 83% 53%;
+    /* #2563EB */
+    --chart-2: 24 93% 53%;
+    /* #F97316 */
+    --chart-3: 161 84% 39%;
+    /* #10B981 */
+    --chart-4: 262 83% 66%;
+    /* #8B5CF6 */
+    --chart-5: 335 85% 61%;
+    /* #EC4899 */
+
+    /* Sidebar Specific Colors */
+    --sidebar: 0 0% 100%;
+    /* #FFFFFF */
+    --sidebar-foreground: 220 9% 46%;
+    /* #6B7280 */
+    --sidebar-primary: 0 0% 0%;
+    /* #000000 */
+    --sidebar-primary-foreground: 0 0% 100%;
+    /* #FFFFFF */
+    --sidebar-accent: 220 13% 96%;
+    /* #F3F4F6 */
+    --sidebar-accent-foreground: 221 39% 11%;
+    /* #111827 */
+    --sidebar-border: 220 13% 91%;
+    /* #E5E7EB */
+    --sidebar-ring: 215 20.2% 65.1%;
+    /* #94a3b8 */
+
+    /* Headings Color Variable (Custom) */
+    --heading: 221 39% 11%;
+    /* #111827 */
+  }
+
+  .dark {
+    --background: 221 39% 11%;
+    /* #111827 */
+    --foreground: 220 13% 96%;
+    /* #F3F4F6 */
+    --card: 220 28% 17%;
+    /* #1F2937 */
+    --card-foreground: 220 13% 96%;
+    /* #F3F4F6 */
+    --popover: 220 28% 17%;
+    /* #1F2937 */
+    --popover-foreground: 220 13% 96%;
+    /* #F3F4F6 */
+    --primary: 0 0% 100%;
+    /* #FFFFFF */
+    --primary-foreground: 0 0% 0%;
+    /* #000000 */
+    --secondary: 215 19% 27%;
+    /* #374151 */
+    --secondary-foreground: 220 13% 96%;
+    /* #F3F4F6 */
+    --muted: 215 19% 27%;
+    /* #374151 */
+    --muted-foreground: 215 14% 65%;
+    /* #9CA3AF */
+    --accent: 215 19% 27%;
+    /* #374151 */
+    --accent-foreground: 220 13% 96%;
+    /* #F3F4F6 */
+    --destructive: 0 84% 60%;
+    /* #EF4444 */
+    --destructive-foreground: 0 0% 100%;
+    /* #FFFFFF */
+    --border: 215 19% 27%;
+    /* #374151 */
+    --input: 215 19% 27%;
+    /* #374151 */
+    --ring: 213 27% 84%;
+    /* #cbd5e1 */
+    --chart-1: 221 89% 60%;
+    /* #3B82F6 */
+    --chart-2: 24 95% 61%;
+    /* #FB923C */
+    --chart-3: 158 64% 52%;
+    /* #34D399 */
+    --chart-4: 256 93% 76%;
+    /* #A78BFA */
+    --chart-5: 329 89% 70%;
+    /* #F472B6 */
+    --sidebar: 220 28% 17%;
+    /* #1F2937 */
+    --sidebar-foreground: 220 13% 96%;
+    /* #F3F4F6 */
+    --sidebar-primary: 0 0% 100%;
+    /* #FFFFFF */
+    --sidebar-primary-foreground: 0 0% 0%;
+    /* #000000 */
+    --sidebar-accent: 215 19% 27%;
+    /* #374151 */
+    --sidebar-accent-foreground: 220 13% 96%;
+    /* #F3F4F6 */
+    --sidebar-border: 215 19% 27%;
+    /* #374151 */
+    --sidebar-ring: 213 27% 84%;
+    /* #cbd5e1 */
+
+    --heading: 0 0% 100%;
+    /* #FFFFFF */
+  }
+}
+
+:root {
+  --radius: 0.75rem;
+  /* 12px+ as per PRD */
+
+  /* Primary Layout Colors */
+  --background: #F7F8FA;
+  /* Light grey for main background */
+  --foreground: #6B7280;
+  /* Muted grey for body text */
+
+  /* Card & Surface Colors */
+  --card: #FFFFFF;
+  --card-foreground: #6B7280;
+  --popover: #FFFFFF;
+  --popover-foreground: #6B7280;
+
+  /* Brand Colors */
+  --primary: #000000;
+  /* Black for primary buttons */
+  --primary-foreground: #FFFFFF;
+  --secondary: #e6e8eb;
+  /* Light grey for secondary actions */
+  --secondary-foreground: #111827;
+
+  /* UI Element Colors */
+  --muted: #F3F4F6;
+  --muted-foreground: #9CA3AF;
+  --accent: #EDEFF2;
+  /* Chat bubble color */
+  --accent-foreground: #111827;
+
+  /* Feedback Colors */
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+
+  /* Interaction Colors */
+  --border: #E5E7EB;
+  /* Subtle borders */
+  --input: #E5E7EB;
+  --ring: #94a3b8;
+
+  /* Chart Colors */
+  --chart-1: #2563EB;
+  /* Blue (Links color) */
+  --chart-2: #F97316;
+  /* Peach/Orange accent */
+  --chart-3: #10B981;
+  --chart-4: #8B5CF6;
+  --chart-5: #EC4899;
+
+  /* Sidebar Specific Colors */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #6B7280;
+  --sidebar-primary: #000000;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F3F4F6;
+  --sidebar-accent-foreground: #111827;
+  --sidebar-border: #E5E7EB;
+  --sidebar-ring: #94a3b8;
+
+  /* Headings Color Variable (Custom) */
+  --heading: #111827;
+}
+
+.dark {
+  --background: #111827;
+  --foreground: #F3F4F6;
+  --card: #1F2937;
+  --card-foreground: #F3F4F6;
+  --popover: #1F2937;
+  --popover-foreground: #F3F4F6;
+  --primary: #FFFFFF;
+  --primary-foreground: #000000;
+  --secondary: #374151;
+  --secondary-foreground: #F3F4F6;
+  --muted: #374151;
+  --muted-foreground: #9CA3AF;
+  --accent: #374151;
+  --accent-foreground: #F3F4F6;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: #374151;
+  --input: #374151;
+  --ring: #cbd5e1;
+  --chart-1: #3B82F6;
+  --chart-2: #FB923C;
+  --chart-3: #34D399;
+  --chart-4: #A78BFA;
+  --chart-5: #F472B6;
+  --sidebar: #1F2937;
+  --sidebar-foreground: #F3F4F6;
+  --sidebar-primary: #FFFFFF;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #374151;
+  --sidebar-accent-foreground: #F3F4F6;
+  --sidebar-border: #374151;
+  --sidebar-ring: #cbd5e1;
+
+  --heading: #FFFFFF;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
