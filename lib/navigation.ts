@@ -23,6 +23,7 @@ import {
     Gavel,
     Landmark,
     Database,
+    HelpCircle,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -311,6 +312,13 @@ export const navGroups: NavGroup[] = [
                 icon: Activity,
                 roles: ['super_admin', 'company_admin', 'agent'],
                 color: 'cyan',
+            },
+            {
+                id: 'help_guides',
+                title: 'Help & Guides',
+                href: '/help/guides',
+                icon: HelpCircle,
+                color: 'blue',
             },
         ]
     }

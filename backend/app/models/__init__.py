@@ -43,6 +43,7 @@ from app.models.quote_element import QuoteElement
 from app.models.sales import SalesTransaction, SalesTarget
 from app.models.task import Task
 from app.models.chat import ChatChannel, ChatMessage, ChatChannelMember
+from app.models.help_guide import HelpGuide, GuideCompletion, GuideAccess, OnboardingStatus, GuideType, GuideSection
 
 __all__ = [
     "Company", 
@@ -100,4 +101,10 @@ __all__ = [
     "ChatChannel",
     "ChatMessage",
     "ChatChannelMember",
+    "HelpGuide",
+    "GuideCompletion",
+    "GuideAccess",
+    "OnboardingStatus",
+    "GuideType",
+    "GuideSection",
 ]

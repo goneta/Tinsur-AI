@@ -56,7 +56,8 @@ from app.api.v1.endpoints import (
     ocr,
     tasks,
     ai,
-    sales
+    sales,
+    help
 )
 
 api_router = APIRouter()
@@ -118,4 +119,4 @@ api_router.include_router(translations.router, prefix="/translations", tags=["Tr
 api_router.include_router(import_export.router, prefix="/import-export", tags=["Import / Export Data"])
 api_router.include_router(social_auth.router, prefix="/auth/social", tags=["Social Authentication"])
 api_router.include_router(sales.router, prefix="/sales", tags=["Sales"])
-
+api_router.include_router(help.router, prefix="/help", tags=["Help & Onboarding"])

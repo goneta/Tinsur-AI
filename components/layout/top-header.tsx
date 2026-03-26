@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { navGroups } from '@/lib/navigation';
 import { Menu, Search, Bell, Sparkles, CreditCard, ShieldAlert, Cpu } from 'lucide-react';
+import { HelpButton } from '@/components/help/help-button';
 import {
     Popover,
     PopoverContent,
@@ -124,6 +125,8 @@ export function TopHeader({ onMobileMenuToggle, onAiToggle, className }: TopHead
                     <Sparkles className="h-5 w-5" />
                     <span className="sr-only">AI Manager</span>
                 </Button>
+
+                <HelpButton />
 
                 <Popover>
                     <PopoverTrigger asChild>
