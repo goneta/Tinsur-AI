@@ -215,7 +215,7 @@ export function Logo({
               </g>
 
               {/* Text */}
-              {variant !== 'icon-only' && (
+              {(variant as LogoVariant) !== 'icon-only' && (
                 <>
                   <text
                     x="65"
