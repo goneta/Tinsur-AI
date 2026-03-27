@@ -1,0 +1,18 @@
+<svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <!-- Shield Icon -->
+  <g>
+    <path d="M20 10 L20 28 C20 38 28 45 38 48 C48 45 56 38 56 28 L56 10 Z" 
+          fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    <!-- Checkmark inside shield -->
+    <path d="M32 32 L36 36 L44 26" 
+          stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+  
+  <!-- Text: Tinsur.AI -->
+  <text x="65" y="37" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="700" fill="currentColor" letter-spacing="-0.5">
+    Tinsur
+  </text>
+  <text x="65" y="52" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="600" fill="currentColor" letter-spacing="1">
+    .AI
+  </text>
+</svg>
