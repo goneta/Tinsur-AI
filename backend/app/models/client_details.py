@@ -188,6 +188,7 @@ class ClientDriver(Base):
     accident_count = Column(Integer, default=0)
     no_claims_years = Column(Integer, default=0)
     driving_license_years = Column(Integer, default=0)
+    number_of_accidents_at_fault = Column(Integer, default=0)  # Required for quote creation
 
     is_main_driver = Column(Boolean, default=False)
     driving_license_url = Column(String(500), nullable=True)

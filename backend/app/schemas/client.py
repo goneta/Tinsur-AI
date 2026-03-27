@@ -175,6 +175,7 @@ class ClientDriverBase(BaseModel):
     accident_count: Optional[int] = 0
     no_claims_years: Optional[int] = 0
     driving_license_years: Optional[int] = 0
+    number_of_accidents_at_fault: Optional[int] = 0  # Required for quote creation
     driving_license_url: Optional[str] = None
 
 class ClientDriverCreate(ClientDriverBase):
@@ -222,6 +223,7 @@ class ClientBase(BaseModel):
     accident_count: Optional[int] = 0
     no_claims_years: Optional[int] = 0
     driving_license_years: Optional[int] = 0
+    number_of_accidents_at_fault: Optional[int] = 0  # Required for quote creation
 
     kyc_status: Optional[str] = 'pending'
     pep_status: Optional[bool] = False
