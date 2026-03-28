@@ -1,0 +1,8 @@
+{
+  "currency_name": "FCFA",
+  "currency_symbol": "FCFA",
+  "amount_format": "{amount} {symbol}",
+  "decimal_separator": ".",
+  "thousands_separator": ",",
+  "currency_code": "XOF"
+}

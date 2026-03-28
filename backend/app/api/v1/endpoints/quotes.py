@@ -514,3 +514,110 @@ def delete_quote(
     
     repo.delete(quote_id)
     return None
+
+
+@router.post("/auto-generate/{client_id}")
+def auto_generate_quotes(
+    client_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Auto-generate recommended quotes for a client.
+    
+    Returns a list of quotes sorted by price (cheapest first).
+    Includes recommendation order based on premium amount.
+    """
+    from app.models.client import Client, client_company
+    from app.services.quote_generation_service import QuoteGenerationService
+    
+    logger = logging.getLogger("api.quotes")
+    
+    try:
+        # Verify client exists and belongs to company
+        client = db.query(Client).join(
+            client_company, Client.id == client_company.c.client_id
+        ).filter(
+            Client.id == client_id,
+            client_company.c.company_id == current_user.company_id
+        ).first()
+        
+        if not client:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Client not found"
+            )
+        
+        # Generate quotes
+        quote_gen_service = QuoteGenerationService(db)
+        recommended_quotes = quote_gen_service.auto_generate_quotes(client_id)
+        
+        logger.info(f"Auto-generated {len(recommended_quotes)} quotes for client {client_id}")
+        
+        return {
+            "client_id": str(client_id),
+            "recommended_quotes": recommended_quotes,
+            "total_quotes": len(recommended_quotes)
+        }
+    except ValueError as e:
+        logger.error(f"Validation error generating quotes: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Error auto-generating quotes: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate quotes: {str(e)}"
+        )
+
+
+@router.get("/{quote_id}/details")
+def get_quote_details(
+    quote_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get full details of a quote including coverage, benefits, and discounts.
+    
+    Returns comprehensive quote information for display in details modal.
+    """
+    from app.services.quote_generation_service import QuoteGenerationService
+    
+    logger = logging.getLogger("api.quotes")
+    
+    try:
+        # Verify quote exists and belongs to company
+        repo = QuoteRepository(db)
+        quote = repo.get_by_id(quote_id)
+        
+        if not quote or quote.company_id != current_user.company_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Quote not found"
+            )
+        
+        # Get detailed information
+        quote_gen_service = QuoteGenerationService(db)
+        details = quote_gen_service.get_quote_details(quote_id)
+        
+        logger.info(f"Retrieved details for quote {quote_id}")
+        
+        return {
+            "quote_id": str(quote_id),
+            "details": details
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving quote details: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve quote details: {str(e)}"
+        )
