@@ -17,6 +17,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useAuth } from '@/lib/auth';
 import { ClientOnly } from '@/components/ui/client-only';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { Logo } from '@/components/ui/Logo';
 
 interface TopHeaderProps {
     onMobileMenuToggle: () => void;
@@ -85,6 +86,17 @@ export function TopHeader({ onMobileMenuToggle, onAiToggle, className }: TopHead
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle menu</span>
             </Button>
+
+            {/* Logo */}
+            <div className="hidden sm:flex items-center">
+                <Logo 
+                    size={32} 
+                    variant="icon-only" 
+                    theme="auto" 
+                    href="/dashboard"
+                    className="hover:opacity-80 transition-opacity"
+                />
+            </div>
 
             <div className="flex flex-col">
                 <h1 className="text-lg font-semibold md:text-xl">{title}</h1>
