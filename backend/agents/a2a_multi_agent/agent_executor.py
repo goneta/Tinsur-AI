@@ -3,6 +3,8 @@ from a2a.server.agent_execution.context import RequestContext
 from a2a.server.events.event_queue import EventQueue
 from a2a.utils import new_agent_text_message
 from google.adk.agents import Agent
+from app.core.database import SessionLocal
+from app.services.ai_context_service import build_tenant_context_summary
 
 # Import real backend agents
 # Adapting imports assuming we are running from backend root or these modules are in python path
@@ -127,7 +129,17 @@ class MultiAgentExecutor(AgentExecutor):
                 await self.admin.execute(context, event_queue)
                 return
 
-            response_text = await self.agent.run(user_input, google_api_key=context.metadata.get("google_api_key"))
+            tenant_context_summary = context.metadata.get("ai_database_context") or ""
+            company_id = context.metadata.get("company_id")
+            if not tenant_context_summary and company_id:
+                db = SessionLocal()
+                try:
+                    tenant_context_summary = build_tenant_context_summary(db, company_id)
+                finally:
+                    db.close()
+
+            manager_prompt = f"{tenant_context_summary}\n\nUser: {user_input}" if tenant_context_summary else user_input
+            response_text = await self.agent.run(manager_prompt, google_api_key=context.metadata.get("google_api_key"))
             
             event_queue.enqueue_event(new_agent_text_message(response_text))
             

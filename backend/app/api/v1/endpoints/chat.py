@@ -13,7 +13,8 @@ from app.models.user import User
 from app.core.agent_client import AgentClient
 from app.services.security_service import SecurityService
 from app.services.ai_service import AiService
-from app.models.client import Client
+from app.models.client import Client, client_company
+from app.services.ai_context_service import build_tenant_context_summary
 from app.models.chat import ChatChannel, ChatChannelMember, ChatMessage as ChatMessageModel
 from app.schemas.chat import (
     ChatChannelCreate,
@@ -60,13 +61,15 @@ async def chat(
     permissions = security.get_user_permissions(str(current_user.id))
     
     # Build context to pass to the agent
+    company_id = str(current_user.company_id) if current_user.company_id else None
     context = {
         "user_id": str(current_user.id),
         "user_email": current_user.email,
         "user_role": current_user.role,
         "permissions": permissions,
-        "company_id": str(current_user.company_id) if current_user.company_id else None,
-        "policy_id": request.policy_id
+        "company_id": company_id,
+        "policy_id": request.policy_id,
+        "ai_database_context": build_tenant_context_summary(db, company_id) if company_id else None,
     }
     
     ai_service = AiService(db)
@@ -90,10 +93,16 @@ async def chat(
         if '..' in normalized or normalized.startswith('/etc') or normalized.startswith('/root'):
             raise HTTPException(status_code=400, detail="Invalid image path")
 
-    # Find client_id if user is a client
+    # Find client_id if user is a client, scoped through the company association table.
     client_id = None
-    if current_user.role == 'client':
-        client = db.query(Client).filter(Client.user_id == current_user.id).first()
+    if current_user.role == 'client' and current_user.company_id:
+        client = (
+            db.query(Client)
+            .join(client_company, client_company.c.client_id == Client.id)
+            .filter(Client.user_id == current_user.id)
+            .filter(client_company.c.company_id == current_user.company_id)
+            .first()
+        )
         if client:
             client_id = str(client.id)
 

@@ -1,12 +1,12 @@
 import json
 import logging
-import uuid
 
 from a2a.server.agent_execution import AgentExecutor
 from a2a.server.agent_execution.context import RequestContext
 from a2a.server.events.event_queue import EventQueue
 from a2a.utils import new_agent_text_message
 from google.adk.agents import Agent
+
 from .tools import (
     list_draft_quotes,
     convert_quote_to_policy,
@@ -14,6 +14,8 @@ from .tools import (
     get_policy_details,
     cancel_policy,
 )
+from app.core.database import SessionLocal
+from app.services.ai_context_service import build_tenant_context_summary
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +50,7 @@ class PolicyAgentExecutor(AgentExecutor):
             IMPORTANT:
             - ALWAYS use the Company_ID and User_ID from [SYSTEM CONTEXT VARIABLES].
             - For client users, use the Client_ID from context to filter their policies.
+            - Use [TENANT DATABASE CONTEXT] to reference current company records, draft quotes, active policies, client metadata, and product metadata.
             - NEVER output raw JSON or code to the user. Format everything in natural language.
             - Present policy numbers, dates, and amounts clearly.
             - Amounts should be displayed in the company's currency (typically FCFA/XOF).
@@ -94,14 +97,31 @@ class PolicyAgentExecutor(AgentExecutor):
             "User_Role": user_role,
         }
 
-        # If client, add their client_id for filtering
         client_id = context.metadata.get("client_id")
         if client_id:
             ctx_vars["Client_ID"] = str(client_id)
 
+        tenant_context_summary = context.metadata.get("ai_database_context") or ""
+        if not tenant_context_summary and company_id:
+            db = SessionLocal()
+            try:
+                tenant_context_summary = build_tenant_context_summary(db, company_id)
+            finally:
+                db.close()
+
         context_prompt = f"""
         [SYSTEM CONTEXT VARIABLES]
         {json.dumps(ctx_vars, indent=2)}
+        """
+
+        if tenant_context_summary:
+            context_prompt += f"""
+
+        [TENANT DATABASE CONTEXT]
+        {tenant_context_summary}
+        """
+
+        context_prompt += """
 
         [CONVERSATION HISTORY]
         """
