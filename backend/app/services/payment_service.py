@@ -114,9 +114,7 @@ class PaymentService:
                     self._process_credit_topup(payment)
                 else:
                     # Standard policy payment logic
-                    self._generate_co_insurance_premium_shares(payment)
-                    self._generate_commissions(payment)
-                    self._post_payment_to_ledger(payment)
+                    self._handle_successful_policy_payment(payment)
             elif result.get('status') == 'pending':
                 payment.status = 'pending'
             else:
@@ -275,8 +273,7 @@ class PaymentService:
         # In production, this would call the gateway's refund API
         payment.status = 'refunded'
         payment.refunded_at = utcnow()
-        payment.metadata['refund_reason'] = reason
-        payment.metadata['refund_amount'] = str(refund_amount)
+        payment.payment_metadata = {**(payment.payment_metadata or {}), 'refund_reason': reason, 'refund_amount': str(refund_amount)}
         
         return self.payment_repo.update(payment)
     
@@ -305,11 +302,26 @@ class PaymentService:
         if status == 'completed' or status == 'success':
             payment.status = 'completed'
             payment.paid_at = utcnow()
+            if (payment.payment_metadata or {}).get('type') == 'ai_credits':
+                self._process_credit_topup(payment)
+            else:
+                self._handle_successful_policy_payment(payment)
         elif status == 'failed':
             payment.status = 'failed'
             payment.failure_reason = payload.get('error_message')
         
         return self.payment_repo.update(payment)
+
+    def _handle_successful_policy_payment(self, payment: Payment):
+        """Run idempotent side effects for a successful policy payment."""
+        metadata = payment.payment_metadata or {}
+        if metadata.get('policy_payment_side_effects_completed'):
+            return
+
+        self._generate_co_insurance_premium_shares(payment)
+        self._generate_commissions(payment)
+        self._post_payment_to_ledger(payment)
+        payment.payment_metadata = {**metadata, 'policy_payment_side_effects_completed': True}
 
     def _generate_co_insurance_premium_shares(self, payment: Payment):
         """Generate inter-company records for co-insurance premium distribution."""

@@ -131,7 +131,10 @@ class QuoteCalculationResponse(BaseModel):
 
 
 class QuoteToPolicyConversion(BaseModel):
-    """Schema for converting quote to policy."""
+    """Schema for converting quote to policy with optional first-premium payment processing."""
     start_date: date
-    payment_method: str = Field(..., pattern='^(stripe|mobile_money|bank_transfer|cash)$')
+    payment_method: Optional[str] = Field(None, pattern='^(stripe|mobile_money|bank_transfer|cash)$')
+    payment_gateway: Optional[str] = None
     initial_payment_amount: Optional[Decimal] = Field(None, ge=0, multiple_of=Decimal('0.01'))
+    payment_details: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    process_payment: bool = False

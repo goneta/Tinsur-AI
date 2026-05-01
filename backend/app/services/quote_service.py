@@ -15,6 +15,8 @@ from app.repositories.quote_repository import QuoteRepository
 from app.services.underwriting_service import UnderwritingService
 from app.models.company import Company
 from app.models.user import User
+from app.models.underwriting import QuoteUnderwritingSnapshot
+from app.core.time import utcnow
 
 
 class QuoteService:
@@ -600,6 +602,52 @@ class QuoteService:
                 # Quote status is updated to 'referred' inside create_referral
         
         return quote
+
+    def get_underwriting_snapshot(self, quote_id: UUID) -> Optional[QuoteUnderwritingSnapshot]:
+        """Return the persisted underwriting snapshot for a quote, if present."""
+        return (
+            self.quote_repo.db.query(QuoteUnderwritingSnapshot)
+            .filter(QuoteUnderwritingSnapshot.quote_id == quote_id)
+            .first()
+        )
+
+    def validate_policy_ready_underwriting(self, quote: Quote) -> QuoteUnderwritingSnapshot:
+        """Validate that the quote has a current approved underwriting snapshot."""
+        snapshot = self.get_underwriting_snapshot(quote.id)
+        if not snapshot:
+            raise ValueError("Quote has no underwriting snapshot. Run automobile underwriting before issuing a policy.")
+
+        if snapshot.company_id != quote.company_id:
+            raise ValueError("Underwriting snapshot company does not match quote company.")
+
+        if snapshot.valid_until and snapshot.valid_until < utcnow():
+            raise ValueError("Underwriting snapshot has expired. Re-run underwriting before issuing a policy.")
+
+        decision = None
+        if snapshot.decision_snapshot:
+            decision = snapshot.decision_snapshot.get("decision")
+        if not decision and snapshot.decision:
+            decision = snapshot.decision.decision
+
+        if decision not in {"approve", "approved"}:
+            raise ValueError(f"Quote cannot be issued because underwriting decision is '{decision or 'missing'}'.")
+
+        ready_payload = snapshot.policy_ready_payload or {}
+        ready_decision = ready_payload.get("decision")
+        if ready_decision and ready_decision not in {"approve", "approved"}:
+            raise ValueError(f"Policy-ready payload is not approved: '{ready_decision}'.")
+
+        snapshot_premium = ready_payload.get("premium") or (snapshot.decision_snapshot or {}).get("final_premium")
+        if snapshot_premium is not None and quote.final_premium is not None:
+            try:
+                if Decimal(str(snapshot_premium)).quantize(Decimal("0.01")) != Decimal(str(quote.final_premium)).quantize(Decimal("0.01")):
+                    raise ValueError("Quote final premium does not match the approved underwriting snapshot.")
+            except ValueError:
+                raise
+            except Exception:
+                raise ValueError("Unable to compare quote premium against the underwriting snapshot premium.")
+
+        return snapshot
     
     def mark_as_sent(self, quote_id: UUID) -> Quote:
         """Mark quote as sent to client and trigger notification."""
@@ -629,12 +677,14 @@ class QuoteService:
         return None
     
     def accept_quote(self, quote_id: UUID) -> Quote:
-        """Mark quote as accepted."""
+        """Mark quote as accepted after validating approved underwriting."""
         quote = self.quote_repo.get_by_id(quote_id)
-        if quote and not quote.is_expired:
-            quote.status = 'accepted'
-            return self.quote_repo.update(quote)
-        return None
+        if not quote or quote.is_expired:
+            return None
+
+        self.validate_policy_ready_underwriting(quote)
+        quote.status = 'accepted'
+        return self.quote_repo.update(quote)
     
     def reject_quote(self, quote_id: UUID) -> Quote:
         """Mark quote as rejected."""

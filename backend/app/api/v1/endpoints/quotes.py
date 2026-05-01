@@ -24,6 +24,8 @@ from app.repositories.policy_repository import PolicyRepository
 from app.repositories.endorsement_repository import EndorsementRepository
 from app.services.quote_service import QuoteService
 from app.services.policy_service import PolicyService
+from app.repositories.payment_repository import PaymentRepository
+from app.services.payment_service import PaymentService
 
 router = APIRouter()
 
@@ -315,10 +317,19 @@ def approve_quote(
             detail=f"Cannot approve quote in '{quote.status}' status"
         )
 
-    # 1. Accept Quote (Transitions to 'policy_created' in service)
-    quote_service.accept_quote(quote_id)
+    # 1. Accept Quote after validating the approved underwriting snapshot.
+    try:
+        accepted_quote = quote_service.accept_quote(quote_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+    if not accepted_quote:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Quote is expired or cannot be accepted"
+        )
     
-    # 2. Convert to Policy
+    # 2. Convert to policy using the same validated snapshot.
     from datetime import date
     start_date = date.today()
     
@@ -330,18 +341,18 @@ def approve_quote(
     
     if not policy:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create policy from accepted quote"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to create policy from quote. Confirm the quote has a current approved underwriting snapshot."
         )
-
-    quote.status = 'policy_created'
-    quote_repo.update(quote)
         
     return {
         "message": "Quote approved and policy created successfully",
         "quote_status": "policy_created",
         "policy_id": str(policy.id),
-        "policy_number": policy.policy_number
+        "policy_number": policy.policy_number,
+        "underwriting_snapshot_ready": True,
+        "payment_required": True,
+        "payment_amount": str(policy.premium_amount)
     }
 
 
@@ -416,12 +427,27 @@ def convert_quote_to_policy(
             detail="Quote not found"
         )
     
-    # Accept the quote first if not already accepted
+    quote_service = QuoteService(quote_repo)
+
+    # Accept the quote first if not already accepted, but only after underwriting validation.
     if quote.status not in ['accepted', 'policy_created', 'approved']:
-        quote_service = QuoteService(quote_repo)
-        quote_service.accept_quote(quote_id)
+        try:
+            accepted_quote = quote_service.accept_quote(quote_id)
+        except ValueError as exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+        if not accepted_quote:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Quote is expired or cannot be accepted"
+            )
+    else:
+        try:
+            quote_service.validate_policy_ready_underwriting(quote)
+        except ValueError as exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     
-    # Create policy from quote
+    # Create policy from quote. This is idempotent and returns the existing policy when present.
     policy = policy_service.create_from_quote(
         quote_id=quote_id,
         start_date=conversion_data.start_date,
@@ -431,14 +457,43 @@ def convert_quote_to_policy(
     if not policy:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to create policy from quote"
+            detail="Failed to create policy from quote. Confirm the quote has a current approved underwriting snapshot."
         )
+
+    payment = None
+    if conversion_data.payment_method:
+        payment_service = PaymentService(db, PaymentRepository(db))
+        amount = conversion_data.initial_payment_amount or policy.premium_amount
+        payment = payment_service.create_payment(
+            company_id=policy.company_id,
+            policy_id=policy.id,
+            client_id=policy.client_id,
+            amount=amount,
+            payment_method=conversion_data.payment_method,
+            payment_gateway=conversion_data.payment_gateway,
+            metadata={
+                "source": "quote_conversion",
+                "quote_id": str(quote_id),
+                "underwriting_snapshot_id": str(quote_service.get_underwriting_snapshot(quote_id).id),
+                "policy_id": str(policy.id),
+            }
+        )
+        if conversion_data.process_payment:
+            payment = payment_service.process_payment(payment.id, conversion_data.payment_details or {})
     
-    return {
+    response = {
         "message": "Quote converted to policy successfully",
         "policy_id": str(policy.id),
-        "policy_number": policy.policy_number
+        "policy_number": policy.policy_number,
+        "quote_status": "policy_created",
+        "underwriting_snapshot_ready": True
     }
+    if payment:
+        response["payment_id"] = str(payment.id)
+        response["payment_number"] = payment.payment_number
+        response["payment_status"] = payment.status
+        response["payment_amount"] = str(payment.amount)
+    return response
 
 
 @router.delete("/{quote_id}", status_code=status.HTTP_204_NO_CONTENT)

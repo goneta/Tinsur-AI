@@ -22,6 +22,7 @@ from app.services.archive_service import ArchiveService
 from app.services.underwriting_service import UnderwritingService
 from app.services.regulatory_service import RegulatoryService
 from app.services.document_service import document_service
+from app.models.underwriting import QuoteUnderwritingSnapshot
 from app.repositories.client_repository import ClientRepository
 from app.repositories.company_repository import CompanyRepository
 
@@ -58,13 +59,36 @@ class PolicyService:
         start_date: date,
         created_by: UUID
     ) -> Optional[Policy]:
-        """Create a policy from an accepted quote."""
+        """Create a policy from an accepted quote with underwriting snapshot validation."""
         quote = self.quote_repo.get_by_id(quote_id)
         
         if not quote or quote.status not in ['accepted', 'policy_created']:
             return None
         
         if quote.is_expired:
+            return None
+
+        existing_policy = self.policy_repo.get_by_quote_id(quote_id)
+        if existing_policy:
+            return existing_policy
+
+        snapshot = (
+            self.policy_repo.db.query(QuoteUnderwritingSnapshot)
+            .filter(QuoteUnderwritingSnapshot.quote_id == quote_id)
+            .first()
+        )
+        if not snapshot:
+            return None
+
+        decision = None
+        if snapshot.decision_snapshot:
+            decision = snapshot.decision_snapshot.get("decision")
+        if not decision and snapshot.decision:
+            decision = snapshot.decision.decision
+        if decision not in {"approve", "approved"}:
+            return None
+
+        if snapshot.valid_until and snapshot.valid_until < utcnow():
             return None
         
         # Calculate end_date based on duration
@@ -106,12 +130,26 @@ class PolicyService:
                     "total_financed_amount": float(quote.total_financed_amount or 0),
                     "monthly_installment": float(quote.monthly_installment or 0),
                     "total_installment_price": float(quote.total_installment_price or 0)
+                },
+                "underwriting_snapshot": {
+                    "snapshot_id": str(snapshot.id),
+                    "underwriting_decision_id": str(snapshot.underwriting_decision_id) if snapshot.underwriting_decision_id else None,
+                    "rule_set_id": str(snapshot.rule_set_id) if snapshot.rule_set_id else None,
+                    "decision": decision,
+                    "valid_until": snapshot.valid_until.isoformat() if snapshot.valid_until else None,
+                    "premium_breakdown": snapshot.premium_breakdown or {},
+                    "policy_ready_payload": snapshot.policy_ready_payload or {},
+                    "decision_snapshot": snapshot.decision_snapshot or {},
+                    "normalized_payload": snapshot.normalized_payload or {},
+                    "required_documents": (snapshot.policy_ready_payload or {}).get("required_documents", [])
                 }
             },
             created_by=created_by
         )
         
         policy = self.policy_repo.create(policy)
+        quote.status = 'policy_created'
+        self.quote_repo.update(quote)
         
         # Trigger Reinsurance Cession
         self.reinsurance_service.process_policy_cessions(policy)
