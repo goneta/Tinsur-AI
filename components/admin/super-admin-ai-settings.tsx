@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react"
-import { Shield, Save, Bot, Sparkles, Activity, Loader2, Info } from "lucide-react"
+import { Shield, Save, Bot, Sparkles, Activity, Loader2, Info, CheckCircle2 } from "lucide-react"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -34,6 +41,12 @@ interface AiUsageLog {
     created_at: string
 }
 
+const PROVIDER_LABELS: Record<string, string> = {
+    gemini: "Google Gemini",
+    openai: "OpenAI GPT",
+    anthropic: "Anthropic Claude",
+}
+
 export function SuperAdminAISettings() {
     const { t } = useLanguage()
     const { toast } = useToast()
@@ -45,9 +58,12 @@ export function SuperAdminAISettings() {
         openai: "",
         anthropic: ""
     })
+    const [preferredProvider, setPreferredProvider] = useState<string>("gemini")
+    const [providerSaving, setProviderSaving] = useState(false)
 
     useEffect(() => {
         fetchLogs()
+        fetchPreferredProvider()
     }, [])
 
     const fetchLogs = async () => {
@@ -59,6 +75,34 @@ export function SuperAdminAISettings() {
             console.error("Failed to fetch AI logs:", error)
         } finally {
             setLogsLoading(false)
+        }
+    }
+
+    const fetchPreferredProvider = async () => {
+        try {
+            const res = await api.get("/subscription/system/provider")
+            setPreferredProvider(res.data?.provider || "gemini")
+        } catch {
+            // Default to gemini if endpoint unavailable
+        }
+    }
+
+    const handleSetPreferredProvider = async () => {
+        setProviderSaving(true)
+        try {
+            await api.post("/subscription/system/provider", { provider: preferredProvider })
+            toast({
+                title: "Preferred Provider Updated",
+                description: `${PROVIDER_LABELS[preferredProvider]} is now the default AI provider for Credit Plan users.`,
+            })
+        } catch {
+            toast({
+                title: "Error",
+                description: "Failed to update preferred provider.",
+                variant: "destructive",
+            })
+        } finally {
+            setProviderSaving(false)
         }
     }
 
@@ -102,6 +146,35 @@ export function SuperAdminAISettings() {
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-6 pt-6">
+                    {/* Preferred Provider Selector */}
+                    <div className="space-y-3 p-4 border-2 border-primary/30 rounded-xl bg-primary/5">
+                        <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-5 w-5 text-primary" />
+                            <Label className="text-base font-bold">Active AI Provider</Label>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                            Select which AI provider powers Credit Plan users when no company BYOK key is set.
+                            The corresponding API key below must also be configured.
+                        </p>
+                        <div className="flex gap-3 items-center">
+                            <Select value={preferredProvider} onValueChange={setPreferredProvider}>
+                                <SelectTrigger className="w-[220px]">
+                                    <SelectValue placeholder="Select provider" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="gemini">Google Gemini</SelectItem>
+                                    <SelectItem value="openai">OpenAI GPT</SelectItem>
+                                    <SelectItem value="anthropic">Anthropic Claude</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Button onClick={handleSetPreferredProvider} disabled={providerSaving}>
+                                {providerSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                <Save className="h-4 w-4 mr-2" />
+                                Set as Default
+                            </Button>
+                        </div>
+                    </div>
+
                     {/* Google Gemini */}
                     <div className="space-y-4 p-4 border rounded-xl bg-accent/30">
                         <div className="flex items-center justify-between">

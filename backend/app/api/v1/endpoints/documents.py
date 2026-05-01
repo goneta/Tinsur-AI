@@ -314,8 +314,53 @@ def get_policy_document(
 
     safe_filename = os.path.basename(filename)
     file_path = os.path.join(str(document_service.output_dir), str(policy_id), safe_filename)
-    
+
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="Document not found")
-        
+
     return FileResponse(file_path)
+
+
+@router.post("/policy/{policy_id}/generate")
+def generate_policy_documents(
+    policy_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Trigger document generation for a policy (insurance certificate, insurance card, etc.).
+    Uses the DocumentService template engine. Returns a list of generated file URLs.
+    Requires company_admin or higher role.
+    """
+    if current_user.role not in ("company_admin", "super_admin", "manager"):
+        raise HTTPException(status_code=403, detail="Not authorized to generate documents")
+
+    repo = PolicyRepository(db)
+    policy = repo.get_by_id(policy_id)
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+    if policy.company_id != current_user.company_id and current_user.role != "super_admin":
+        raise HTTPException(status_code=403, detail="Not authorized for this policy")
+
+    # Fetch required related objects
+    from app.models.client import Client
+    from app.models.company import Company as CompanyModel
+
+    client = db.query(Client).filter(Client.id == policy.client_id).first()
+    company = db.query(CompanyModel).filter(CompanyModel.id == policy.company_id).first()
+
+    if not client or not company:
+        raise HTTPException(status_code=422, detail="Policy is missing client or company data")
+
+    try:
+        generated_paths = document_service.generate_documents(db, policy, client, company)
+    except Exception as exc:
+        logger.error("Document generation failed for policy %s: %s", policy_id, exc)
+        raise HTTPException(status_code=500, detail=f"Document generation failed: {exc}")
+
+    return {
+        "policy_id": str(policy_id),
+        "generated": len(generated_paths),
+        "files": generated_paths,
+        "message": f"{len(generated_paths)} document(s) generated successfully.",
+    }

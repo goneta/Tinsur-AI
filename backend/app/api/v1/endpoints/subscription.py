@@ -7,7 +7,7 @@ from uuid import UUID
 from app.core.time import utcnow
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_user, require_admin
+from app.core.dependencies import get_current_user, require_admin, require_role
 from app.models.user import User
 from app.models.company import Company
 from app.models.system_settings import AiUsageLog
@@ -41,6 +41,9 @@ class ApiKeyUpdate(BaseModel):
 class SuperAdminKeyUpdate(BaseModel):
     provider: str # 'google', 'openai', 'anthropic'
     api_key: str
+
+class PreferredProviderUpdate(BaseModel):
+    provider: str  # 'gemini', 'openai', 'anthropic'
 
 class SubscriptionStatus(BaseModel):
     plan: str
@@ -123,13 +126,69 @@ async def update_company_key(
 @router.post("/system/keys")
 async def update_system_key(
     update: SuperAdminKeyUpdate,
-    current_user: User = Depends(require_admin), # Super Admin only
+    current_user: User = Depends(require_role(["super_admin"])),
     db: Session = Depends(get_db)
 ):
-    # require_admin checks if role == 'super_admin'
+    # Validate provider field
+    if update.provider not in ["google", "openai", "anthropic"]:
+        raise HTTPException(status_code=400, detail="Invalid provider. Must be one of: google, openai, anthropic")
+
+    # Encrypt the system API key before storing
     ai_service = AiService(db)
-    ai_service.set_system_api_key(update.provider, update.api_key)
+    encrypted_key = ai_service.encrypt_key(update.api_key)
+    ai_service.set_system_api_key(update.provider, encrypted_key)
     return {"message": f"System {update.provider} key updated successfully"}
+
+@router.post("/system/provider")
+async def set_preferred_provider(
+    update: PreferredProviderUpdate,
+    current_user: User = Depends(require_role(["super_admin"])),
+    db: Session = Depends(get_db),
+):
+    """
+    Set the globally preferred AI provider used when a company has not configured BYOK.
+    Stored in the AI_CONFIG SystemSettings record under 'preferred_provider'.
+    Valid values: 'gemini', 'openai', 'anthropic'.
+    """
+    valid_providers = {"gemini", "openai", "anthropic"}
+    if update.provider not in valid_providers:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid provider. Must be one of: {', '.join(sorted(valid_providers))}",
+        )
+
+    from app.models.system_settings import SystemSettings
+
+    config = db.query(SystemSettings).filter(SystemSettings.key == "AI_CONFIG").first()
+    if not config:
+        config = SystemSettings(
+            key="AI_CONFIG",
+            value={"preferred_provider": update.provider},
+            description="Global AI API Configuration",
+        )
+        db.add(config)
+    else:
+        new_val = dict(config.value)
+        new_val["preferred_provider"] = update.provider
+        config.value = new_val
+
+    db.commit()
+    return {"message": f"Preferred AI provider set to '{update.provider}'.", "provider": update.provider}
+
+
+@router.get("/system/provider")
+async def get_preferred_provider(
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Return the currently configured global preferred AI provider."""
+    from app.models.system_settings import SystemSettings
+
+    config = db.query(SystemSettings).filter(SystemSettings.key == "AI_CONFIG").first()
+    if not config:
+        return {"provider": "gemini"}
+    return {"provider": config.value.get("preferred_provider", "gemini")}
+
 
 @router.get("/system/usage", response_model=List[AiUsageLogResponse])
 async def get_system_usage(
