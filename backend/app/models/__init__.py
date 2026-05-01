@@ -1,6 +1,7 @@
 """
 Models package.
 """
+from app.core.database import Base
 from app.models.company import Company
 from app.models.policy_service import PolicyService
 from app.models.user import User
@@ -39,6 +40,7 @@ from app.models.employee import EmployeeProfile
 from app.models.payroll import PayrollTransaction
 from app.models.ledger import Account, JournalEntry, LedgerEntry
 from app.models.premium_policy import PremiumPolicyCriteria, PremiumPolicyType
+from app.models.underwriting import Vehicle, Driver, DriverClaimHistory, DriverConvictionHistory, VehicleRiskProfile, UnderwritingRuleSet, UnderwritingRule, UnderwritingDecision, QuoteUnderwritingSnapshot
 from app.models.quote_element import QuoteElement
 from app.models.sales import SalesTransaction, SalesTarget
 from app.models.task import Task
@@ -46,6 +48,7 @@ from app.models.chat import ChatChannel, ChatMessage, ChatChannelMember
 from app.models.help_guide import HelpGuide, GuideCompletion, GuideAccess, OnboardingStatus, GuideType, GuideSection
 
 __all__ = [
+    "Base",
     "Company", 
     "User", 
     "Client", 
@@ -93,6 +96,15 @@ __all__ = [
     "LedgerEntry",
     "PremiumPolicyCriteria",
     "PremiumPolicyType",
+    "Vehicle",
+    "Driver",
+    "DriverClaimHistory",
+    "DriverConvictionHistory",
+    "VehicleRiskProfile",
+    "UnderwritingRuleSet",
+    "UnderwritingRule",
+    "UnderwritingDecision",
+    "QuoteUnderwritingSnapshot",
     "PolicyService",
     "QuoteElement",
     "SalesTransaction",

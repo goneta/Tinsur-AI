@@ -76,6 +76,7 @@ class Quote(Base):
     creator = relationship("User", foreign_keys=[created_by])
     pos_location = relationship("POSLocation")
     policy = relationship("Policy", back_populates="quote", uselist=False)
+    underwriting_snapshot = relationship("QuoteUnderwritingSnapshot", uselist=False, cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Quote {self.quote_number}>"
