@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Moon, Sun, Check, Plus, Trash2, Upload, Building2, Save, UserCog } from "lucide-react"
+import { TwoFactorSettings } from "@/components/settings/two-factor-settings"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -346,6 +347,9 @@ export default function SettingsPage() {
                     </Button>
                 </div>
             </div>
+
+            {/* Two-Factor Authentication */}
+            <TwoFactorSettings />
 
             {/* Theme & Language */}
             <Card>

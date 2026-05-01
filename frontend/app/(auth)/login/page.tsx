@@ -76,52 +76,72 @@ export default function LoginPage() {
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-6">
-                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                            {error && (
-                                <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
-                                    {error}
+                        {/* Social login options — shown by default */}
+                        {!showEmailForm && (
+                            <SocialAuth
+                                onEmailClick={() => setShowEmailForm(true)}
+                                isLoading={loading}
+                                userType="login"
+                            />
+                        )}
+
+                        {/* Email / password form — shown after clicking "Sign in with email" */}
+                        {showEmailForm && (
+                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                                {error && (
+                                    <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+                                        {error}
+                                    </div>
+                                )}
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">{t('login.email', 'Email')}</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder={t('placeholder.email', 'you@example.com')}
+                                        {...register('email')}
+                                        className={errors.email ? 'border-red-500' : ''}
+                                    />
+                                    {errors.email && (
+                                        <p className="text-sm text-red-600">{errors.email.message}</p>
+                                    )}
                                 </div>
-                            )}
 
-                            <div className="space-y-2">
-                                <Label htmlFor="email">{t('login.email', 'Email')}</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    placeholder={t('placeholder.email', 'you@example.com')}
-                                    {...register('email')}
-                                    className={errors.email ? 'border-red-500' : ''}
-                                />
-                                {errors.email && (
-                                    <p className="text-sm text-red-600">{errors.email.message}</p>
-                                )}
-                            </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="password">{t('login.password', 'Password')}</Label>
+                                    <Input
+                                        id="password"
+                                        type="password"
+                                        placeholder={t('placeholder.password', '••••••••')}
+                                        {...register('password')}
+                                        className={errors.password ? 'border-red-500' : ''}
+                                    />
+                                    {errors.password && (
+                                        <p className="text-sm text-red-600">{errors.password.message}</p>
+                                    )}
+                                </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="password">{t('login.password', 'Password')}</Label>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    placeholder={t('placeholder.password', '••••••••')}
-                                    {...register('password')}
-                                    className={errors.password ? 'border-red-500' : ''}
-                                />
-                                {errors.password && (
-                                    <p className="text-sm text-red-600">{errors.password.message}</p>
-                                )}
-                            </div>
+                                <Button type="submit" className="w-full" disabled={loading}>
+                                    {loading ? t('Signing in...') : t('login.sign_in_btn', 'Sign In')}
+                                </Button>
 
-                            <Button type="submit" className="w-full" disabled={loading}>
-                                {loading ? t('Signing in...') : t('login.sign_in_btn', 'Sign In')}
-                            </Button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEmailForm(false)}
+                                    className="w-full text-center text-sm text-gray-500 hover:text-gray-700"
+                                >
+                                    {t('login.back_to_options', '← Other sign-in options')}
+                                </button>
+                            </form>
+                        )}
 
-                            <div className="text-center text-sm pt-2">
-                                <span className="text-gray-600">{t('login.no_account', "Don't have an account?")} </span>
-                                <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
-                                    {t('login.register_link', 'Register now')}
-                                </Link>
-                            </div>
-                        </form>
+                        <div className="text-center text-sm pt-2">
+                            <span className="text-gray-600">{t('login.no_account', "Don't have an account?")} </span>
+                            <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+                                {t('login.register_link', 'Register now')}
+                            </Link>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
