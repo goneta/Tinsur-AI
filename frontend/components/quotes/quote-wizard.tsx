@@ -403,33 +403,49 @@ export function QuoteWizard({ initialClientId, onQuoteCreated, initialVehicleId,
             setSelectedClient(client);
             setValue("client_id", client.id);
 
-            if (client.automobile_details && client.automobile_details.length > 0) {
-                const vehicle = client.automobile_details[0];
-                setClientVehicles([{
+            // Load ALL vehicles (automobile_details is an array)
+            if (client.automobile_details && Array.isArray(client.automobile_details) && client.automobile_details.length > 0) {
+                setClientVehicles(client.automobile_details.map((vehicle: any) => ({
                     ...vehicle,
-                    id: vehicle.id || 'v1',
+                    id: vehicle.id || `v-${Math.random()}`,
                     make: vehicle.vehicle_make,
                     model: vehicle.vehicle_model,
                     registrationNumber: vehicle.vehicle_registration,
                     vehicleType: 'Manual',
                     usage: vehicle.vehicle_usage || 'Domestic',
                     mileage: vehicle.vehicle_mileage?.toString() || '0',
-                    imageUrl: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=400'
-                }]);
+                    imageUrl: vehicle.vehicle_image_url || 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=400'
+                })));
             } else {
                 setClientVehicles([]);
             }
 
-            setClientDrivers([{
-                id: client.id,
-                fullName: `${client.first_name} ${client.last_name}`,
-                phoneNumber: client.phone || '',
-                address: client.address || '',
-                licenseNumber: client.driving_licence_number || '',
-                photoUrl: client.profile_picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${client.first_name}`
-            }]);
-
-            setValue("driver_ids", [client.id]);
+            // Load actual driver records if available
+            if (client.drivers && Array.isArray(client.drivers) && client.drivers.length > 0) {
+                setClientDrivers(client.drivers.map((driver: any) => ({
+                    id: driver.id,
+                    fullName: `${driver.first_name || ''} ${driver.last_name || ''}`.trim(),
+                    phoneNumber: driver.phone_number || '',
+                    address: driver.address || '',
+                    licenseNumber: driver.license_number || '',
+                    isMainDriver: driver.is_main_driver || false,
+                    photoUrl: driver.driving_license_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${driver.first_name}`
+                })));
+                const mainDriver = client.drivers.find((d: any) => d.is_main_driver);
+                setValue("driver_ids", mainDriver ? [mainDriver.id] : [client.drivers[0].id]);
+            } else {
+                // Fallback: use client details as driver
+                setClientDrivers([{
+                    id: client.id,
+                    fullName: `${client.first_name} ${client.last_name}`,
+                    phoneNumber: client.phone || '',
+                    address: client.address || '',
+                    licenseNumber: client.driving_licence_number || '',
+                    isMainDriver: true,
+                    photoUrl: client.profile_picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${client.first_name}`
+                }]);
+                setValue("driver_ids", [client.id]);
+            }
 
             setEligiblePolicies([]);
             setRecommendedPolicyId(null);
@@ -553,8 +569,11 @@ export function QuoteWizard({ initialClientId, onQuoteCreated, initialVehicleId,
     const duration = watch("duration_months");
     const frequency = watch("premium_frequency");
 
+    const selectedServices = watch("selected_services");
+
     useEffect(() => {
-        if ((step === 3 || step === 4 || step === 8) && selectedPolicy) {
+        // Recalculate on steps where pricing-relevant data changes
+        if ((step >= 3 && step <= 8) && selectedPolicy) {
             // Debounce slightly to avoid rapid-fire API calls during typing
             const timer = setTimeout(() => {
                 const data = methods.getValues();
@@ -573,7 +592,8 @@ export function QuoteWizard({ initialClientId, onQuoteCreated, initialVehicleId,
         coverage,
         duration,
         frequency,
-        watch("discount_percent")
+        watch("discount_percent"),
+        selectedServices
     ]);
 
     const onCreate = async (status: 'draft' | 'sent', e?: React.MouseEvent) => {
@@ -598,7 +618,7 @@ export function QuoteWizard({ initialClientId, onQuoteCreated, initialVehicleId,
                 duration_months: data.duration_months,
                 discount_percent: data.discount_percent || 0,
                 excess: (data.excess_details?.mandatory || 0) + (data.excess_details?.voluntary || 0),
-                included_services: data.selected_services || [],
+                selected_services: data.selected_services || [],
                 details: {
                     ...data.risk_factors,
                     excess_details: data.excess_details,

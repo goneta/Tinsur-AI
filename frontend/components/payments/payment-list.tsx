@@ -25,8 +25,10 @@ import {
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Search, Filter, RefreshCw, Eye } from 'lucide-react';
+import { useLanguage } from '@/contexts/language-context';
 
 export function PaymentList() {
+    const { t } = useLanguage();
     const router = useRouter();
     const [payments, setPayments] = useState<Payment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -82,8 +84,8 @@ export function PaymentList() {
         <div className="space-y-4">
             <Card>
                 <CardHeader>
-                    <CardTitle>Payments</CardTitle>
-                    <CardDescription>View and manage payment transactions.</CardDescription>
+                    <CardTitle>{t('label.payments', 'Payments')}</CardTitle>
+                    <CardDescription>{t('payment.list_desc', 'View and manage payment transactions.')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
@@ -91,33 +93,33 @@ export function PaymentList() {
                             <Filter className="w-4 h-4 text-muted-foreground" />
                             <Select value={statusFilter} onValueChange={setStatusFilter}>
                                 <SelectTrigger className="w-[150px]">
-                                    <SelectValue placeholder="Status" />
+                                    <SelectValue placeholder={t('label.status', 'Status')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">All Statuses</SelectItem>
-                                    <SelectItem value="completed">Completed</SelectItem>
-                                    <SelectItem value="pending">Pending</SelectItem>
-                                    <SelectItem value="failed">Failed</SelectItem>
-                                    <SelectItem value="refunded">Refunded</SelectItem>
+                                    <SelectItem value="all">{t('payment.all_statuses', 'All Statuses')}</SelectItem>
+                                    <SelectItem value="completed">{t('status.completed', 'Completed')}</SelectItem>
+                                    <SelectItem value="pending">{t('status.pending', 'Pending')}</SelectItem>
+                                    <SelectItem value="failed">{t('status.failed', 'Failed')}</SelectItem>
+                                    <SelectItem value="refunded">{t('status.refunded', 'Refunded')}</SelectItem>
                                 </SelectContent>
                             </Select>
 
                             <Select value={methodFilter} onValueChange={setMethodFilter}>
                                 <SelectTrigger className="w-[150px]">
-                                    <SelectValue placeholder="Method" />
+                                    <SelectValue placeholder={t('payment.method_label', 'Method')} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="all">All Methods</SelectItem>
+                                    <SelectItem value="all">{t('payment.all_methods', 'All Methods')}</SelectItem>
                                     <SelectItem value="stripe">Stripe</SelectItem>
-                                    <SelectItem value="mobile_money">Mobile Money</SelectItem>
-                                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                                    <SelectItem value="cash">Cash</SelectItem>
+                                    <SelectItem value="mobile_money">{t('payment.method.mobile_money', 'Mobile Money')}</SelectItem>
+                                    <SelectItem value="bank_transfer">{t('payment.method.bank_transfer', 'Bank Transfer')}</SelectItem>
+                                    <SelectItem value="cash">{t('payment.method.cash', 'Cash')}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                         <Button variant="outline" size="sm" onClick={loadPayments}>
                             <RefreshCw className="mr-2 h-4 w-4" />
-                            Refresh
+                            {t('common.refresh', 'Refresh')}
                         </Button>
                     </div>
 
@@ -125,28 +127,28 @@ export function PaymentList() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Payment #</TableHead>
-                                    <TableHead>Client</TableHead>
-                                    <TableHead>Policy</TableHead>
-                                    <TableHead>Created By</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Amount</TableHead>
-                                    <TableHead>Method</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
+                                    <TableHead>{t('label.payment', 'Payment #')}</TableHead>
+                                    <TableHead>{t('label.client', 'Client')}</TableHead>
+                                    <TableHead>{t('label.policy', 'Policy')}</TableHead>
+                                    <TableHead>{t('label.created_by', 'Created By')}</TableHead>
+                                    <TableHead>{t('label.date', 'Date')}</TableHead>
+                                    <TableHead>{t('label.amount', 'Amount')}</TableHead>
+                                    <TableHead>{t('label.method', 'Method')}</TableHead>
+                                    <TableHead>{t('label.status', 'Status')}</TableHead>
+                                    <TableHead className="text-right">{t('common.actions', 'Actions')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {loading ? (
                                     <TableRow>
                                         <TableCell colSpan={9} className="h-24 text-center">
-                                            Loading...
+                                            {t('common.loading', 'Loading...')}
                                         </TableCell>
                                     </TableRow>
                                 ) : payments.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={9} className="h-24 text-center">
-                                            No payments found.
+                                            {t('payment.no_payments', 'No payments found.')}
                                         </TableCell>
                                     </TableRow>
                                 ) : (
@@ -183,7 +185,7 @@ export function PaymentList() {
                                                     onClick={() => router.push(`/dashboard/payments/${payment.id}`)}
                                                 >
                                                     <Eye className="h-4 w-4 mr-1" />
-                                                    View
+                                                    {t('btn.view', 'View')}
                                                 </Button>
                                             </TableCell>
                                         </TableRow>

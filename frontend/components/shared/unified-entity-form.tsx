@@ -16,6 +16,35 @@ import { formatDate } from '@/lib/utils';
 
 type EntityType = 'client' | 'driver';
 
+// Maps unified form field keys to Client model field names.
+// Driver fields match directly, but Client uses different names for some fields.
+const CLIENT_FIELD_MAP: Record<string, string> = {
+    'phone_number': 'phone',
+    'license_number': 'driving_licence_number',
+};
+
+/**
+ * Convert form field key to the correct API field name based on entity type.
+ */
+function toApiField(field: string, type: EntityType): string {
+    if (type === 'client' && CLIENT_FIELD_MAP[field]) {
+        return CLIENT_FIELD_MAP[field];
+    }
+    return field;
+}
+
+/**
+ * Convert entity data from API format to form display format.
+ * Ensures unified field keys like 'phone_number' are populated from 'phone', etc.
+ */
+function mapEntityToFormData(entity: any, type: EntityType): any {
+    if (!entity || type !== 'client') return { ...entity };
+    const mapped = { ...entity };
+    if (entity.phone && !mapped.phone_number) mapped.phone_number = entity.phone;
+    if (entity.driving_licence_number && !mapped.license_number) mapped.license_number = entity.driving_licence_number;
+    return mapped;
+}
+
 interface UnifiedEntityFormProps {
     type: EntityType;
     mode: 'create' | 'edit';
@@ -35,7 +64,7 @@ export function UnifiedEntityForm({ type, mode, entity, clientId, onUpdate, onBa
     const [editingField, setEditingField] = useState<string | null>(null);
     const [tempValue, setTempValue] = useState<any>(null);
     const [formData, setFormData] = useState<any>({
-        ...entity,
+        ...mapEntityToFormData(entity, type),
         ...(type === 'client' ? { country: "Côte d'Ivoire", client_type: 'individual' } : { client_id: clientId })
     });
 
@@ -46,9 +75,9 @@ export function UnifiedEntityForm({ type, mode, entity, clientId, onUpdate, onBa
 
     useEffect(() => {
         if (entity) {
-            setFormData((prev: any) => ({ ...prev, ...entity }));
+            setFormData((prev: any) => ({ ...prev, ...mapEntityToFormData(entity, type) }));
         }
-    }, [entity]);
+    }, [entity, type]);
 
     const handleInputChange = (field: string, value: any) => {
         setFormData((prev: any) => ({ ...prev, [field]: value }));
@@ -68,7 +97,9 @@ export function UnifiedEntityForm({ type, mode, entity, clientId, onUpdate, onBa
     const saveField = async (field: string) => {
         setLoading(true);
         try {
-            const payload = { [field]: tempValue };
+            // Map form field key to API field name (e.g., phone_number → phone for clients)
+            const apiField = toApiField(field, type);
+            const payload = { [apiField]: tempValue };
             if (type === 'client' && entity.id) {
                 await clientApi.updateClient(entity.id, payload);
             } else if (type === 'driver' && entity.id && clientId) {
@@ -104,6 +135,20 @@ export function UnifiedEntityForm({ type, mode, entity, clientId, onUpdate, onBa
                 if (payload.date_of_birth === '') payload.date_of_birth = null;
                 // Remove File if accidentally present in JSON payload
                 if (payload.driving_license_url instanceof File) delete payload.driving_license_url;
+
+                // Map unified form field names to Client model field names
+                if (payload.phone_number && !payload.phone) {
+                    payload.phone = payload.phone_number;
+                }
+                delete payload.phone_number;
+
+                if (payload.license_number && !payload.driving_licence_number) {
+                    payload.driving_licence_number = payload.license_number;
+                }
+                delete payload.license_number;
+
+                // Remove driver-only fields that don't exist on Client model
+                delete payload.postal_code;
 
                 const newClient = await clientApi.createClient(payload);
                 toast({

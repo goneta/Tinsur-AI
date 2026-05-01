@@ -31,6 +31,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 import { formatCurrency } from '@/lib/utils';
 import { RotateCcw, TrendingUp, DollarSign } from 'lucide-react';
+import { useLanguage } from '@/contexts/language-context';
 
 interface Recovery {
     id: string;
@@ -47,6 +48,7 @@ interface Recovery {
 }
 
 export default function RecoveryPipeline() {
+    const { t } = useLanguage();
     const [recoveries, setRecoveries] = useState<Recovery[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedRecovery, setSelectedRecovery] = useState<Recovery | null>(null);
@@ -92,46 +94,46 @@ export default function RecoveryPipeline() {
 
             if (res.ok) {
                 toast({
-                    title: "Recovery Finalized",
-                    description: `Recovered ${formatCurrency(parseFloat(actualAmount) || 0)} successfully.`,
+                    title: t('recovery.finalized', 'Recovery Finalized'),
+                    description: t('recovery.finalized_desc', `Recovered ${formatCurrency(parseFloat(actualAmount) || 0)} successfully.`),
                 });
                 setIsFinalizeModalOpen(false);
                 fetchRecoveries();
             }
         } catch (error) {
             toast({
-                title: "Error",
-                description: "Failed to finalize recovery.",
+                title: t('common.error', 'Error'),
+                description: t('recovery.finalize_failed', 'Failed to finalize recovery.'),
                 variant: "destructive"
             });
         }
     };
 
-    if (loading) return <div>Loading recovery cases...</div>;
+    if (loading) return <div>{t('common.loading', 'Loading...')}</div>;
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Recovery Pipeline</CardTitle>
+                <CardTitle>{t('recovery.title', 'Recovery Pipeline')}</CardTitle>
                 <CardDescription>
-                    Tracking Subrogation and Salvage cases for revenue recovery.
+                    {t('recovery.desc', 'Tracking Subrogation and Salvage cases for revenue recovery.')}
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 {recoveries.length === 0 ? (
                     <div className="text-center py-6 text-muted-foreground">
-                        No active recovery cases.
+                        {t('recovery.no_cases', 'No active recovery cases.')}
                     </div>
                 ) : (
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Type</TableHead>
-                                <TableHead>Claim #</TableHead>
-                                <TableHead>Client</TableHead>
-                                <TableHead>Estimated</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead>{t('label.type', 'Type')}</TableHead>
+                                <TableHead>{t('label.claim', 'Claim #')}</TableHead>
+                                <TableHead>{t('label.client', 'Client')}</TableHead>
+                                <TableHead>{t('label.estimated', 'Estimated')}</TableHead>
+                                <TableHead>{t('label.status', 'Status')}</TableHead>
+                                <TableHead className="text-right">{t('common.actions', 'Actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -156,7 +158,7 @@ export default function RecoveryPipeline() {
                                             onClick={() => handleFinalize(rec)}
                                             className="bg-blue-600 hover:bg-blue-700"
                                         >
-                                            <TrendingUp className="h-4 w-4 mr-1" /> Finalize
+                                            <TrendingUp className="h-4 w-4 mr-1" /> {t('btn.finalize', 'Finalize')}
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -169,14 +171,14 @@ export default function RecoveryPipeline() {
             <Dialog open={isFinalizeModalOpen} onOpenChange={setIsFinalizeModalOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Finalize Claim Recovery</DialogTitle>
+                        <DialogTitle>{t('recovery.finalize_title', 'Finalize Claim Recovery')}</DialogTitle>
                         <DialogDescription>
-                            Enter the final amount collected and any associated costs (legal, towing, auction fees).
+                            {t('recovery.finalize_desc', 'Enter the final amount collected and any associated costs (legal, towing, auction fees).')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="actualAmount">Actual Amount Recovered</Label>
+                            <Label htmlFor="actualAmount">{t('recovery.amount_recovered', 'Actual Amount Recovered')}</Label>
                             <Input
                                 id="actualAmount"
                                 type="number"
@@ -185,7 +187,7 @@ export default function RecoveryPipeline() {
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="costs">Recovery Costs (Fees)</Label>
+                            <Label htmlFor="costs">{t('recovery.recovery_costs', 'Recovery Costs (Fees)')}</Label>
                             <Input
                                 id="costs"
                                 type="number"
@@ -195,8 +197,8 @@ export default function RecoveryPipeline() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="ghost" onClick={() => setIsFinalizeModalOpen(false)}>Cancel</Button>
-                        <Button onClick={submitFinalize}>Record Recovery</Button>
+                        <Button variant="ghost" onClick={() => setIsFinalizeModalOpen(false)}>{t('btn.cancel', 'Cancel')}</Button>
+                        <Button onClick={submitFinalize}>{t('recovery.record_btn', 'Record Recovery')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

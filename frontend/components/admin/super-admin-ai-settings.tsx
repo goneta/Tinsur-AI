@@ -115,7 +115,7 @@ export function SuperAdminAISettings() {
                         <div className="flex gap-4">
                             <Input
                                 type="password"
-                                placeholder="Enter Google API Key..."
+                                placeholder={t('placeholder.enter_api_key', 'Enter Google API Key...')}
                                 value={keys.google}
                                 onChange={(e) => setKeys(prev => ({ ...prev, google: e.target.value }))}
                                 className="flex-grow"

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { tasksApi, Task } from "@/lib/tasks-api";
+import { useLanguage } from "@/contexts/language-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { ClipboardList, Plus } from "lucide-react";
 
 export default function TasksPage() {
+    const { t } = useLanguage();
     const { toast } = useToast();
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
@@ -33,8 +35,8 @@ export default function TasksPage() {
             setTasks(data);
         } catch (error) {
             toast({
-                title: "Error",
-                description: "Failed to load tasks.",
+                title: t('common.error', 'Error'),
+                description: t('tasks.load_failed', 'Failed to load tasks.'),
                 variant: "destructive",
             });
         } finally {
@@ -54,8 +56,8 @@ export default function TasksPage() {
                 setEmployees(data || []);
             } catch (error) {
                 toast({
-                    title: "Error",
-                    description: "Failed to load employees.",
+                    title: t('common.error', 'Error'),
+                    description: t('tasks.load_employees_failed', 'Failed to load employees.'),
                     variant: "destructive",
                 });
             } finally {
@@ -72,16 +74,16 @@ export default function TasksPage() {
     }, [employees]);
 
     const formatEmployeeLabel = (employee?: { first_name?: string; last_name?: string; email?: string }) => {
-        if (!employee) return "Unassigned";
+        if (!employee) return t('tasks.unassigned', 'Unassigned');
         const fullName = [employee.first_name, employee.last_name].filter(Boolean).join(" ").trim();
-        return fullName || employee.email || "Unassigned";
+        return fullName || employee.email || t('tasks.unassigned', 'Unassigned');
     };
 
     const handleCreateTask = async () => {
         if (!title.trim()) {
             toast({
-                title: "Missing title",
-                description: "Please provide a task title.",
+                title: t('tasks.missing_title', 'Missing title'),
+                description: t('tasks.provide_title', 'Please provide a task title.'),
                 variant: "destructive",
             });
             return;
@@ -104,13 +106,13 @@ export default function TasksPage() {
             setAssignedTo("");
             await loadTasks();
             toast({
-                title: "Task created",
-                description: "The task has been added successfully.",
+                title: t('tasks.created', 'Task created'),
+                description: t('tasks.created_desc', 'The task has been added successfully.'),
             });
         } catch (error) {
             toast({
-                title: "Error",
-                description: "Failed to create task.",
+                title: t('common.error', 'Error'),
+                description: t('tasks.create_failed', 'Failed to create task.'),
                 variant: "destructive",
             });
         } finally {
@@ -122,9 +124,9 @@ export default function TasksPage() {
         <div className="flex flex-col gap-6 p-8">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">{t('tasks.title', 'Tasks')}</h1>
                     <p className="text-muted-foreground mt-2">
-                        Track internal work items, follow-ups, and approvals.
+                        {t('tasks.subtitle', 'Track internal work items, follow-ups, and approvals.')}
                     </p>
                 </div>
             </div>
@@ -132,25 +134,25 @@ export default function TasksPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <ClipboardList className="h-4 w-4" /> Create Task
+                        <ClipboardList className="h-4 w-4" /> {t('tasks.create_task', 'Create Task')}
                     </CardTitle>
-                    <CardDescription>Add a new task for your team.</CardDescription>
+                    <CardDescription>{t('tasks.add_for_team', 'Add a new task for your team.')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label>Title</Label>
+                            <Label>{t('common.title', 'Title')}</Label>
                             <Input value={title} onChange={(e) => setTitle(e.target.value)} />
                         </div>
                         <div className="space-y-2">
-                            <Label>Assigned To</Label>
+                            <Label>{t('tasks.assigned_to', 'Assigned To')}</Label>
                             <select
                                 className="w-full border rounded-md px-3 py-2 text-sm bg-white"
                                 value={assignedTo}
                                 onChange={(e) => setAssignedTo(e.target.value)}
                                 disabled={employeesLoading}
                             >
-                                <option value="">Unassigned</option>
+                                <option value="">{t('tasks.unassigned', 'Unassigned')}</option>
                                 {employees.map((employee) => (
                                     <option key={employee.id} value={employee.id}>
                                         {formatEmployeeLabel(employee)}
@@ -159,44 +161,44 @@ export default function TasksPage() {
                             </select>
                         </div>
                         <div className="space-y-2">
-                            <Label>Priority</Label>
+                            <Label>{t('tasks.priority', 'Priority')}</Label>
                             <select
                                 className="w-full border rounded-md px-3 py-2 text-sm bg-white"
                                 value={priority}
                                 onChange={(e) => setPriority(e.target.value as Task["priority"])}
                             >
-                                <option value="low">Low</option>
-                                <option value="medium">Medium</option>
-                                <option value="high">High</option>
-                                <option value="urgent">Urgent</option>
+                                <option value="low">{t('priority.low', 'Low')}</option>
+                                <option value="medium">{t('priority.medium', 'Medium')}</option>
+                                <option value="high">{t('priority.high', 'High')}</option>
+                                <option value="urgent">{t('priority.urgent', 'Urgent')}</option>
                             </select>
                         </div>
                         <div className="space-y-2">
-                            <Label>Status</Label>
+                            <Label>{t('common.status', 'Status')}</Label>
                             <select
                                 className="w-full border rounded-md px-3 py-2 text-sm bg-white"
                                 value={status}
                                 onChange={(e) => setStatus(e.target.value as Task["status"])}
                             >
-                                <option value="pending">Pending</option>
-                                <option value="in_progress">In Progress</option>
-                                <option value="completed">Completed</option>
-                                <option value="cancelled">Cancelled</option>
+                                <option value="pending">{t('status.pending', 'Pending')}</option>
+                                <option value="in_progress">{t('status.in_progress', 'In Progress')}</option>
+                                <option value="completed">{t('status.completed', 'Completed')}</option>
+                                <option value="cancelled">{t('status.cancelled', 'Cancelled')}</option>
                             </select>
                         </div>
                         <div className="space-y-2">
-                            <Label>Due Date</Label>
+                            <Label>{t('tasks.due_date', 'Due Date')}</Label>
                             <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
                         </div>
                     </div>
                     <div className="space-y-2">
-                        <Label>Description</Label>
+                        <Label>{t('common.description', 'Description')}</Label>
                         <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
                     </div>
                     <div>
                         <Button onClick={handleCreateTask} disabled={creating}>
                             <Plus className="mr-2 h-4 w-4" />
-                            {creating ? "Creating..." : "Create Task"}
+                            {creating ? t('tasks.creating', 'Creating...') : t('tasks.create_button', 'Create Task')}
                         </Button>
                     </div>
                 </CardContent>
@@ -204,14 +206,14 @@ export default function TasksPage() {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Task List</CardTitle>
-                    <CardDescription>Latest tasks in your company.</CardDescription>
+                    <CardTitle>{t('tasks.task_list', 'Task List')}</CardTitle>
+                    <CardDescription>{t('tasks.latest_tasks', 'Latest tasks in your company.')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {loading ? (
-                        <div className="text-sm text-muted-foreground">Loading tasks...</div>
+                        <div className="text-sm text-muted-foreground">{t('common.loading', 'Loading tasks...')}</div>
                     ) : tasks.length === 0 ? (
-                        <div className="text-sm text-muted-foreground">No tasks yet.</div>
+                        <div className="text-sm text-muted-foreground">{t('tasks.no_tasks', 'No tasks yet.')}</div>
                     ) : (
                         <div className="space-y-3">
                             {tasks.map((task) => (
@@ -233,10 +235,10 @@ export default function TasksPage() {
                                                     );
                                                 }}
                                             >
-                                                <option value="pending">Pending</option>
-                                                <option value="in_progress">In Progress</option>
-                                                <option value="completed">Completed</option>
-                                                <option value="cancelled">Cancelled</option>
+                                                <option value="pending">{t('status.pending', 'Pending')}</option>
+                                                <option value="in_progress">{t('status.in_progress', 'In Progress')}</option>
+                                                <option value="completed">{t('status.completed', 'Completed')}</option>
+                                                <option value="cancelled">{t('status.cancelled', 'Cancelled')}</option>
                                             </select>
                                         </div>
                                     </div>
@@ -246,9 +248,9 @@ export default function TasksPage() {
                                         </div>
                                     )}
                                     <div className="mt-2 flex flex-col gap-2 text-[10px] text-muted-foreground">
-                                        <div>Due: {task.due_date || "N/A"}</div>
+                                        <div>{t('tasks.due', 'Due')}: {task.due_date || t('tasks.na', 'N/A')}</div>
                                         <div className="flex items-center gap-2">
-                                            <span>Assigned:</span>
+                                            <span>{t('tasks.assigned', 'Assigned')}:</span>
                                             <select
                                                 className="border rounded-md px-2 py-1 text-[10px] bg-white"
                                                 value={task.assigned_to || ""}

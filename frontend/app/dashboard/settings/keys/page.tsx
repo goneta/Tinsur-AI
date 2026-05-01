@@ -173,7 +173,7 @@ export default function ApiKeysPage() {
                                             <FormItem>
                                                 <FormLabel>{t('settings.keys.name_label', 'Name')}</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="e.g. OCR Agent Key" {...field} />
+                                                    <Input placeholder={t('settings.keys.name_placeholder', 'e.g. OCR Agent Key')} {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -184,9 +184,9 @@ export default function ApiKeysPage() {
                                         name="agent_id"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Agent ID (Optional)</FormLabel>
+                                                <FormLabel>{t('settings.keys.agent_id_label', 'Agent ID (Optional)')}</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="e.g. ocr_agent_v1" {...field} />
+                                                    <Input placeholder={t('settings.keys.agent_id_placeholder', 'e.g. ocr_agent_v1')} {...field} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -217,7 +217,7 @@ export default function ApiKeysPage() {
                     <TableBody>
                         {isLoading ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center h-24">Loading...</TableCell>
+                                <TableCell colSpan={6} className="text-center h-24">{t('common.loading', 'Loading...')}</TableCell>
                             </TableRow>
                         ) : keys.length === 0 ? (
                             <TableRow>
@@ -237,9 +237,9 @@ export default function ApiKeysPage() {
                                     <TableCell>{formatDate(key.created_at)}</TableCell>
                                     <TableCell>
                                         {key.is_active ? (
-                                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Active</Badge>
+                                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{t('status.active', 'Active')}</Badge>
                                         ) : (
-                                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Revoked</Badge>
+                                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">{t('status.revoked', 'Revoked')}</Badge>
                                         )}
                                     </TableCell>
                                     <TableCell className="text-right">

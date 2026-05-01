@@ -105,10 +105,10 @@ export function QuoteElementManager({ category, title, description, valueLabel =
 
             if (editingElement) {
                 await quoteElementApi.update(editingElement.id, payload);
-                toast({ title: "Updated", description: "Element updated successfully." });
+                toast({ title: t('toast.updated', 'Updated'), description: t('toast.element_updated', 'Element updated successfully.') });
             } else {
                 await quoteElementApi.create(payload);
-                toast({ title: "Created", description: "Element created successfully." });
+                toast({ title: t('toast.created', 'Created'), description: t('toast.element_created', 'Element created successfully.') });
             }
 
             setIsDialogOpen(false);
@@ -123,10 +123,10 @@ export function QuoteElementManager({ category, title, description, valueLabel =
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this element?")) return;
+        if (!confirm(t('modal.confirm_delete_desc', 'Are you sure you want to delete this element?'))) return;
         try {
             await quoteElementApi.delete(id);
-            toast({ title: "Deleted", description: "Element deleted successfully." });
+            toast({ title: t('toast.deleted', 'Deleted'), description: t('toast.element_deleted', 'Element deleted successfully.') });
             loadElements();
         } catch (error) {
             toast({
@@ -181,7 +181,7 @@ export function QuoteElementManager({ category, title, description, valueLabel =
                         {elements.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
-                                    No elements found.
+                                    {t('msg.no_results', 'No results found.')}
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -218,14 +218,14 @@ export function QuoteElementManager({ category, title, description, valueLabel =
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{editingElement ? "Edit Element" : "Add New Element"}</DialogTitle>
+                        <DialogTitle>{editingElement ? t('modal.edit_element', 'Edit Element') : t('modal.add_element', 'Add New Element')}</DialogTitle>
                         <DialogDescription>
                             Configure the details for this {title.toLowerCase()}.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label>Name</Label>
+                            <Label>{t('label.name', 'Name')}</Label>
                             <Input
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -243,7 +243,7 @@ export function QuoteElementManager({ category, title, description, valueLabel =
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label>Description</Label>
+                            <Label>{t('label.description', 'Description')}</Label>
                             <Input
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -256,12 +256,12 @@ export function QuoteElementManager({ category, title, description, valueLabel =
                                 checked={formData.is_active}
                                 onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                             />
-                            <Label htmlFor="active-mode">Active</Label>
+                            <Label htmlFor="active-mode">{t('status.active', 'Active')}</Label>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                        <Button onClick={handleSave}>{editingElement ? "Save Changes" : "Create"}</Button>
+                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>{t('btn.cancel', 'Cancel')}</Button>
+                        <Button onClick={handleSave}>{editingElement ? t('btn.save_changes', 'Save Changes') : t('btn.create', 'Create')}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

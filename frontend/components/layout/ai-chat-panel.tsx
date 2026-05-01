@@ -7,6 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { X, Bot, Sparkles, Send, User } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useLanguage } from '@/contexts/language-context';
 
 interface AIChatPanelProps {
     isOpen: boolean;
@@ -20,6 +21,7 @@ interface Message {
 }
 
 export function AIChatPanel({ isOpen, onClose, className }: AIChatPanelProps) {
+    const { t } = useLanguage();
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -138,7 +140,7 @@ export function AIChatPanel({ isOpen, onClose, className }: AIChatPanelProps) {
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Type your message..."
+                        placeholder={t('placeholder.type_message', 'Type your message...')}
                         className="flex-1"
                         disabled={loading}
                     />

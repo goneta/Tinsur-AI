@@ -19,21 +19,38 @@ logger = logging.getLogger(__name__)
 class AiService:
     def __init__(self, db: Session):
         self.db = db
-        # Derive a Fernet key from the application SECRET_KEY
+        # Use PBKDF2 for proper key derivation (much stronger than plain SHA256)
+        key_bytes = hashlib.pbkdf2_hmac(
+            'sha256',
+            settings.SECRET_KEY.encode(),
+            b'tinsur-ai-encryption-salt-v1',  # Fixed salt for deterministic derivation
+            iterations=100_000
+        )
+        self.fernet = Fernet(base64.urlsafe_b64encode(key_bytes))
+
+    def _create_legacy_fernet(self):
+        """Create a Fernet instance using legacy SHA256 derivation for backward compat."""
         key_hash = hashlib.sha256(settings.SECRET_KEY.encode()).digest()
-        self.fernet = Fernet(base64.urlsafe_b64encode(key_hash))
+        return Fernet(base64.urlsafe_b64encode(key_hash))
 
     def encrypt_key(self, api_key: str) -> str:
         """Encrypt an API key for storage."""
         return self.fernet.encrypt(api_key.encode()).decode()
 
     def decrypt_key(self, encrypted_key: str) -> str:
-        """Decrypt a stored API key."""
+        """Decrypt a stored API key, with backward compatibility for legacy encryption."""
         try:
             return self.fernet.decrypt(encrypted_key.encode()).decode()
-        except Exception as e:
-            logger.error(f"Failed to decrypt API key: {e}")
-            return ""
+        except Exception:
+            # Try legacy decryption for keys encrypted before PBKDF2 migration
+            try:
+                legacy_fernet = self._create_legacy_fernet()
+                decrypted = legacy_fernet.decrypt(encrypted_key.encode()).decode()
+                logger.info("Decrypted with legacy key derivation - consider re-encrypting")
+                return decrypted
+            except Exception as e:
+                logger.error(f"Failed to decrypt API key with both methods: {e}")
+                return ""
 
     def get_effective_ai_config(self, company_id: Optional[str] = None) -> Tuple[str, str, bool]:
         """
@@ -73,10 +90,18 @@ class AiService:
 
         # 2. Super Admin Global Key (If key exists in DB)
         system_config = self.db.query(SystemSettings).filter(SystemSettings.key == "AI_CONFIG").first()
-        if system_config and "google_api_key" in system_config.value:
-            global_key = system_config.value["google_api_key"]
-            if global_key:
-                return global_key, plan, True
+        if system_config and system_config.value:
+            # Check for provider-specific keys (google, openai, anthropic)
+            for provider_key in ["google_api_key", "openai_api_key", "anthropic_api_key"]:
+                stored_key = system_config.value.get(provider_key)
+                if stored_key:
+                    # Try to decrypt if it looks encrypted (Fernet tokens start with 'gAAAAA')
+                    if stored_key.startswith("gAAAAA"):
+                        decrypted = self.decrypt_key(stored_key)
+                        if decrypted:
+                            return decrypted, plan, True
+                    else:
+                        return stored_key, plan, True
 
         # 3. Final Fallback to .env (Legacy Support)
         env_key = settings.GOOGLE_API_KEY or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
@@ -97,8 +122,8 @@ class AiService:
         try:
             import google.generativeai as genai
             genai.configure(api_key=api_key)
-            # print(f"DEBUG: Using Gemini model for damage analysis: gemini-3-pro-preview")
-            model = genai.GenerativeModel('gemini-3-pro-preview')
+            # print(f"DEBUG: Using Gemini model for damage analysis: gemini-2.0-flash")
+            model = genai.GenerativeModel('gemini-2.0-flash')
             
             # Formulate prompt
             prompt = """
@@ -117,11 +142,38 @@ class AiService:
             }
             """
             
-            # In a real implementation, we would download the images and pass them to the model.
-            # For this SaaS demo, we simulate the multimodal response.
-            # response = model.generate_content([prompt, *images])
-            
-            # Simulated high-quality AI response for the demo
+            # Download images and pass to Gemini multimodal
+            import requests as http_requests
+            image_parts = []
+            for url in image_urls:
+                try:
+                    img_response = http_requests.get(url, timeout=15)
+                    if img_response.status_code == 200:
+                        import mimetypes
+                        content_type = img_response.headers.get('content-type', 'image/jpeg')
+                        image_parts.append({
+                            "mime_type": content_type.split(';')[0],
+                            "data": img_response.content
+                        })
+                except Exception as img_err:
+                    logger.warning(f"Failed to download image {url}: {img_err}")
+
+            try:
+                content_parts = [prompt] + image_parts if image_parts else [prompt]
+                response = model.generate_content(content_parts)
+
+                # Parse JSON from response
+                import json, re
+                text = response.text
+                json_match = re.search(r'\{[\s\S]*\}', text)
+                if json_match:
+                    result = json.loads(json_match.group())
+                    result["analyzed_at"] = utcnow().isoformat()
+                    return result
+            except Exception as gen_err:
+                logger.warning(f"Gemini analysis call failed, using heuristic fallback: {gen_err}")
+
+            # Heuristic fallback if Gemini call fails
             import random
             severities = ["Low", "Medium", "High"]
             severity = random.choice(severities)
@@ -130,13 +182,14 @@ class AiService:
                 "Medium": random.randrange(250000, 750000, 10000),
                 "High": random.randrange(800000, 2500000, 50000)
             }
-            
+
             return {
                 "severity": severity,
-                "damage_description": f"AI detection reveals {severity.lower()} impact damage. Primary affected areas include body panels and light clusters. Structural integrity seems { 'affected' if severity == 'High' else 'intact' }.",
+                "damage_description": f"Heuristic estimate: {severity.lower()} impact damage detected. Manual review recommended for accurate assessment.",
                 "suggested_estimate": estimates[severity],
-                "confidence_score": 0.85 + (random.random() * 0.1),
-                "analyzed_at": utcnow().isoformat()
+                "confidence_score": 0.5,
+                "analyzed_at": utcnow().isoformat(),
+                "note": "Automated AI analysis unavailable. This is a heuristic estimate."
             }
             
         except Exception as e:
@@ -165,8 +218,8 @@ class AiService:
             return {"error": "AI API key not configured"}
             
         genai.configure(api_key=api_key)
-        print(f"DEBUG: Using Gemini model for KYC: gemini-3-flash-preview")
-        model = genai.GenerativeModel('gemini-3-flash-preview')
+        logger.debug(f"Using Gemini model for KYC: gemini-2.0-flash")
+        model = genai.GenerativeModel('gemini-2.0-flash')
         
         if doc_type == "car_papers":
             prompt = """
@@ -355,8 +408,68 @@ class AiService:
         if not config:
             config = SystemSettings(key="AI_CONFIG", value={}, description="Global AI API Configuration")
             self.db.add(config)
-        
+
         new_value = dict(config.value)
         new_value[f"{provider}_api_key"] = api_key
         config.value = new_value
         self.db.commit()
+
+    def get_llm_router(
+        self,
+        company_id: Optional[str] = None,
+        system_prompt: Optional[str] = None,
+    ):
+        """
+        Return a configured LLMRouter for the given company using the key
+        hierarchy (BYOK → System Admin → env fallback).
+        Returns None if no key is available.
+        """
+        from app.services.llm_router import build_router_from_config
+
+        api_key, plan, has_credits = self.get_effective_ai_config(company_id)
+        if not api_key:
+            return None
+
+        # Fetch system settings for provider preference
+        system_config = self.db.query(SystemSettings).filter(SystemSettings.key == "AI_CONFIG").first()
+        system_val = system_config.value if system_config else None
+
+        return build_router_from_config(
+            api_key=api_key,
+            system_settings_value=system_val,
+            system_prompt=system_prompt,
+        )
+
+    async def chat(
+        self,
+        prompt: str,
+        company_id: Optional[str] = None,
+        system_prompt: Optional[str] = None,
+        history: Optional[List[Dict[str, Any]]] = None,
+        temperature: float = 0.7,
+        max_tokens: int = 1024,
+    ) -> Dict[str, Any]:
+        """
+        Unified chat method — uses whichever AI provider is configured.
+        Falls back to a helpful error message if no key is available.
+        """
+        router = self.get_llm_router(company_id=company_id, system_prompt=system_prompt)
+        if router is None:
+            return {
+                "text": "AI service is currently unavailable. Please configure an API key.",
+                "provider": "none",
+                "error": "no_api_key",
+            }
+
+        resp = await router.generate(
+            prompt=prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            history=history or [],
+        )
+        return {
+            "text": resp.text,
+            "provider": resp.provider,
+            "model": resp.model,
+            "error": resp.error,
+        }

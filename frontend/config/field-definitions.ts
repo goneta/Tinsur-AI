@@ -79,14 +79,28 @@ export const UNIFIED_ENTITY_FIELDS: FieldDefinition[] = [
     { key: 'driving_license_years', label: 'Licence Duration (years)', type: 'number', section: 'License' },
     { key: 'cars_in_household', label: 'Cars in Household', type: 'number', section: 'Auto' },
     { key: 'accident_count', label: 'Accidents (last 5 years)', type: 'number', section: 'History' },
+    { key: 'number_of_accidents_at_fault', label: 'Accidents at Fault', type: 'number', section: 'History' },
     { key: 'no_claims_years', label: 'No Claims Discount (years)', type: 'number', section: 'History' },
     { key: 'driving_license_url', label: 'Upload Driving Licence', type: 'file', section: 'Documents' }
+];
+
+export const GENDER_OPTIONS: FieldOption[] = [
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
+    { value: 'other', label: 'Other' }
 ];
 
 // Administrative fields required for backend Client creation but not in the "Unified 20"
 export const CLIENT_ADMIN_FIELDS: FieldDefinition[] = [
     { key: 'client_type', label: 'Client Type', type: 'select', options: CLIENT_TYPE_OPTIONS, required: true, section: 'Profile' },
     { key: 'email', label: 'Email Address', type: 'text', required: true, section: 'Contact' },
+    { key: 'gender', label: 'Gender', type: 'select', options: GENDER_OPTIONS, section: 'Identity' },
+    { key: 'nationality', label: 'Nationality', type: 'text', section: 'Identity' },
+    { key: 'id_number', label: 'ID Number', type: 'text', section: 'Identity' },
+    { key: 'occupation', label: 'Occupation', type: 'text', section: 'Professional' },
+    { key: 'employer_name', label: 'Employer Name', type: 'text', section: 'Professional' },
+    { key: 'annual_income', label: 'Annual Income', type: 'number', section: 'Financial' },
+    { key: 'tax_id', label: 'Tax ID', type: 'text', section: 'Financial' },
     { key: 'business_name', label: 'Business Name', type: 'text', section: 'Identity' }
 ];
 

@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils';
 import { LogOut, User as UserIcon, Menu, X, CircleUser } from 'lucide-react';
 import { useBranding } from '@/components/branding-provider';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { useLanguage } from '@/contexts/language-context';
+import { Logo } from '@/components/ui/Logo';
 // import { ModeToggle } from '@/components/mode-toggle';
 
 export default function ClientPortalLayout({
@@ -34,13 +36,14 @@ export default function ClientPortalLayout({
     }, [isAuthenticated, loading, router, user]);
 
     const { logoUrl } = useBranding();
+    const { t } = useLanguage();
 
     const tabs = [
-        { title: 'Your Account', href: '/portal' },
-        { title: 'Insurance Details', href: '/portal/insurance-details' },
-        { title: 'Make a Claim', href: '/portal/claims' },
-        { title: 'Refer a Friend', href: '/portal/referrals' },
-        { title: 'Contact Us', href: '/portal/support' },
+        { title: t('portal.tab_account', 'Your Account'), href: '/portal' },
+        { title: t('portal.tab_insurance', 'Insurance Details'), href: '/portal/insurance-details' },
+        { title: t('portal.tab_claim', 'Make a Claim'), href: '/portal/claims' },
+        { title: t('portal.tab_referral', 'Refer a Friend'), href: '/portal/referrals' },
+        { title: t('portal.tab_contact', 'Contact Us'), href: '/portal/support' },
     ];
 
     if (loading) {
@@ -61,18 +64,13 @@ export default function ClientPortalLayout({
             <header className="z-40 bg-white">
                 <div className="container mx-auto flex h-20 items-center justify-between py-4 px-6 md:px-8">
                     <div className="flex items-center">
-                        <Link href="/portal" className="flex items-center">
-                            {logoUrl ? (
+                        {logoUrl ? (
+                            <Link href="/portal" className="flex items-center">
                                 <img src={logoUrl} alt="Company Logo" className="h-12 w-auto object-contain" />
-                            ) : (
-                                <div className="flex items-center gap-2">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-700 text-white">
-                                        <span className="text-xl font-bold">T</span>
-                                    </div>
-                                    <span className="text-2xl font-bold text-blue-900 tracking-tight">Tinsur Insurance</span>
-                                </div>
-                            )}
-                        </Link>
+                            </Link>
+                        ) : (
+                            <Logo size={48} variant="full" theme="dark" href="/portal" />
+                        )}
                     </div>
 
                     <div className="flex items-center gap-8">
@@ -83,7 +81,7 @@ export default function ClientPortalLayout({
                                     <CircleUser className="h-6 w-6" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-[11px] text-gray-500 leading-none">Logged in as</span>
+                                    <span className="text-[11px] text-gray-500 leading-none">{t('Logged in as', 'Logged in as')}</span>
                                     <span className="text-sm font-bold text-blue-900 leading-tight">{user.first_name} {user.last_name}</span>
                                 </div>
                             </div>
@@ -93,7 +91,7 @@ export default function ClientPortalLayout({
                                 onClick={logout}
                                 className="rounded-full border-[#00539F] text-[#00539F] hover:bg-blue-50 px-6 font-bold"
                             >
-                                Log out
+                                {t('Log out', 'Log out')}
                             </Button>
                         </div>
                         {/* Mobile Menu Toggle */}
@@ -159,7 +157,7 @@ export default function ClientPortalLayout({
                                     <span className="text-sm font-bold text-blue-900">{user.first_name} {user.last_name}</span>
                                 </div>
                                 <Button onClick={logout} className="w-full bg-[#00539F] hover:bg-blue-800 text-white font-bold rounded-full">
-                                    Log out
+                                    {t('Log out', 'Log out')}
                                 </Button>
                             </div>
                         </nav>

@@ -91,7 +91,7 @@ export function NavigationSidebar({ className, isCollapsed, onToggleCollapse }: 
             <div className={cn("flex h-14 items-center border-b px-4", isCollapsed ? "justify-center" : "justify-between")}>
                 <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
                     {branding.logoUrl ? (
-                        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-white p-1 shadow-sm">
+                        <div className="relative h-9 w-auto shrink-0 overflow-hidden rounded-lg bg-white p-1 shadow-sm">
                             <Image
                                 src={branding.logoUrl}
                                 alt="Company Logo"
@@ -99,12 +99,25 @@ export function NavigationSidebar({ className, isCollapsed, onToggleCollapse }: 
                                 className="object-contain"
                             />
                         </div>
-                    ) : (
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shrink-0">
-                            <span className="text-xl font-black">I</span>
+                    ) : isCollapsed ? (
+                        <div className="relative h-9 w-9 shrink-0 overflow-hidden">
+                            <Image
+                                src="/images/tinsurAI_logo.png"
+                                alt="Tinsur.AI Logo"
+                                fill
+                                className="object-contain"
+                            />
                         </div>
+                    ) : (
+                        <Image
+                            src="/images/tinsurAI_logo.png"
+                            alt="Tinsur.AI Logo"
+                            width={160}
+                            height={40}
+                            priority
+                            className="object-contain h-10 w-auto"
+                        />
                     )}
-                    {!isCollapsed && <span className="text-lg font-bold tracking-tight">Tinsur.AI</span>}
                 </Link>
                 {!isCollapsed && onToggleCollapse && (
                     <Button
@@ -205,11 +218,11 @@ export function NavigationSidebar({ className, isCollapsed, onToggleCollapse }: 
                             variant="ghost"
                             size="icon"
                             onClick={() => setTimeout(() => logout(), 0)}
-                            title="Logout"
+                            title={t('btn.logout', 'Logout')}
                             className={cn("shrink-0", isCollapsed ? "h-9 w-9" : "h-8 w-8")}
                         >
                             <LogOut className="h-4 w-4" />
-                            <span className="sr-only">Logout</span>
+                            <span className="sr-only">{t('btn.logout', 'Logout')}</span>
                         </Button>
                     </div>
                 </div>

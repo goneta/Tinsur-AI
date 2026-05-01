@@ -11,7 +11,7 @@ class MLAgentExecutor(AgentExecutor):
     def __init__(self):
         self.agent = Agent(
             name="ml_agent",
-            model="gemini-3-pro-preview",
+            model="gemini-2.0-flash",
             description="Agent that manages machine learning models and provides performance insights",
             instruction="""
             You are an ML Specialist for InsurSaaS.

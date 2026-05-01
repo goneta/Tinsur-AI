@@ -14,7 +14,7 @@ class QuoteAgentExecutor(AgentExecutor):
     def __init__(self):
         self.agent = Agent(
             name="quote_agent",
-            model="gemini-2.0-flash-exp", # Using latest experimental model
+            model="gemini-2.0-flash", # Using latest experimental model
             description="Agent that calculates quotes based on eligible premium policies.",
             instruction="""
             You are the Tinsur.AI Quote Agent.

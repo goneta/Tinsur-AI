@@ -25,6 +25,7 @@ import {
     Database,
     MessageSquare,
     ClipboardList,
+    Filter as FilterIcon,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -267,6 +268,14 @@ export const navGroups: NavGroup[] = [
                 icon: Shield,
                 roles: ['super_admin', 'company_admin'],
                 color: 'amber',
+            },
+            {
+                id: 'policy_criteria',
+                title: 'Policy Criteria',
+                href: '/dashboard/admin/policy-criteria',
+                icon: FilterIcon,
+                roles: ['super_admin', 'company_admin'],
+                color: 'violet',
             },
             {
                 id: 'services',

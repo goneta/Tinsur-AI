@@ -41,7 +41,7 @@ class OCRService:
         try:
             import google.generativeai as genai
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-3-flash-preview')
+            model = genai.GenerativeModel('gemini-2.0-flash')
             prompt = "Extract all visible text from this document. Return plain text only."
             response = await asyncio.to_thread(
                 model.generate_content,

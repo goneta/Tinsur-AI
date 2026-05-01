@@ -3,10 +3,13 @@ Security utilities for authentication and authorization.
 """
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+import logging
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
@@ -50,5 +53,5 @@ def decode_token(token: str) -> Optional[dict]:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         return payload
     except JWTError as e:
-        print(f"DEBUG: Token decode failed: {e}")
+        logger.debug("Token decode failed")
         return None

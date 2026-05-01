@@ -7,6 +7,7 @@ import * as z from "zod";
 import { format } from "date-fns";
 import { api } from "@/lib/api";
 import { claimApi } from "@/lib/claim-api";
+import { useLanguage } from "@/contexts/language-context";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +52,7 @@ export function ClaimFormDialog({
     onOpenChange,
     onSuccess,
 }: ClaimFormDialogProps) {
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [policies, setPolicies] = useState<any[]>([]);
@@ -116,9 +118,9 @@ export function ClaimFormDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
-                    <DialogTitle>File New Claim</DialogTitle>
+                    <DialogTitle>{t('claims.file_new', 'File New Claim')}</DialogTitle>
                     <DialogDescription>
-                        Record a new insurance claim for a policy.
+                        {t('claims.file_new_desc', 'Record a new insurance claim for a policy.')}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -130,12 +132,12 @@ export function ClaimFormDialog({
                     )}
 
                     <div className="space-y-2">
-                        <Label>Policy</Label>
+                        <Label>{t('claims.policy', 'Policy')}</Label>
                         <Select
                             onValueChange={(val) => setValue("policy_id", val)}
                         >
                             <SelectTrigger>
-                                <SelectValue placeholder="Select Policy" />
+                                <SelectValue placeholder={t('claims.select_policy', 'Select Policy')} />
                             </SelectTrigger>
                             <SelectContent>
                                 {policies.map((p: any) => (
@@ -150,33 +152,33 @@ export function ClaimFormDialog({
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label>Incident Date</Label>
+                            <Label>{t('claims.incident_date', 'Incident Date')}</Label>
                             <Input type="date" {...register("incident_date")} />
                         </div>
                         <div className="space-y-2">
-                            <Label>Estimated Amount (XOF)</Label>
+                            <Label>{t('claims.estimated_amount', 'Estimated Amount (XOF)')}</Label>
                             <Input type="number" {...register("claim_amount")} />
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Location</Label>
+                        <Label>{t('claims.location', 'Location')}</Label>
                         <Input {...register("incident_location")} placeholder="e.g. Abidjan, Cocody" />
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Description</Label>
+                        <Label>{t('claims.description', 'Description')}</Label>
                         <Textarea {...register("incident_description")} placeholder="Describe what happened..." />
                         {errors.incident_description && <p className="text-red-500 text-sm">{errors.incident_description.message}</p>}
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Created By (Agent)</Label>
+                        <Label>{t('claims.created_by', 'Created By (Agent)')}</Label>
                         <Select
                             onValueChange={(val) => setValue("created_by", val)}
                         >
                             <SelectTrigger>
-                                <SelectValue placeholder="Select Agent" />
+                                <SelectValue placeholder={t('claims.select_agent', 'Select Agent')} />
                             </SelectTrigger>
                             <SelectContent>
                                 {employees.map((emp: any) => (
@@ -189,10 +191,10 @@ export function ClaimFormDialog({
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Damage Photos / Evidence</Label>
+                        <Label>{t('claims.damage_photos', 'Damage Photos / Evidence')}</Label>
                         <div className="flex gap-2">
                             <Input
-                                placeholder="Paste image URL (Simulation)"
+                                placeholder={t('claims.paste_url', 'Paste image URL (Simulation)')}
                                 onKeyDown={(e: any) => {
                                     if (e.key === 'Enter') {
                                         e.preventDefault();
@@ -205,7 +207,7 @@ export function ClaimFormDialog({
                                     }
                                 }}
                             />
-                            <Button type="button" variant="secondary">Upload</Button>
+                            <Button type="button" variant="secondary">{t('btn.upload', 'Upload')}</Button>
                         </div>
                         <div className="flex flex-wrap gap-2 mt-2">
                             {(watch("evidence_files") || []).map((url: string, idx: number) => (
@@ -227,9 +229,9 @@ export function ClaimFormDialog({
                     </div>
 
                     <div className="flex justify-end gap-2 pt-4">
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t('btn.cancel', 'Cancel')}</Button>
                         <Button type="submit" disabled={loading}>
-                            {loading ? "Creating..." : "Create Claim"}
+                            {loading ? t('btn.creating', 'Creating...') : t('claims.create_claim', 'Create Claim')}
                         </Button>
                     </div>
                 </form>

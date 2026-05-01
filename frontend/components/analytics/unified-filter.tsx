@@ -19,6 +19,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { AnalyticsFilter } from "@/lib/types/analytics";
+import { useLanguage } from "@/contexts/language-context";
 
 interface UnifiedFilterProps {
     initialFilter: AnalyticsFilter;
@@ -31,6 +32,7 @@ export function UnifiedFilter({
     onFilterChange,
     onExport,
 }: UnifiedFilterProps) {
+    const { t } = useLanguage();
     const [filter, setFilter] = useState<AnalyticsFilter>(initialFilter);
     const [dateRange, setDateRange] = useState<{
         from: Date | undefined;
@@ -90,14 +92,14 @@ export function UnifiedFilter({
                 {/* Period Selector */}
                 <Select value={filter.period_type} onValueChange={handlePeriodChange}>
                     <SelectTrigger className="w-[140px]">
-                        <SelectValue placeholder="Select Period" />
+                        <SelectValue placeholder={t('analytics.select_period', 'Select Period')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="day">Today</SelectItem>
-                        <SelectItem value="week">Last 7 Days</SelectItem>
-                        <SelectItem value="month">This Month</SelectItem>
-                        <SelectItem value="year">This Year</SelectItem>
-                        <SelectItem value="custom">Custom Range</SelectItem>
+                        <SelectItem value="day">{t('analytics.period.today', 'Today')}</SelectItem>
+                        <SelectItem value="week">{t('analytics.period.last_7_days', 'Last 7 Days')}</SelectItem>
+                        <SelectItem value="month">{t('analytics.period.this_month', 'This Month')}</SelectItem>
+                        <SelectItem value="year">{t('analytics.period.this_year', 'This Year')}</SelectItem>
+                        <SelectItem value="custom">{t('analytics.period.custom_range', 'Custom Range')}</SelectItem>
                     </SelectContent>
                 </Select>
 
@@ -122,14 +124,14 @@ export function UnifiedFilter({
                                     format(dateRange.from, "PPP")
                                 )
                             ) : (
-                                <span>Pick a date</span>
+                                <span>{t('analytics.pick_date', 'Pick a date')}</span>
                             )}
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                         {/* Note: Simplified Calendar for now, ideally range picker */}
                         <div className="p-4">
-                            <p className="text-sm text-muted-foreground mb-2">Start Date</p>
+                            <p className="text-sm text-muted-foreground mb-2">{t('analytics.start_date', 'Start Date')}</p>
                             <Calendar
                                 mode="single"
                                 selected={dateRange.from}
@@ -156,12 +158,12 @@ export function UnifiedFilter({
                 {/* Scope Selector */}
                 <Select value={filter.scope} onValueChange={handleScopeChange}>
                     <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Scope" />
+                        <SelectValue placeholder={t('analytics.select_scope', 'Select Scope')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="me">My Performance</SelectItem>
-                        <SelectItem value="team">My Team</SelectItem>
-                        <SelectItem value="company">Company Wide</SelectItem>
+                        <SelectItem value="me">{t('analytics.scope.my_performance', 'My Performance')}</SelectItem>
+                        <SelectItem value="team">{t('analytics.scope.my_team', 'My Team')}</SelectItem>
+                        <SelectItem value="company">{t('analytics.scope.company_wide', 'Company Wide')}</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -170,11 +172,11 @@ export function UnifiedFilter({
                 <Select onValueChange={(v) => onExport(v as "csv" | "pdf")}>
                     <SelectTrigger className="w-[130px]">
                         <Download className="mr-2 h-4 w-4" />
-                        <SelectValue placeholder="Export" />
+                        <SelectValue placeholder={t('analytics.export', 'Export')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="csv">Export CSV</SelectItem>
-                        <SelectItem value="pdf" disabled>Export PDF (Pro)</SelectItem>
+                        <SelectItem value="csv">{t('analytics.export_csv', 'Export CSV')}</SelectItem>
+                        <SelectItem value="pdf" disabled>{t('analytics.export_pdf', 'Export PDF (Pro)')}</SelectItem>
                     </SelectContent>
                 </Select>
             </div>

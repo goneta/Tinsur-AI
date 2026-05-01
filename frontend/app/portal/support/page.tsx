@@ -21,8 +21,10 @@ import {
 import { portalApi, Ticket } from '@/lib/portal-api';
 import { formatDate } from '@/lib/utils';
 import { SupportChatWidget } from '@/components/support/support-chat-widget';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function ClientSupportPage() {
+    const { t } = useLanguage();
     const [tickets, setTickets] = useState<Ticket[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
@@ -100,8 +102,8 @@ export default function ClientSupportPage() {
         <div className="max-w-[1700px] mx-auto flex-1 space-y-8 pt-6 pb-20">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">Support Center</h2>
-                    <p className="text-slate-500 mt-1 text-lg">Instant AI assistance and ticket management.</p>
+                    <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">{t('support.title', 'Support Center')}</h2>
+                    <p className="text-slate-500 mt-1 text-lg">{t('support.subtitle', 'Instant AI assistance and ticket management.')}</p>
                 </div>
 
                 <div className="flex gap-2">
@@ -112,46 +114,46 @@ export default function ClientSupportPage() {
                     <Dialog open={isNewOpen} onOpenChange={setIsNewOpen}>
                         <DialogTrigger asChild>
                             <Button variant="outline" className="border-slate-200 hover:bg-slate-50 font-semibold shadow-sm">
-                                <Plus className="mr-2 h-4 w-4" /> Traditional Ticket
+                                <Plus className="mr-2 h-4 w-4" /> {t('support.new_ticket', 'Traditional Ticket')}
                             </Button>
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Create New Support Ticket</DialogTitle>
-                                <DialogDescription>Describe your issue and we'll get back to you asap.</DialogDescription>
+                                <DialogTitle>{t('support.create_title', 'Create New Support Ticket')}</DialogTitle>
+                                <DialogDescription>{t('support.create_desc', 'Describe your issue and we\'ll get back to you asap.')}</DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="subject">Subject</Label>
+                                    <Label htmlFor="subject">{t('label.subject', 'Subject')}</Label>
                                     <Input
                                         id="subject"
-                                        placeholder="Brief summary of the issue"
+                                        placeholder={t('support.subject_placeholder', 'Brief summary of the issue')}
                                         value={newTicket.subject}
                                         onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="category">Category</Label>
+                                    <Label htmlFor="category">{t('label.category', 'Category')}</Label>
                                     <Select
                                         value={newTicket.category}
                                         onValueChange={(val) => setNewTicket({ ...newTicket, category: val })}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select category" />
+                                            <SelectValue placeholder={t('support.category_placeholder', 'Select category')} />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="general">General Inquiry</SelectItem>
-                                            <SelectItem value="billing">Billing & Payments</SelectItem>
-                                            <SelectItem value="technical">Technical Issue</SelectItem>
-                                            <SelectItem value="claim">Claims Support</SelectItem>
+                                            <SelectItem value="general">{t('support.category.general', 'General Inquiry')}</SelectItem>
+                                            <SelectItem value="billing">{t('support.category.billing', 'Billing & Payments')}</SelectItem>
+                                            <SelectItem value="technical">{t('support.category.technical', 'Technical Issue')}</SelectItem>
+                                            <SelectItem value="claim">{t('support.category.claim', 'Claims Support')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="description">Description</Label>
+                                    <Label htmlFor="description">{t('label.description', 'Description')}</Label>
                                     <Textarea
                                         id="description"
-                                        placeholder="Detailed explanation..."
+                                        placeholder={t('support.description_placeholder', 'Detailed explanation...')}
                                         rows={4}
                                         value={newTicket.description}
                                         onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
@@ -160,7 +162,7 @@ export default function ClientSupportPage() {
                             </div>
                             <DialogFooter>
                                 <Button onClick={handleCreateTicket} disabled={sending} className="bg-blue-600 hover:bg-blue-700">
-                                    {sending ? 'Creating...' : 'Submit Ticket'}
+                                    {sending ? t('support.creating', 'Creating...') : t('support.submit_btn', 'Submit Ticket')}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -179,21 +181,21 @@ export default function ClientSupportPage() {
                     <Card className="border-slate-200 shadow-md">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0">
                             <div>
-                                <CardTitle className="text-xl">Your Open Cases</CardTitle>
-                                <CardDescription>Track the status of your reported issues.</CardDescription>
+                                <CardTitle className="text-xl">{t('support.open_cases', 'Your Open Cases')}</CardTitle>
+                                <CardDescription>{t('support.cases_desc', 'Track the status of your reported issues.')}</CardDescription>
                             </div>
                             <Badge variant="secondary" className="bg-slate-100 font-bold px-3 py-1">
-                                {tickets.length} Total
+                                {tickets.length} {t('common.total', 'Total')}
                             </Badge>
                         </CardHeader>
                         <CardContent>
                             <Table>
                                 <TableHeader>
                                     <TableRow className="hover:bg-transparent border-slate-100">
-                                        <TableHead className="font-bold">ID</TableHead>
-                                        <TableHead className="font-bold">Subject</TableHead>
-                                        <TableHead className="font-bold">Status</TableHead>
-                                        <TableHead className="text-right font-bold">Action</TableHead>
+                                        <TableHead className="font-bold">{t('label.id', 'ID')}</TableHead>
+                                        <TableHead className="font-bold">{t('label.subject', 'Subject')}</TableHead>
+                                        <TableHead className="font-bold">{t('label.status', 'Status')}</TableHead>
+                                        <TableHead className="text-right font-bold">{t('common.action', 'Action')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -208,7 +210,7 @@ export default function ClientSupportPage() {
                                             <TableCell colSpan={4} className="text-center h-32 text-slate-400">
                                                 <div className="flex flex-col items-center gap-2">
                                                     <MessageSquare className="h-8 w-8 text-slate-200" />
-                                                    <p>No active tickets found.</p>
+                                                    <p>{t('support.no_tickets', 'No active tickets found.')}</p>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
@@ -225,7 +227,7 @@ export default function ClientSupportPage() {
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <Button variant="ghost" size="sm" onClick={() => handleOpenTicket(ticket)} className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
-                                                        Interact
+                                                        {t('common.interact', 'Interact')}
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>
@@ -243,10 +245,9 @@ export default function ClientSupportPage() {
                                 <Sparkles className="h-5 w-5" />
                             </div>
                             <div>
-                                <h4 className="font-bold text-blue-900">Did you know?</h4>
+                                <h4 className="font-bold text-blue-900">{t('support.tip_title', 'Did you know?')}</h4>
                                 <p className="text-sm text-blue-800 leading-relaxed mt-1">
-                                    Our AI Assistant can handle most requests instantly, including <strong>claims assessment from photos</strong>,
-                                    policy cancellations, and coverage explanations.
+                                    {t('support.tip_desc', 'Our AI Assistant can handle most requests instantly, including claims assessment from photos, policy cancellations, and coverage explanations.')}
                                 </p>
                             </div>
                         </div>
@@ -298,13 +299,13 @@ export default function ClientSupportPage() {
 
                     <div className="p-6 bg-white border-t flex gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                         <Textarea
-                            placeholder="Add a comment..."
+                            placeholder={t('support.reply_placeholder', 'Add a comment...')}
                             value={replyText}
                             onChange={(e) => setReplyText(e.target.value)}
                             className="flex-1 min-h-[50px] border-slate-200 focus-visible:ring-blue-500"
                         />
                         <Button onClick={handleReply} disabled={sending || !replyText.trim()} className="self-end bg-blue-600 hover:bg-blue-700 h-10 px-6">
-                            Send
+                            {t('common.send', 'Send')}
                         </Button>
                     </div>
                 </DialogContent>

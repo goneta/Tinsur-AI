@@ -17,7 +17,7 @@ class ClaimsAgentExecutor(AgentExecutor):
     def __init__(self):
         self.agent = Agent(
             name="claims_agent",
-            model="gemini-3-pro-preview",
+            model="gemini-2.0-flash",
             description="Agent that processes claims and detects fraud",
             instruction="""
             You are a Claims Agent.
@@ -48,7 +48,7 @@ class ClaimsAgentExecutor(AgentExecutor):
         try:
             extractor = Agent(
                 name="claim_extractor",
-                model="gemini-3-pro-preview",
+                model="gemini-2.0-flash",
                 instruction=extraction_instruction,
                 output_type=ClaimRequest
             )

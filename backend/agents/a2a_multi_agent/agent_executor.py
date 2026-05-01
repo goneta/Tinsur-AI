@@ -14,6 +14,7 @@ try:
     from backend.agents.a2a_finance_agent.agent_executor import FinanceAgentExecutor
     from backend.agents.a2a_support_agent.agent_executor import SupportAgentExecutor
     from backend.agents.a2a_document_agent.agent_executor import DocumentAgentExecutor
+    from backend.agents.a2a_admin_agent.agent_executor import AdminAgentExecutor
 except ImportError:
     # Fallback for different running contexts (e.g. inside agents dir)
     import sys
@@ -27,6 +28,7 @@ except ImportError:
     from backend.agents.a2a_finance_agent.agent_executor import FinanceAgentExecutor
     from backend.agents.a2a_support_agent.agent_executor import SupportAgentExecutor
     from backend.agents.a2a_document_agent.agent_executor import DocumentAgentExecutor
+    from backend.agents.a2a_admin_agent.agent_executor import AdminAgentExecutor
 
 class MultiAgentExecutor(AgentExecutor):
     def __init__(self):
@@ -38,6 +40,7 @@ class MultiAgentExecutor(AgentExecutor):
         self.finance = FinanceAgentExecutor()
         self.support = SupportAgentExecutor()
         self.document = DocumentAgentExecutor()
+        self.admin = AdminAgentExecutor()
         
         # Create the Manager Agent with sub-agents
         self.agent = Agent(
@@ -47,7 +50,7 @@ class MultiAgentExecutor(AgentExecutor):
             instruction="""
             You are the Tinsur.AI Manager Agent.
             Your job is to route user requests to the appropriate specialist agent.
-            
+
             - If the user wants to check a claim status, file a claim, or asks about fraud, delegate to the 'claims_agent'.
             - If the user wants to create or manage their specific policies, delegate to the 'policy_agent'.
             - If the user wants to get a quote, check prices, buy insurance, or create a new quote, delegate to the 'quote_agent'.
@@ -55,21 +58,24 @@ class MultiAgentExecutor(AgentExecutor):
             - If the user asks about financial reports, P&L, balance sheets, or accounting, delegate to the 'finance_agent'.
             - If the user has questions about policy terms, coverage details from the knowledge base, deductibles, or general help, delegate to the 'support_agent'.
             - If the user wants to generate, share, or revoke documents (agreements, slips), delegate to the 'document_agent'.
-            
+            - If the user wants to create, update, or manage premium policies, eligibility criteria, or policy services, delegate to the 'admin_agent'.
+            - If the user asks for business analytics, dashboard statistics, or KPI reports, delegate to the 'admin_agent'.
+
             IMPORTANT:
             - "I want to get a quote" -> ALWAYS 'quote_agent'.
             - "I had an accident" -> ALWAYS 'support_agent' (for claims).
-            
+
             If the request is general (e.g., 'Hello'), you can answer directly.
             """,
             sub_agents=[
-                self.claims.agent, 
-                self.policy.agent, 
-                self.quote.agent, 
+                self.claims.agent,
+                self.policy.agent,
+                self.quote.agent,
                 self.telematics.agent,
                 self.finance.agent,
                 self.support.agent,
-                self.document.agent
+                self.document.agent,
+                self.admin.agent
             ]
         )
 
@@ -103,7 +109,24 @@ class MultiAgentExecutor(AgentExecutor):
             if "quote" in user_input.lower() or "price" in user_input.lower() or "buy" in user_input.lower():
                 await self.quote.execute(context, event_queue)
                 return
-            
+
+            # Route claims directly
+            if any(kw in user_input.lower() for kw in ["claim", "accident", "damage", "fraud"]):
+                await self.claims.execute(context, event_queue)
+                return
+
+            # Route policy management directly
+            if any(kw in user_input.lower() for kw in ["create policy", "activate policy", "my policy", "policy status"]):
+                await self.policy.execute(context, event_queue)
+                return
+
+            # Route admin operations directly
+            admin_keywords = ["premium policy", "eligibility", "criteria", "policy service", "create policy type",
+                              "dashboard stats", "kpi", "analytics", "business report"]
+            if any(kw in user_input.lower() for kw in admin_keywords):
+                await self.admin.execute(context, event_queue)
+                return
+
             response_text = await self.agent.run(user_input, google_api_key=context.metadata.get("google_api_key"))
             
             event_queue.enqueue_event(new_agent_text_message(response_text))

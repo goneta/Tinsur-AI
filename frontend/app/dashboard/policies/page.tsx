@@ -93,7 +93,7 @@ export default function PoliciesPage() {
     }, []);
 
     const handleDelete = useCallback(async (id: string) => {
-        if (confirm(t('Are you sure you want to delete this policy?'))) {
+        if (confirm(t('confirm.delete_policy', 'Are you sure you want to delete this policy?'))) {
             try {
                 await policyApi.deletePolicy(id);
                 loadPolicies();
@@ -101,7 +101,7 @@ export default function PoliciesPage() {
                 console.error('Failed to delete policy:', error);
             }
         }
-    }, []);
+    }, [t]);
 
     const handleView = useCallback((id: string) => {
         router.push(`/dashboard/policies/${id}`);

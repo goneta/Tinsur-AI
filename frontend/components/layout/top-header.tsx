@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { navGroups } from '@/lib/navigation';
 import { Menu, Search, Bell, Sparkles, CreditCard, ShieldAlert, Cpu } from 'lucide-react';
+import { useLanguage } from '@/contexts/language-context';
 import {
     Popover,
     PopoverContent,
@@ -17,8 +18,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { useAuth } from '@/lib/auth';
 import { ClientOnly } from '@/components/ui/client-only';
 import { LanguageSwitcher } from '@/components/language-switcher';
-import { Logo } from '@/components/ui/Logo';
-
 interface TopHeaderProps {
     onMobileMenuToggle: () => void;
     onAiToggle?: () => void;
@@ -26,6 +25,7 @@ interface TopHeaderProps {
 }
 
 export function TopHeader({ onMobileMenuToggle, onAiToggle, className }: TopHeaderProps) {
+    const { t } = useLanguage();
     const pathname = usePathname();
     const { ai_credits_balance } = useAuth();
     const [notifications, setNotifications] = useState<NotifType[]>([]);
@@ -87,17 +87,6 @@ export function TopHeader({ onMobileMenuToggle, onAiToggle, className }: TopHead
                 <span className="sr-only">Toggle menu</span>
             </Button>
 
-            {/* Logo */}
-            <div className="hidden sm:flex items-center">
-                <Logo 
-                    size={32} 
-                    variant="icon-only" 
-                    theme="auto" 
-                    href="/dashboard"
-                    className="hover:opacity-80 transition-opacity"
-                />
-            </div>
-
             <div className="flex flex-col">
                 <h1 className="text-lg font-semibold md:text-xl">{title}</h1>
                 {breadcrumbs && (
@@ -110,7 +99,7 @@ export function TopHeader({ onMobileMenuToggle, onAiToggle, className }: TopHead
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                         type="search"
-                        placeholder="Search..."
+                        placeholder={t('placeholder.search', 'Search...')}
                         className="w-64 pl-8 md:w-80 lg:w-96"
                     />
                 </div>
@@ -152,12 +141,12 @@ export function TopHeader({ onMobileMenuToggle, onAiToggle, className }: TopHead
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-0" align="end">
                         <div className="p-4 border-b">
-                            <h3 className="font-semibold text-sm">Notifications</h3>
+                            <h3 className="font-semibold text-sm">{t('common.notifications', 'Notifications')}</h3>
                         </div>
                         <div className="max-h-[400px] overflow-y-auto">
                             {notifications.length === 0 ? (
                                 <div className="p-8 text-center text-sm text-muted-foreground">
-                                    No new notifications
+                                    {t('msg.no_notifications', 'No new notifications')}
                                 </div>
                             ) : (
                                 notifications.map((n) => (
@@ -192,7 +181,7 @@ export function TopHeader({ onMobileMenuToggle, onAiToggle, className }: TopHead
                         {notifications.length > 0 && (
                             <div className="p-2 border-t text-center">
                                 <Button variant="ghost" size="sm" className="text-xs w-full">
-                                    View all
+                                    {t('btn.view_all', 'View all')}
                                 </Button>
                             </div>
                         )}

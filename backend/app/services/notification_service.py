@@ -1,13 +1,55 @@
 """
 Notification service for sending notifications.
+Supports real SMTP email (smtplib / SMTP_SSL) and Twilio SMS.
+Falls back to logging when credentials are not configured.
 """
+import os
+import logging
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from typing import List, Optional, Dict, Any
 from uuid import UUID
 from datetime import datetime
 from app.core.time import utcnow
 
+logger = logging.getLogger(__name__)
+
+try:
+    from twilio.rest import Client as TwilioClient
+    TWILIO_AVAILABLE = True
+except ImportError:
+    TwilioClient = None
+    TWILIO_AVAILABLE = False
 
 from app.models.notification import Notification
+
+
+# ── helpers ──────────────────────────────────────────────────────────────────
+def _smtp_cfg() -> Dict[str, str]:
+    return {
+        "host": os.getenv("SMTP_HOST", ""),
+        "port": int(os.getenv("SMTP_PORT", "587")),
+        "user": os.getenv("SMTP_USER", ""),
+        "password": os.getenv("SMTP_PASSWORD", ""),
+        "from_email": os.getenv("SMTP_FROM_EMAIL", os.getenv("SMTP_USER", "noreply@tinsur.ai")),
+        "use_tls": os.getenv("SMTP_USE_TLS", "true").lower() == "true",
+    }
+
+def _twilio_cfg() -> Dict[str, str]:
+    return {
+        "account_sid": os.getenv("TWILIO_ACCOUNT_SID", ""),
+        "auth_token": os.getenv("TWILIO_AUTH_TOKEN", ""),
+        "from_number": os.getenv("TWILIO_FROM_NUMBER", ""),
+    }
+
+def _smtp_configured() -> bool:
+    cfg = _smtp_cfg()
+    return bool(cfg["host"] and cfg["user"] and cfg["password"])
+
+def _twilio_configured() -> bool:
+    cfg = _twilio_cfg()
+    return bool(cfg["account_sid"] and cfg["auth_token"] and cfg["from_number"])
 
 
 class NotificationService:
@@ -264,46 +306,134 @@ class NotificationService:
             return False
     
     def _send_email(self, notification: Notification) -> bool:
-        """Send email notification. (Placeholder for actual email service)"""
-        # In production, use SendGrid, AWS SES, or similar
-        print(f"Sending email to {notification.recipient_email}: {notification.subject}")
-        
-        notification.status = 'sent'
+        """Send email via SMTP. Falls back to logging when SMTP is not configured."""
+        recipient = notification.recipient_email
+        if not recipient:
+            logger.warning("Email notification has no recipient_email; skipping.")
+            return False
+
+        if _smtp_configured():
+            cfg = _smtp_cfg()
+            try:
+                msg = MIMEMultipart("alternative")
+                msg["Subject"] = notification.subject or "Tinsur.AI Notification"
+                msg["From"] = cfg["from_email"]
+                msg["To"] = recipient
+                msg.attach(MIMEText(notification.content or "", "plain", "utf-8"))
+
+                if cfg["use_tls"]:
+                    server = smtplib.SMTP(cfg["host"], cfg["port"])
+                    server.starttls()
+                else:
+                    server = smtplib.SMTP_SSL(cfg["host"], int(cfg["port"]))
+                server.login(cfg["user"], cfg["password"])
+                server.sendmail(cfg["from_email"], [recipient], msg.as_string())
+                server.quit()
+
+                ext_id = f"smtp-{datetime.now().timestamp()}"
+                logger.info(f"Email sent to {recipient} (subject: {notification.subject})")
+            except Exception as e:
+                logger.error(f"SMTP send failed to {recipient}: {e}")
+                notification.status = "failed"
+                notification.error_message = str(e)
+                self.db.commit()
+                return False
+        else:
+            logger.info(
+                f"[SMTP not configured] Would send email to {recipient}: {notification.subject}"
+            )
+            ext_id = f"email-logged-{datetime.now().timestamp()}"
+
+        notification.status = "sent"
         notification.sent_at = utcnow()
-        notification.external_id = f"email-{datetime.now().timestamp()}"
+        notification.external_id = ext_id
         self.db.commit()
-        
         return True
-    
+
     def _send_sms(self, notification: Notification) -> bool:
-        """Send SMS notification. (Placeholder for actual SMS service)"""
-        # In production, use Twilio or similar
-        print(f"Sending SMS to {notification.recipient_phone}")
-        
-        notification.status = 'sent'
+        """Send SMS via Twilio. Falls back to logging when Twilio is not configured."""
+        recipient = notification.recipient_phone
+        if not recipient:
+            logger.warning("SMS notification has no recipient_phone; skipping.")
+            return False
+
+        if TWILIO_AVAILABLE and _twilio_configured():
+            cfg = _twilio_cfg()
+            try:
+                client = TwilioClient(cfg["account_sid"], cfg["auth_token"])
+                message = client.messages.create(
+                    body=notification.content or notification.subject or "Tinsur.AI notification",
+                    from_=cfg["from_number"],
+                    to=recipient,
+                )
+                ext_id = message.sid
+                logger.info(f"SMS sent to {recipient} via Twilio (sid: {ext_id})")
+            except Exception as e:
+                logger.error(f"Twilio SMS failed to {recipient}: {e}")
+                notification.status = "failed"
+                notification.error_message = str(e)
+                self.db.commit()
+                return False
+        else:
+            logger.info(
+                f"[Twilio not configured] Would send SMS to {recipient}: "
+                f"{(notification.content or '')[:80]}"
+            )
+            ext_id = f"sms-logged-{datetime.now().timestamp()}"
+
+        notification.status = "sent"
         notification.sent_at = utcnow()
-        notification.external_id = f"sms-{datetime.now().timestamp()}"
+        notification.external_id = ext_id
         self.db.commit()
-        
         return True
-    
+
     def _send_whatsapp(self, notification: Notification) -> bool:
-        """Send WhatsApp notification. (Placeholder)"""
-        # In production, use WhatsApp Business API
-        print(f"Sending WhatsApp to {notification.recipient_phone}")
-        
-        notification.status = 'sent'
+        """Send WhatsApp via Twilio WhatsApp sandbox. Falls back to logging."""
+        recipient = notification.recipient_phone
+        if not recipient:
+            logger.warning("WhatsApp notification has no recipient_phone; skipping.")
+            return False
+
+        if TWILIO_AVAILABLE and _twilio_configured():
+            cfg = _twilio_cfg()
+            try:
+                client = TwilioClient(cfg["account_sid"], cfg["auth_token"])
+                wa_from = f"whatsapp:{cfg['from_number']}"
+                wa_to = f"whatsapp:{recipient}"
+                message = client.messages.create(
+                    body=notification.content or notification.subject or "Tinsur.AI notification",
+                    from_=wa_from,
+                    to=wa_to,
+                )
+                ext_id = message.sid
+                logger.info(f"WhatsApp sent to {recipient} (sid: {ext_id})")
+            except Exception as e:
+                logger.error(f"WhatsApp send failed to {recipient}: {e}")
+                notification.status = "failed"
+                notification.error_message = str(e)
+                self.db.commit()
+                return False
+        else:
+            logger.info(
+                f"[Twilio WhatsApp not configured] Would send WhatsApp to {recipient}"
+            )
+            ext_id = f"wa-logged-{datetime.now().timestamp()}"
+
+        notification.status = "sent"
         notification.sent_at = utcnow()
-        notification.external_id = f"wa-{datetime.now().timestamp()}"
+        notification.external_id = ext_id
         self.db.commit()
-        
         return True
-    
+
     def _send_push(self, notification: Notification) -> bool:
-        """Send push notification. (Placeholder)"""
-        # In production, use Firebase Cloud Messaging or similar
-        notification.status = 'sent'
+        """Send push notification via Firebase (FCM). Falls back to logging."""
+        # Firebase FCM would require firebase-admin SDK and device tokens.
+        # Logs the notification for now; integrate FCM when device tokens are available.
+        logger.info(
+            f"[FCM push] Would send push to client_id={notification.client_id}: "
+            f"{notification.subject}"
+        )
+        notification.status = "sent"
         notification.sent_at = utcnow()
         self.db.commit()
-        
         return True

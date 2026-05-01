@@ -36,8 +36,8 @@ export default function PremiumPoliciesPage() {
         } catch (error) {
             console.error('Failed to load policy types:', error)
             toast({
-                title: 'Error',
-                description: 'Failed to load policy types',
+                title: t('common.error', 'Error'),
+                description: t('premium_policies.load_failed', 'Failed to load policy types'),
                 variant: 'destructive',
             })
         } finally {
@@ -51,13 +51,13 @@ export default function PremiumPoliciesPage() {
     }
 
     const handleDelete = async (policy: PremiumPolicyType) => {
-        if (!confirm(`Are you sure you want to delete ${policy.name}?`)) return
+        if (!confirm(t('premium_policies.confirm_delete', `Are you sure you want to delete ${policy.name}?`))) return
         try {
             await premiumPolicyApi.deletePolicyType(policy.id)
-            toast({ title: 'Success', description: 'Policy type deleted' })
+            toast({ title: t('common.success', 'Success'), description: t('premium_policies.deleted', 'Policy type deleted') })
             loadPolicyTypes()
         } catch (error) {
-            toast({ title: 'Error', description: 'Failed to delete policy type', variant: 'destructive' })
+            toast({ title: t('common.error', 'Error'), description: t('premium_policies.delete_failed', 'Failed to delete policy type'), variant: 'destructive' })
         }
     }
 
@@ -67,7 +67,7 @@ export default function PremiumPoliciesPage() {
         setSelectedPolicy(undefined)
     }
 
-    const columns = useMemo(() => getColumns(handleEdit, handleDelete, formatPrice), [handleEdit, handleDelete, formatPrice])
+    const columns = useMemo(() => getColumns(handleEdit, handleDelete, formatPrice, t), [handleEdit, handleDelete, formatPrice, t])
 
     const renderPolicyCard = useCallback((policy: PremiumPolicyType) => {
         // Map services to generic card items
@@ -103,7 +103,7 @@ export default function PremiumPoliciesPage() {
             // Criteria Section
             {
                 id: 'header-criteria',
-                label: "Eligibility criteria",
+                label: t('premium_policies.eligibility_criteria', 'Eligibility criteria'),
                 isSectionHeader: true
             },
             ...criteriaItems,
@@ -111,7 +111,7 @@ export default function PremiumPoliciesPage() {
             // Services Section
             {
                 id: 'header-services',
-                label: "Included services",
+                label: t('premium_policies.included_services', 'Included services'),
                 isSectionHeader: true
             },
             ...serviceItems
@@ -161,6 +161,7 @@ export default function PremiumPoliciesPage() {
                                 variant="outline"
                                 className="flex-1"
                                 onClick={() => handleEdit(policy)}
+                                title={t('common.edit', 'Edit')}
                             >
                                 <Pencil className="mr-2 h-4 w-4" />
                                 {t('common.edit', 'Edit')}
@@ -169,6 +170,7 @@ export default function PremiumPoliciesPage() {
                                 variant="destructive"
                                 size="icon"
                                 onClick={() => handleDelete(policy)}
+                                title={t('common.delete', 'Delete')}
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>
@@ -202,7 +204,7 @@ export default function PremiumPoliciesPage() {
             {loading && policyTypes.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-muted-foreground">{t('common.loading', 'Loading premium policies...')}</p>
+                    <p className="text-muted-foreground">{t('premium_policies.loading', 'Loading premium policies...')}</p>
                 </div>
             ) : (
                 <DataView

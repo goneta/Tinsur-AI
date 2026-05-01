@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Body, F
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Optional
 import json
+from datetime import datetime
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -153,8 +154,17 @@ async def export_data(
     elif format == 'pdf':
         content = export_service.generate_pdf(data, report_type=data_type)
         media_type = "application/pdf"
+        filename = f"export_{data_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    elif format == 'excel' or format == 'xlsx':
+        content = export_service.generate_excel(
+            data,
+            sheet_name=data_type.capitalize(),
+            title=f"{data_type.capitalize()} Export",
+        )
+        media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        filename = f"export_{data_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     else:
-        raise HTTPException(status_code=400, detail="Invalid format")
+        raise HTTPException(status_code=400, detail="Invalid format. Supported: csv, json, xml, md, pdf, excel")
 
     from fastapi.responses import Response
     return Response(

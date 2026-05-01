@@ -5,6 +5,7 @@ from typing import List, Any
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 import os
+import secrets
 
 class Settings(BaseSettings):
     """Application settings."""
@@ -14,7 +15,7 @@ class Settings(BaseSettings):
     # Application
     APP_NAME: str = "Tinsur.AI"
     APP_VERSION: str = "1.0.0"
-    DEBUG: bool = True
+    DEBUG: bool = False
     ENVIRONMENT: str = "development"
     
     # Database
@@ -23,11 +24,11 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
 
     # Security
-    SECRET_KEY: str = "dev_secret_key_123456789" # Default set to bypass .env requirement
+    SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    A2A_INTERNAL_API_KEY: str = "super-secret-a2a-key"
+    A2A_INTERNAL_API_KEY: str = ""
     GOOGLE_API_KEY: str = ""
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
@@ -41,7 +42,25 @@ class Settings(BaseSettings):
     
     # CORS
     ALLOWED_ORIGINS: Any = "http://localhost:3000,http://127.0.0.1:3000"
-    
+
+    @field_validator("SECRET_KEY", mode="before")
+    @classmethod
+    def ensure_secret_key(cls, v: str) -> str:
+        """Generate a secure random SECRET_KEY if not set or using default."""
+        if not v or v == "dev_secret_key_123456789":
+            import warnings
+            warnings.warn("SECRET_KEY not set! Generating a random key. Set SECRET_KEY in .env for production.", stacklevel=2)
+            return secrets.token_urlsafe(64)
+        return v
+
+    @field_validator("A2A_INTERNAL_API_KEY", mode="before")
+    @classmethod
+    def ensure_a2a_key(cls, v: str) -> str:
+        """Generate a secure random A2A_INTERNAL_API_KEY if not set or using default."""
+        if not v or v == "super-secret-a2a-key":
+            return secrets.token_urlsafe(32)
+        return v
+
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, v: Any) -> List[str]:

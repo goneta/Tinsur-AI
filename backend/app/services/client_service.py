@@ -104,13 +104,16 @@ class ClientService:
                 address=client.address,
                 city=client.city,
                 country=client.country,
-                license_number=getattr(client, 'driving_licence_number', None), 
+                license_number=getattr(client, 'driving_licence_number', None),
                 date_of_birth=getattr(client, 'date_of_birth', None),
-                
-                # Initialize defaults
+                marital_status=getattr(client, 'marital_status', None),
+                employment_status=getattr(client, 'employment_status', None),
+
+                # Eligibility fields - ensure all are mapped for quote creation
                 accident_count=getattr(client, 'accident_count', 0) or 0,
                 no_claims_years=getattr(client, 'no_claims_years', 0) or 0,
                 driving_license_years=getattr(client, 'driving_license_years', 0) or 0,
+                number_of_accidents_at_fault=getattr(client, 'number_of_accidents_at_fault', 0) or 0,
                 driving_license_url=getattr(client, 'driving_license_url', None)
             )
             

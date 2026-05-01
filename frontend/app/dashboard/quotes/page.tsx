@@ -61,8 +61,8 @@ export default function QuotesPage() {
 
         } catch (error) {
             toast({
-                title: "Error",
-                description: "Failed to load quotes",
+                title: t("Error", "Error"),
+                description: t("Failed to load quotes", "Failed to load quotes"),
                 variant: "destructive",
             })
         } finally {
@@ -112,60 +112,60 @@ export default function QuotesPage() {
         setProcessingId(quote.id)
         try {
             await QuoteAPI.send(quote.id)
-            toast({ title: "Success", description: `Quote ${quote.quote_number} sent to client.` })
+            toast({ title: t("Success", "Success"), description: t("Quote sent to client", `Quote ${quote.quote_number} sent to client.`) })
             fetchQuotes()
         } catch (error) {
-            toast({ title: "Error", description: "Failed to send quote.", variant: "destructive" })
+            toast({ title: t("Error", "Error"), description: t("Failed to send quote", "Failed to send quote."), variant: "destructive" })
         } finally {
             setProcessingId(null)
         }
     }, [toast])
 
     const handleApprove = useCallback(async (quote: Quote) => {
-        if (!confirm(`Approve quote ${quote.quote_number}? This will create an active policy.`)) return
+        if (!confirm(t("Approve quote confirmation", `Approve quote ${quote.quote_number}? This will create an active policy.`))) return
 
         setProcessingId(quote.id)
         try {
             const result = await QuoteAPI.approve(quote.id)
             toast({
-                title: "Quote Approved",
-                description: `Policy ${result.policy_number} created successfully.`
+                title: t("Quote Approved", "Quote Approved"),
+                description: t("Policy created successfully", `Policy ${result.policy_number} created successfully.`)
             })
             fetchQuotes()
         } catch (error) {
             console.error(error)
-            toast({ title: "Error", description: "Failed to approve quote.", variant: "destructive" })
+            toast({ title: t("Error", "Error"), description: t("Failed to approve quote", "Failed to approve quote."), variant: "destructive" })
         } finally {
             setProcessingId(null)
         }
     }, [toast])
 
     const handleReject = useCallback(async (quote: Quote) => {
-        if (!confirm(`Reject quote ${quote.quote_number}?`)) return
+        if (!confirm(t("Reject quote confirmation", `Reject quote ${quote.quote_number}?`))) return
 
         setProcessingId(quote.id)
         try {
             await QuoteAPI.reject(quote.id)
-            toast({ title: "Quote Rejected", description: "Quote status updated." })
+            toast({ title: t("Quote Rejected", "Quote Rejected"), description: t("Quote status updated", "Quote status updated.") })
             fetchQuotes()
         } catch (error) {
-            toast({ title: "Error", description: "Failed to reject quote.", variant: "destructive" })
+            toast({ title: t("Error", "Error"), description: t("Failed to reject quote", "Failed to reject quote."), variant: "destructive" })
         } finally {
             setProcessingId(null)
         }
     }, [toast])
 
     const handleArchive = useCallback(async (quote: Quote) => {
-        if (!confirm(`Archive quote ${quote.quote_number}?`)) return
+        if (!confirm(t("Archive quote confirmation", `Archive quote ${quote.quote_number}?`))) return
 
         setProcessingId(quote.id)
         try {
             await QuoteAPI.archive(quote.id)
-            toast({ title: "Quote Archived", description: "Quote has been archived." })
+            toast({ title: t("Quote Archived", "Quote Archived"), description: t("Quote has been archived", "Quote has been archived.") })
             fetchQuotes()
         } catch (error) {
             console.log(error)
-            toast({ title: "Error", description: "Failed to archive quote.", variant: "destructive" })
+            toast({ title: t("Error", "Error"), description: t("Failed to archive quote", "Failed to archive quote."), variant: "destructive" })
         } finally {
             setProcessingId(null)
         }
@@ -173,7 +173,7 @@ export default function QuotesPage() {
 
     const handleEdit = useCallback((quote: Quote) => {
         // Just mock for now or redirect
-        toast({ title: "Edit", description: "Edit functionality coming soon." })
+        toast({ title: t("Edit", "Edit"), description: t("Edit functionality coming soon", "Edit functionality coming soon.") })
     }, [toast])
 
 
@@ -191,8 +191,8 @@ export default function QuotesPage() {
     const onDeleteAdapter = (id: string) => handleDelete(id)
 
     const tableColumns = useMemo(() =>
-        getColumns(handleView, onDeleteAdapter, handleSend, handleApprove, handleReject, handleArchive, policyTypes),
-        [handleView, handleDelete, handleSend, handleApprove, handleReject, handleArchive, policyTypes]
+        getColumns(handleView, onDeleteAdapter, handleSend, handleApprove, handleReject, handleArchive, policyTypes, t),
+        [handleView, handleDelete, handleSend, handleApprove, handleReject, handleArchive, policyTypes, t]
     )
 
 
@@ -234,32 +234,32 @@ export default function QuotesPage() {
 
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
                 <span>{t("Lifecycle", "Lifecycle")}:</span>
-                <Badge role="button" onClick={() => setActiveTab('draft')} variant="secondary" className="cursor-pointer">Draft</Badge>
-                <Badge role="button" onClick={() => setActiveTab('draft_from_client')} variant="secondary" className="cursor-pointer">Draft (Client)</Badge>
+                <Badge role="button" onClick={() => setActiveTab('draft')} variant="secondary" className="cursor-pointer">{t("lifecycle.draft", "Draft")}</Badge>
+                <Badge role="button" onClick={() => setActiveTab('draft_from_client')} variant="secondary" className="cursor-pointer">{t("lifecycle.draft_client", "Draft (Client)")}</Badge>
                 <span className="text-muted-foreground">?</span>
-                <Badge role="button" onClick={() => setActiveTab('sent')} variant="default" className="cursor-pointer">Sent</Badge>
-                <Badge role="button" onClick={() => setActiveTab('submitted')} variant="default" className="cursor-pointer">Submitted</Badge>
-                <Badge role="button" onClick={() => setActiveTab('under_review')} variant="default" className="cursor-pointer">Under Review</Badge>
+                <Badge role="button" onClick={() => setActiveTab('sent')} variant="default" className="cursor-pointer">{t("lifecycle.sent", "Sent")}</Badge>
+                <Badge role="button" onClick={() => setActiveTab('submitted')} variant="default" className="cursor-pointer">{t("lifecycle.submitted", "Submitted")}</Badge>
+                <Badge role="button" onClick={() => setActiveTab('under_review')} variant="default" className="cursor-pointer">{t("lifecycle.under_review", "Under Review")}</Badge>
                 <span className="text-muted-foreground">?</span>
-                <Badge role="button" onClick={() => setActiveTab('accepted')} variant="default" className="cursor-pointer">Accepted</Badge>
+                <Badge role="button" onClick={() => setActiveTab('accepted')} variant="default" className="cursor-pointer">{t("lifecycle.accepted", "Accepted")}</Badge>
                 <span className="text-muted-foreground">?</span>
-                <Badge role="button" onClick={() => setActiveTab('policy_created')} variant="default" className="cursor-pointer">Policy Created</Badge>
+                <Badge role="button" onClick={() => setActiveTab('policy_created')} variant="default" className="cursor-pointer">{t("lifecycle.policy_created", "Policy Created")}</Badge>
                 <span className="text-muted-foreground">?</span>
-                <Badge role="button" onClick={() => setActiveTab('archived')} variant="outline" className="cursor-pointer">Archived</Badge>
-                <Badge role="button" onClick={() => setActiveTab('rejected')} variant="destructive" className="cursor-pointer">Rejected</Badge>
-                <Badge role="button" onClick={() => setActiveTab('expired')} variant="destructive" className="cursor-pointer">Expired</Badge>
-                <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px]" onClick={() => setActiveTab('all')}>{t("Reset", "Reset")}</Button>
+                <Badge role="button" onClick={() => setActiveTab('archived')} variant="outline" className="cursor-pointer">{t("lifecycle.archived", "Archived")}</Badge>
+                <Badge role="button" onClick={() => setActiveTab('rejected')} variant="destructive" className="cursor-pointer">{t("lifecycle.rejected", "Rejected")}</Badge>
+                <Badge role="button" onClick={() => setActiveTab('expired')} variant="destructive" className="cursor-pointer">{t("lifecycle.expired", "Expired")}</Badge>
+                <Button variant="ghost" size="sm" className="h-6 px-2 text-[10px]" onClick={() => setActiveTab('all')}>{t("status.reset", "Reset")}</Button>
             </div>
 
                 <TabsList>
                     <TabsTrigger value="all">{t("All Quotes", "All Quotes")}</TabsTrigger>
-                    <TabsTrigger value="draft">{t("Draft", "Draft")}</TabsTrigger>
-                    <TabsTrigger value="draft_from_client">{t("Draft (Client)", "Draft (Client)")}</TabsTrigger>
-                    <TabsTrigger value="sent">{t("Sent", "Sent")}</TabsTrigger>
-                    <TabsTrigger value="under_review">{t("Under Review", "Under Review")}</TabsTrigger>
-                    <TabsTrigger value="accepted">{t("Accepted", "Accepted")}</TabsTrigger>
-                    <TabsTrigger value="policy_created">{t("Policy Created", "Policy Created")}</TabsTrigger>
-                    <TabsTrigger value="archived" className="text-red-500 data-[state=active]:text-red-600">{t("Archived", "Archived")}</TabsTrigger>
+                    <TabsTrigger value="draft">{t("status.draft", "Draft")}</TabsTrigger>
+                    <TabsTrigger value="draft_from_client">{t("status.draft_client", "Draft (Client)")}</TabsTrigger>
+                    <TabsTrigger value="sent">{t("status.sent", "Sent")}</TabsTrigger>
+                    <TabsTrigger value="under_review">{t("status.under_review", "Under Review")}</TabsTrigger>
+                    <TabsTrigger value="accepted">{t("status.accepted", "Accepted")}</TabsTrigger>
+                    <TabsTrigger value="policy_created">{t("status.policy_created", "Policy Created")}</TabsTrigger>
+                    <TabsTrigger value="archived" className="text-red-500 data-[state=active]:text-red-600">{t("status.archived", "Archived")}</TabsTrigger>
                 </TabsList>
 
                 <div className="mt-4">

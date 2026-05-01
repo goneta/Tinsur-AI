@@ -6,6 +6,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional
 import uuid
+import logging
 from jose import JWTError
 from pydantic import ValidationError
 from datetime import datetime
@@ -15,6 +16,8 @@ from app.core.database import get_db
 from app.core.security import decode_token
 from app.models.user import User
 from app.schemas.auth import TokenData
+
+logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
 security_optional = HTTPBearer(auto_error=False)
@@ -31,20 +34,18 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     token = credentials.credentials
-    print(f"DEBUG_AUTH: Received token starting with {token[:10]}")
     try:
         payload = decode_token(token)
         if payload is None:
-            print("DEBUG: Token decode returned None")
             raise credentials_exception
-        
-        print(f"DEBUG_AUTH: Decoded payload for sub {payload.get('sub')}")
-        
+
+        logger.debug("Token decoded successfully")
+
         user_id: str = payload.get("sub")
         if user_id is None:
-            print("DEBUG: Token payload missing 'sub' claim")
+            logger.debug("Token payload missing 'sub' claim")
             raise credentials_exception
-        
+
         token_data = TokenData(
             user_id=user_id,
             email=payload.get("email"),
@@ -52,13 +53,7 @@ async def get_current_user(
             company_id=payload.get("company_id")
         )
     except (JWTError, ValidationError, ValueError) as e:
-        msg = f"DEBUG: Token validation exception: {type(e).__name__}: {e}"
-        print(msg)
-        try:
-            with open("auth_error.log", "a") as f:
-                f.write(f"{utcnow()} - {msg}\n")
-        except:
-            pass
+        logger.warning(f"Token validation failed: {type(e).__name__}")
         raise credentials_exception
     
     from sqlalchemy.orm import joinedload
@@ -68,26 +63,18 @@ async def get_current_user(
         db_user_id = uuid.UUID(token_data.user_id) if token_data.user_id else None
     except (ValueError, AttributeError):
         db_user_id = None
-        
+
     if not db_user_id:
-        print(f"DEBUG: Invalid UUID format for user_id: {token_data.user_id}")
+        logger.warning("Invalid UUID format in token")
         raise credentials_exception
 
     user = db.query(User).options(joinedload(User.company)).filter(User.id == db_user_id).first()
     if user is None:
-        msg = f"DEBUG: User not found for ID {token_data.user_id}"
-        print(msg)
-        try:
-            with open("auth_error.log", "a") as f:
-                f.write(f"{utcnow()} - {msg}\n")
-        except:
-            pass
+        logger.warning("User not found for token subject")
         raise credentials_exception
-    
-    print(f"DEBUG_AUTH: User found: {user.email}, is_active: {user.is_active}")
-    
+
     if not user.is_active:
-        print(f"DEBUG_AUTH: User {user.email} is INACTIVE")
+        logger.info("Inactive user login attempt")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Inactive user"

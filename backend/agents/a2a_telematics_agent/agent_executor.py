@@ -11,7 +11,7 @@ class TelematicsAgentExecutor(AgentExecutor):
     def __init__(self):
         self.agent = Agent(
             name="telematics_agent",
-            model="gemini-3-pro-preview",
+            model="gemini-2.0-flash",
             description="Agent that analyzes usage-based insurance (UBI) driving data",
             instruction="""
             You are a Telematics Agent for InsurSaaS.

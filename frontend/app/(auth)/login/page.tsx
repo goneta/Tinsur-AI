@@ -88,7 +88,7 @@ export default function LoginPage() {
                                 <Input
                                     id="email"
                                     type="email"
-                                    placeholder="you@example.com"
+                                    placeholder={t('placeholder.email', 'you@example.com')}
                                     {...register('email')}
                                     className={errors.email ? 'border-red-500' : ''}
                                 />
@@ -102,7 +102,7 @@ export default function LoginPage() {
                                 <Input
                                     id="password"
                                     type="password"
-                                    placeholder="••••••••"
+                                    placeholder={t('placeholder.password', '••••••••')}
                                     {...register('password')}
                                     className={errors.password ? 'border-red-500' : ''}
                                 />

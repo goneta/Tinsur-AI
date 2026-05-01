@@ -26,7 +26,6 @@ class ClientAutomobileBase(BaseModel):
     registration_document_url: Optional[str] = None
     parked_location: Optional[str] = None
     vehicle_image_url: Optional[str] = None
-    parked_location: Optional[str] = None
     
     driver_name: Optional[str] = None
     driver_dob: Optional[date] = None
@@ -245,7 +244,12 @@ class ClientCreate(ClientBase):
 
 
 class ClientUpdate(BaseModel):
-    """Client update schema."""
+    """Client update schema.
+
+    All fields are Optional so that partial updates work correctly
+    with exclude_unset=True in the repository layer.
+    """
+    client_type: Optional[str] = None  # 'individual' or 'corporate'
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     business_name: Optional[str] = None
@@ -257,30 +261,36 @@ class ClientUpdate(BaseModel):
     city: Optional[str] = None
     country: Optional[str] = None
     profile_picture: Optional[str] = None
-    
+
     nationality: Optional[str] = None
     id_number: Optional[str] = None
     id_expiry_date: Optional[date] = None
     marital_status: Optional[str] = None
-    
+
     occupation: Optional[str] = None
     employer_name: Optional[str] = None
     employment_status: Optional[str] = None
     annual_income: Optional[Decimal] = None
-    
+
+    # Eligibility Fields - all must be Optional to avoid resetting on partial update
     accident_count: Optional[int] = None
     no_claims_years: Optional[int] = None
     driving_license_years: Optional[int] = None
+    number_of_accidents_at_fault: Optional[int] = None  # Was missing - required for quote creation
 
     kyc_status: Optional[str] = None
-    pep_status: bool = False
-    consent_accepted: bool = False
-    
+    kyc_notes: Optional[str] = None
+    pep_status: Optional[bool] = None  # Fixed: was bool=False which reset on every partial update
+    consent_accepted: Optional[bool] = None  # Fixed: was bool=False which reset on every partial update
+
     driving_licence_number: Optional[str] = None
     id_card_url: Optional[str] = None
     driving_license_url: Optional[str] = None
     tax_id: Optional[str] = None
     risk_profile: Optional[str] = None
+    compliance_status: Optional[str] = None
+    is_high_risk: Optional[bool] = None
+    compliance_notes: Optional[str] = None
     status: Optional[str] = None
 
 

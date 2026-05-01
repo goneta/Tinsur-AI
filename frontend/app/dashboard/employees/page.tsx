@@ -129,7 +129,7 @@ export default function EmployeesPage() {
                 )}
                 {employee.pos_location?.city && (
                     <div className="flex items-center justify-between text-sm py-1 border-b">
-                        <span className="text-muted-foreground">POS City</span>
+                        <span className="text-muted-foreground">{t('employees.pos_city', 'POS City')}</span>
                         <span className="font-medium text-right">{employee.pos_location.city}</span>
                     </div>
                 )}
@@ -163,7 +163,7 @@ export default function EmployeesPage() {
                     <DialogHeader>
                         <DialogTitle>{t('employees.add_employee')}</DialogTitle>
                         <DialogDescription>
-                            Create a new employee account. They will receive an email with login instructions.
+                            {t('employees.create_desc', 'Create a new employee account. They will receive an email with login instructions.')}
                         </DialogDescription>
                     </DialogHeader>
                     <EmployeeForm onSuccess={handleSuccess} />
@@ -176,7 +176,7 @@ export default function EmployeesPage() {
             }}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Edit Employee</DialogTitle>
+                        <DialogTitle>{t('employees.edit_employee', 'Edit Employee')}</DialogTitle>
                     </DialogHeader>
                     <EmployeeForm
                         mode="edit"

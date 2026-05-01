@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { CreditCard, Banknote, Building2, Smartphone, Loader2 } from "lucide-react";
+import { useLanguage } from "@/contexts/language-context";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -85,6 +86,7 @@ interface PaymentFormProps {
 }
 
 export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }: PaymentFormProps) {
+    const { t } = useLanguage();
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 
@@ -124,8 +126,8 @@ export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }
             });
 
             toast({
-                title: "Payment processed",
-                description: "The payment has been successfully recorded.",
+                title: t('payment.processed', 'Payment processed'),
+                description: t('payment.recorded_success', 'The payment has been successfully recorded.'),
             });
 
             form.reset();
@@ -136,8 +138,8 @@ export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }
             console.error(error);
             toast({
                 variant: "destructive",
-                title: "Error",
-                description: "Failed to process payment. Please try again.",
+                title: t('common.error', 'Error'),
+                description: t('payment.process_failed', 'Failed to process payment. Please try again.'),
             });
         } finally {
             setIsLoading(false);
@@ -153,7 +155,7 @@ export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }
                         name="amount"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Amount</FormLabel>
+                                <FormLabel>{t('label.amount', 'Amount')}</FormLabel>
                                 <FormControl>
                                     <Input placeholder="0.00" {...field} />
                                 </FormControl>
@@ -167,11 +169,11 @@ export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }
                         name="currency"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Currency</FormLabel>
+                                <FormLabel>{t('label.currency', 'Currency')}</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select currency" />
+                                            <SelectValue placeholder={t('payment.currency_placeholder', 'Select currency')} />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
@@ -191,7 +193,7 @@ export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }
                     name="payment_method"
                     render={({ field }) => (
                         <FormItem className="space-y-3">
-                            <FormLabel>Payment Method</FormLabel>
+                            <FormLabel>{t('label.payment_method', 'Payment Method')}</FormLabel>
                             <FormControl>
                                 <RadioGroup
                                     onValueChange={field.onChange}
@@ -204,7 +206,7 @@ export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }
                                         </FormControl>
                                         <FormLabel className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
                                             <Banknote className="mb-3 h-6 w-6" />
-                                            Cash
+                                            {t('payment.method.cash', 'Cash')}
                                         </FormLabel>
                                     </FormItem>
                                     <FormItem>
@@ -213,7 +215,7 @@ export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }
                                         </FormControl>
                                         <FormLabel className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
                                             <Smartphone className="mb-3 h-6 w-6" />
-                                            Mobile Money
+                                            {t('payment.method.mobile_money', 'Mobile Money')}
                                         </FormLabel>
                                     </FormItem>
                                     <FormItem>
@@ -222,7 +224,7 @@ export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }
                                         </FormControl>
                                         <FormLabel className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
                                             <Building2 className="mb-3 h-6 w-6" />
-                                            Bank Transfer
+                                            {t('payment.method.bank_transfer', 'Bank Transfer')}
                                         </FormLabel>
                                     </FormItem>
                                     <FormItem>
@@ -231,7 +233,7 @@ export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }
                                         </FormControl>
                                         <FormLabel className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary opacity-50 cursor-not-allowed">
                                             <CreditCard className="mb-3 h-6 w-6" />
-                                            Card (Online)
+                                            {t('payment.method.card_online', 'Card (Online)')}
                                         </FormLabel>
                                     </FormItem>
                                 </RadioGroup>
@@ -250,9 +252,9 @@ export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }
                                     name="transaction_id"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Reference / Receipt No. (Optional)</FormLabel>
+                                            <FormLabel>{t('payment.reference_no', 'Reference / Receipt No. (Optional)')}</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Enter receipt number" {...field} />
+                                                <Input placeholder={t('payment.receipt_placeholder', 'Enter receipt number')} {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -268,11 +270,11 @@ export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }
                                     name="gateway"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Provider</FormLabel>
+                                            <FormLabel>{t('label.provider', 'Provider')}</FormLabel>
                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                 <FormControl>
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder="Select provider" />
+                                                        <SelectValue placeholder={t('payment.provider_placeholder', 'Select provider')} />
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
@@ -291,7 +293,7 @@ export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }
                                     name="phone_number"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Phone Number</FormLabel>
+                                            <FormLabel>{t('label.phone_number', 'Phone Number')}</FormLabel>
                                             <FormControl>
                                                 <Input placeholder="0102030405" {...field} />
                                             </FormControl>
@@ -309,9 +311,9 @@ export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }
                                     name="bank_name"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Bank Name</FormLabel>
+                                            <FormLabel>{t('label.bank_name', 'Bank Name')}</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Enter bank name" {...field} />
+                                                <Input placeholder={t('payment.bank_placeholder', 'Enter bank name')} {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -322,9 +324,9 @@ export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }
                                     name="account_number"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Account Number</FormLabel>
+                                            <FormLabel>{t('label.account_number', 'Account Number')}</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Enter account number" {...field} />
+                                                <Input placeholder={t('payment.account_placeholder', 'Enter account number')} {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -335,9 +337,9 @@ export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }
                                     name="transaction_id"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Transaction Reference</FormLabel>
+                                            <FormLabel>{t('payment.transaction_reference', 'Transaction Reference')}</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Enter reference number" {...field} />
+                                                <Input placeholder={t('payment.reference_placeholder', 'Enter reference number')} {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -352,10 +354,10 @@ export function PaymentForm({ policyId, policyNumber, defaultAmount, onSuccess }
                     {isLoading ? (
                         <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Processing...
+                            {t('common.processing', 'Processing...')}
                         </>
                     ) : (
-                        "Process Payment"
+                        t('payment.process_btn', 'Process Payment')
                     )}
                 </Button>
             </form>

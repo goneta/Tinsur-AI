@@ -260,13 +260,17 @@ async def update_client(
     """Update a client."""
     repo = ClientRepository(db)
     client = repo.update(client_id, current_user.company_id, client_data)
-    
+
     if not client:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Client not found"
         )
-    
+
+    # Commit the transaction - was missing, causing updates to not persist
+    db.commit()
+    db.refresh(client)
+
     return client
 
 

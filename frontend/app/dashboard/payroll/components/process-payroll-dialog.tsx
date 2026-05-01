@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
+import { useLanguage } from "@/contexts/language-context";
 
 interface ProcessPayrollDialogProps {
     isOpen: boolean;
@@ -23,6 +24,7 @@ interface ProcessPayrollDialogProps {
 }
 
 export function ProcessPayrollDialog({ isOpen, onOpenChange, onSuccess }: ProcessPayrollDialogProps) {
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(false);
     const [month, setMonth] = useState(() => {
         const d = new Date();
@@ -34,15 +36,15 @@ export function ProcessPayrollDialog({ isOpen, onOpenChange, onSuccess }: Proces
         try {
             await api.post('/payroll/generate', { month });
             toast({
-                title: "Success",
-                description: `Payroll for ${month} has been generated successfully.`,
+                title: t('payroll.success', 'Success'),
+                description: t('payroll.generated_success', `Payroll for ${month} has been generated successfully.`),
             });
             onSuccess();
         } catch (error) {
             console.error(error);
             toast({
-                title: "Error",
-                description: "Failed to generate payroll. Please check if it was already processed for this month.",
+                title: t('common.error', 'Error'),
+                description: t('payroll.generate_failed', 'Failed to generate payroll. Please check if it was already processed for this month.'),
                 variant: "destructive",
             });
         } finally {
@@ -59,17 +61,17 @@ export function ProcessPayrollDialog({ isOpen, onOpenChange, onSuccess }: Proces
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Process Monthly Payroll</DialogTitle>
+                    <DialogTitle>{t('payroll.process_title', 'Process Monthly Payroll')}</DialogTitle>
                     <DialogDescription>
-                        This will calculate salaries, taxes, and commissions for all employees for the selected month.
+                        {t('payroll.process_desc', 'This will calculate salaries, taxes, and commissions for all employees for the selected month.')}
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="month">Select Month</Label>
+                        <Label htmlFor="month">{t('payroll.select_month', 'Select Month')}</Label>
                         <Select value={month} onValueChange={setMonth}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Select month" />
+                                <SelectValue placeholder={t('payroll.month_placeholder', 'Select month')} />
                             </SelectTrigger>
                             <SelectContent>
                                 {months.map((m) => (
@@ -81,11 +83,11 @@ export function ProcessPayrollDialog({ isOpen, onOpenChange, onSuccess }: Proces
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-                        Cancel
+                        {t('btn.cancel', 'Cancel')}
                     </Button>
                     <Button onClick={handleProcess} disabled={loading}>
                         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Generate Payroll
+                        {t('payroll.generate_btn', 'Generate Payroll')}
                     </Button>
                 </DialogFooter>
             </DialogContent>

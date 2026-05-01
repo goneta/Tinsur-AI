@@ -98,9 +98,14 @@ export const columns = (
                     medium: 'bg-yellow-100 text-yellow-800',
                     high: 'bg-red-100 text-red-800',
                 };
+                const riskLabels: Record<string, string> = {
+                    low: t('status.low_risk', 'Low'),
+                    medium: t('status.medium_risk', 'Medium'),
+                    high: t('status.high_risk', 'High'),
+                };
                 return (
                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colors[risk] || ''}`}>
-                        {risk}
+                        {riskLabels[risk] || risk}
                     </span>
                 )
             },
@@ -117,9 +122,15 @@ export const columns = (
                     pending: 'bg-yellow-100 text-yellow-800',
                     rejected: 'bg-red-100 text-red-800',
                 };
+                const statusLabels: Record<string, string> = {
+                    verified: t('status.verified', 'Verified'),
+                    pending: t('status.pending', 'Pending'),
+                    rejected: t('status.rejected', 'Rejected'),
+                };
+                const currentStatus = status || 'pending';
                 return (
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colors[status] || ''}`}>
-                        {status || 'pending'}
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colors[currentStatus] || ''}`}>
+                        {statusLabels[currentStatus] || currentStatus}
                     </span>
                 )
             },
@@ -136,7 +147,12 @@ export const columns = (
                     inactive: 'secondary',
                     suspended: 'destructive',
                 };
-                return <Badge variant={variants[status] || 'default'}>{status}</Badge>;
+                const statusLabels: Record<string, string> = {
+                    active: t('status.active', 'Active'),
+                    inactive: t('status.inactive', 'Inactive'),
+                    suspended: t('status.suspended', 'Suspended'),
+                };
+                return <Badge variant={variants[status] || 'default'}>{statusLabels[status] || status}</Badge>;
             },
         },
         {

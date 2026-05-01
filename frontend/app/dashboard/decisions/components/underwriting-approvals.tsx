@@ -30,6 +30,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/components/ui/use-toast';
 import { formatCurrency } from '@/lib/utils';
 import { ShieldAlert, CheckCircle2, XCircle } from 'lucide-react';
+import { useLanguage } from '@/contexts/language-context';
 
 interface Referral {
     id: string;
@@ -49,6 +50,7 @@ interface Referral {
 }
 
 export default function UnderwritingApprovals() {
+    const { t } = useLanguage();
     const [referrals, setReferrals] = useState<Referral[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedReferral, setSelectedReferral] = useState<Referral | null>(null);
@@ -83,8 +85,8 @@ export default function UnderwritingApprovals() {
     const submitDecision = async () => {
         if (!decisionNote.trim()) {
             toast({
-                title: "Error",
-                description: "Please provide decision notes.",
+                title: t('common.error', 'Error'),
+                description: t('underwriting.decision_notes_required', 'Please provide decision notes.'),
                 variant: "destructive"
             });
             return;
@@ -104,46 +106,46 @@ export default function UnderwritingApprovals() {
 
             if (res.ok) {
                 toast({
-                    title: decisionType === 'approved' ? "Referral Approved" : "Referral Rejected",
-                    description: `The quote has been updated to ${decisionType === 'approved' ? 'Accepted' : 'Rejected'}.`,
+                    title: decisionType === 'approved' ? t('underwriting.referral_approved', 'Referral Approved') : t('underwriting.referral_rejected', 'Referral Rejected'),
+                    description: t('underwriting.decision_processed', `The quote has been updated to ${decisionType === 'approved' ? t('status.accepted', 'Accepted') : t('status.rejected', 'Rejected')}.`),
                 });
                 setIsDecisionModalOpen(false);
                 fetchReferrals();
             }
         } catch (error) {
             toast({
-                title: "Error",
-                description: "Failed to process decision.",
+                title: t('common.error', 'Error'),
+                description: t('underwriting.decision_failed', 'Failed to process decision.'),
                 variant: "destructive"
             });
         }
     };
 
-    if (loading) return <div>Loading approvals...</div>;
+    if (loading) return <div>{t('common.loading', 'Loading...')}</div>;
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Quotes Awaiting Approval</CardTitle>
+                <CardTitle>{t('underwriting.title', 'Quotes Awaiting Approval')}</CardTitle>
                 <CardDescription>
-                    These cases exceed agent authority limits or have high-risk flags.
+                    {t('underwriting.desc', 'These cases exceed agent authority limits or have high-risk flags.')}
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 {referrals.length === 0 ? (
                     <div className="text-center py-6 text-muted-foreground">
-                        No pending approvals in the queue.
+                        {t('underwriting.no_pending', 'No pending approvals in the queue.')}
                     </div>
                 ) : (
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Quote #</TableHead>
-                                <TableHead>Client</TableHead>
-                                <TableHead>Coverage</TableHead>
-                                <TableHead>Referred By</TableHead>
-                                <TableHead>Reason</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                                <TableHead>{t('label.quote', 'Quote #')}</TableHead>
+                                <TableHead>{t('label.client', 'Client')}</TableHead>
+                                <TableHead>{t('label.coverage', 'Coverage')}</TableHead>
+                                <TableHead>{t('underwriting.referred_by', 'Referred By')}</TableHead>
+                                <TableHead>{t('label.reason', 'Reason')}</TableHead>
+                                <TableHead className="text-right">{t('common.actions', 'Actions')}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -165,7 +167,7 @@ export default function UnderwritingApprovals() {
                                             className="text-green-600 border-green-200 hover:bg-green-50"
                                             onClick={() => handleAction(ref, 'approved')}
                                         >
-                                            <CheckCircle2 className="h-4 w-4 mr-1" /> Approve
+                                            <CheckCircle2 className="h-4 w-4 mr-1" /> {t('btn.approve', 'Approve')}
                                         </Button>
                                         <Button
                                             size="sm"
@@ -173,7 +175,7 @@ export default function UnderwritingApprovals() {
                                             className="text-red-600 border-red-200 hover:bg-red-50"
                                             onClick={() => handleAction(ref, 'rejected')}
                                         >
-                                            <XCircle className="h-4 w-4 mr-1" /> Reject
+                                            <XCircle className="h-4 w-4 mr-1" /> {t('btn.reject', 'Reject')}
                                         </Button>
                                     </TableCell>
                                 </TableRow>
@@ -186,27 +188,26 @@ export default function UnderwritingApprovals() {
             <Dialog open={isDecisionModalOpen} onOpenChange={setIsDecisionModalOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{decisionType === 'approved' ? 'Approve' : 'Reject'} Underwriting Referral</DialogTitle>
+                        <DialogTitle>{decisionType === 'approved' ? t('btn.approve', 'Approve') : t('btn.reject', 'Reject')} {t('underwriting.referral_title', 'Underwriting Referral')}</DialogTitle>
                         <DialogDescription>
-                            Please provide justification for your decision.
-                            This will be sent to the referring agent and client.
+                            {t('underwriting.decision_desc', 'Please provide justification for your decision. This will be sent to the referring agent and client.')}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
                         <Textarea
-                            placeholder="Decision notes..."
+                            placeholder={t('underwriting.notes_placeholder', 'Decision notes...')}
                             value={decisionNote}
                             onChange={(e) => setDecisionNote(e.target.value)}
                             className="min-h-[100px]"
                         />
                     </div>
                     <DialogFooter>
-                        <Button variant="ghost" onClick={() => setIsDecisionModalOpen(false)}>Cancel</Button>
+                        <Button variant="ghost" onClick={() => setIsDecisionModalOpen(false)}>{t('btn.cancel', 'Cancel')}</Button>
                         <Button
                             className={decisionType === 'approved' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
                             onClick={submitDecision}
                         >
-                            Confirm {decisionType === 'approved' ? 'Approval' : 'Rejection'}
+                            {t('common.confirm', 'Confirm')} {decisionType === 'approved' ? t('status.approved', 'Approval') : t('status.rejected', 'Rejection')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

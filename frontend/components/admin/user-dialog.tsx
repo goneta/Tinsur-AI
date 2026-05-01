@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useLanguage } from '@/contexts/language-context';
 import {
     Dialog,
     DialogContent,
@@ -52,6 +53,7 @@ interface UserDialogProps {
 }
 
 export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps) {
+    const { t } = useLanguage();
     const form = useForm<UserFormValues>({
         resolver: zodResolver(userSchema),
         defaultValues: {
@@ -116,7 +118,7 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
                                     <FormItem>
                                         <FormLabel>First Name</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="John" {...field} />
+                                            <Input placeholder={t('placeholder.enter_name', 'Enter name')} {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -129,7 +131,7 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
                                     <FormItem>
                                         <FormLabel>Last Name</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Doe" {...field} />
+                                            <Input placeholder={t('placeholder.enter_name', 'Enter name')} {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -174,7 +176,7 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select a role" />
+                                                <SelectValue placeholder={t('placeholder.select_role', 'Select a role')} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
@@ -207,10 +209,10 @@ export function UserDialog({ open, onOpenChange, user, onSave }: UserDialogProps
                         )}
 
                         <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t('btn.cancel', 'Cancel')}</Button>
                             <Button type="submit" disabled={form.formState.isSubmitting}>
                                 {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {user ? 'Save Changes' : 'Create User'}
+                                {user ? t('btn.save_changes', 'Save Changes') : t('btn.create_user', 'Create User')}
                             </Button>
                         </DialogFooter>
                     </form>

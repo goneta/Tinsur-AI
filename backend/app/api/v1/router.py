@@ -4,8 +4,9 @@ API v1 router.
 from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
-    auth, 
-    clients, 
+    auth,
+    twofa,
+    clients,
     admin,
     policy_templates,
     quotes,
@@ -71,6 +72,7 @@ api_router.include_router(co_insurance.router, prefix="/co-insurance", tags=["Co
 api_router.include_router(pos.router, prefix="/pos", tags=["Point of Sale & Inventory"])
 api_router.include_router(sales_reports.router, prefix="/sales-reports", tags=["Sales Analytics"])
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+api_router.include_router(twofa.router, prefix="/2fa", tags=["Two-Factor Authentication"])
 api_router.include_router(clients.router, prefix="/clients", tags=["Clients"])
 api_router.include_router(admin.router, prefix="/admin", tags=["Admin"])
 api_router.include_router(policy_templates.router, prefix="/policy-templates", tags=["Policy Templates"])

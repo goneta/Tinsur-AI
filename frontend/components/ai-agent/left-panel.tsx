@@ -226,14 +226,26 @@ ${t('ai_manager.upload_hint')}`
         try {
             console.log("Sending message...", userMsg);
 
-            // TODO: Handle File Upload via API if selectedFile exists
+            // Handle File Upload via documents API
+            let imagePath: string | undefined = undefined;
             if (selectedFile) {
-                console.log("File upload would happen here:", selectedFile.name);
+                try {
+                    const formData = new FormData();
+                    formData.append('file', selectedFile);
+                    const { api } = await import('@/lib/api');
+                    const uploadRes = await api.post('/documents/upload', formData, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+                    imagePath = uploadRes.data?.path || uploadRes.data?.file_path;
+                } catch (uploadErr) {
+                    console.warn("File upload failed, sending message without attachment:", uploadErr);
+                    toast({ title: t('ai_manager.upload_error', 'Upload Failed'), description: t('ai_manager.upload_error_desc', 'Could not upload file. Sending message without attachment.'), variant: "destructive" });
+                }
                 setSelectedFile(null);
             }
 
-            // Call API
-            const response = await AiAPI.chat(userMsg);
+            // Call API with optional image path
+            const response = await AiAPI.chat(userMsg, undefined, undefined, imagePath);
 
             // Checks for Preview Data in response
             parsePreviewData(response.response);

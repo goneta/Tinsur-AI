@@ -11,7 +11,7 @@ class TicketsAgentExecutor(AgentExecutor):
     def __init__(self):
         self.agent = Agent(
             name="tickets_agent",
-            model="gemini-3-pro-preview",
+            model="gemini-2.0-flash",
             description="Agent that manages support tickets for clients",
             instruction="""
             You are a Support Tickets Agent for InsurSaaS.

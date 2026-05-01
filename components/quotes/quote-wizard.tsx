@@ -275,34 +275,63 @@ export function QuoteWizard() {
             const client = await clientApi.getClient(selectedId);
             setSelectedClient(client);
 
-            // Fetch vehicles if any
-            if (client.automobile_details) {
+            // Fetch vehicles if any (automobile_details is an array)
+            if (client.automobile_details && Array.isArray(client.automobile_details) && client.automobile_details.length > 0) {
+                setClientVehicles(client.automobile_details.map((vehicle: any) => ({
+                    ...vehicle,
+                    id: vehicle.id || `v-${Math.random()}`,
+                    make: vehicle.vehicle_make,
+                    model: vehicle.vehicle_model,
+                    registrationNumber: vehicle.vehicle_registration,
+                    vehicleType: 'Manual', // Default
+                    usage: vehicle.vehicle_usage || 'Domestic',
+                    mileage: vehicle.vehicle_mileage?.toString() || '0',
+                    imageUrl: vehicle.vehicle_image_url || 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=400'
+                })));
+            } else if (client.automobile_details && !Array.isArray(client.automobile_details)) {
+                // Handle legacy single-object format
                 setClientVehicles([{
                     ...client.automobile_details,
                     id: client.automobile_details.id || 'v1',
                     make: client.automobile_details.vehicle_make,
                     model: client.automobile_details.vehicle_model,
                     registrationNumber: client.automobile_details.vehicle_registration,
-                    vehicleType: 'Manual', // Default
+                    vehicleType: 'Manual',
                     usage: client.automobile_details.vehicle_usage || 'Domestic',
                     mileage: client.automobile_details.vehicle_mileage?.toString() || '0',
-                    imageUrl: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=400' // Mock image
+                    imageUrl: client.automobile_details.vehicle_image_url || 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=400'
                 }]);
             } else {
                 setClientVehicles([]);
             }
 
-            // Drivers - select current client as main driver by default
-            setClientDrivers([{
-                id: client.id,
-                fullName: `${client.first_name} ${client.last_name}`,
-                phoneNumber: client.phone || '',
-                address: client.address || '',
-                licenseNumber: client.driving_licence_number || '',
-                photoUrl: client.profile_picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${client.first_name}`
-            }]);
-
-            setValue("driver_ids", [client.id]);
+            // Drivers - load from client's driver records if available
+            if (client.drivers && Array.isArray(client.drivers) && client.drivers.length > 0) {
+                setClientDrivers(client.drivers.map((driver: any) => ({
+                    id: driver.id,
+                    fullName: `${driver.first_name || ''} ${driver.last_name || ''}`.trim(),
+                    phoneNumber: driver.phone_number || '',
+                    address: driver.address || '',
+                    licenseNumber: driver.license_number || '',
+                    isMainDriver: driver.is_main_driver || false,
+                    photoUrl: driver.driving_license_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${driver.first_name}`
+                })));
+                // Default select the main driver
+                const mainDriver = client.drivers.find((d: any) => d.is_main_driver);
+                setValue("driver_ids", mainDriver ? [mainDriver.id] : [client.drivers[0].id]);
+            } else {
+                // Fallback: use client details as a mock driver
+                setClientDrivers([{
+                    id: client.id,
+                    fullName: `${client.first_name} ${client.last_name}`,
+                    phoneNumber: client.phone || '',
+                    address: client.address || '',
+                    licenseNumber: client.driving_licence_number || '',
+                    isMainDriver: true,
+                    photoUrl: client.profile_picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${client.first_name}`
+                }]);
+                setValue("driver_ids", [client.id]);
+            }
 
             // Policy matching
             const result = await QuoteAPI.matchPolicies(selectedId);
@@ -405,15 +434,36 @@ export function QuoteWizard() {
             e.preventDefault();
             e.stopPropagation();
         }
-        if (!calculation || !selectedPolicy) return;
+        if (!calculation || !selectedPolicy) {
+            toast({
+                title: "Cannot create quote",
+                description: "Please calculate the premium first before creating the quote.",
+                variant: "destructive"
+            });
+            return;
+        }
         setLoading(true);
         try {
-            console.log("Submitting quote creation...");
             const data = methods.getValues();
 
+            // Validate required fields before submission
+            if (!data.client_id) {
+                toast({ title: "Error", description: "Please select a client.", variant: "destructive" });
+                setLoading(false);
+                return;
+            }
+            if (!data.vehicle_id) {
+                toast({ title: "Error", description: "Please select a vehicle.", variant: "destructive" });
+                setLoading(false);
+                return;
+            }
+            if (!data.driver_ids || data.driver_ids.length === 0) {
+                toast({ title: "Error", description: "Please select at least one driver.", variant: "destructive" });
+                setLoading(false);
+                return;
+            }
 
             // Construct a clean payload matching QuoteCreate schema
-            // Explicitly excluding 'risk_factors' property which is not in QuoteCreate
             const payload: any = {
                 client_id: data.client_id,
                 policy_type_id: selectedPolicy.id,
@@ -422,7 +472,7 @@ export function QuoteWizard() {
                 duration_months: data.duration_months,
                 discount_percent: data.discount_percent || 0,
                 excess: (data.excess_details?.mandatory || 0) + (data.excess_details?.voluntary || 0),
-                included_services: data.selected_services || [],
+                selected_services: data.selected_services || [],
                 details: {
                     ...data.risk_factors,
                     excess_details: data.excess_details,
@@ -436,23 +486,18 @@ export function QuoteWizard() {
                     base_rate: selectedBaseRateId ? quoteElements.find(e => e.id === selectedBaseRateId)?.value ?? null : null,
                     risk_multiplier: selectedMultipliers.map(id => quoteElements.find(e => e.id === id)?.value).filter(v => v !== undefined && v !== null),
                     fixed_fee: selectedFees.map(id => quoteElements.find(e => e.id === id)?.value).filter(v => v !== undefined && v !== null),
-                    // government_tax: selectedTaxes.map(id => quoteElements.find(e => e.id === id)?.value).filter(v => v !== undefined && v !== null), // REMOVED to enforce company settings
                     company_discount: selectedDiscounts.map(id => quoteElements.find(e => e.id === id)?.value).filter(v => v !== undefined && v !== null)
                 }
             };
 
-            // Only add created_by if it exists (though backend handles optional)
-            // if (data.created_by) payload.created_by = data.created_by;
-            console.log("Payload:", payload);
-
             await QuoteAPI.create(payload);
 
-            toast({ title: "Success", description: `Quote ${status === 'draft' ? 'saved' : 'created'} successfully` });
+            toast({ title: "Success", description: `Quote ${status === 'draft' ? 'saved as draft' : 'created and ready to send'} successfully` });
             router.push('/dashboard/quotes');
-            // router.refresh(); // Removed to prevent potential race/reload issues
         } catch (e: any) {
             console.error("Quote Creation Error:", e);
-            toast({ title: "Error", description: e.message || "Failed to create quote", variant: "destructive" });
+            const errorMsg = e.response?.data?.detail || e.message || "Failed to create quote";
+            toast({ title: "Quote Creation Failed", description: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg), variant: "destructive" });
         } finally {
             setLoading(false);
         }

@@ -11,7 +11,7 @@ class LoyaltyAgentExecutor(AgentExecutor):
     def __init__(self):
         self.agent = Agent(
             name="loyalty_agent",
-            model="gemini-3-pro-preview", # Upgrade for better tool use
+            model="gemini-2.0-flash", # Upgrade for better tool use
             description="Agent that manages loyalty points and rewards",
             instruction="""
             You are a Loyalty Agent for InsurSaaS.

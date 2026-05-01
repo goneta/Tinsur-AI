@@ -6,22 +6,24 @@ import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash2 } from "lucide-react"
+import { useLanguage } from "@/contexts/language-context"
 
 export const columns = (
     onEdit: (policyType: PremiumPolicyType) => void,
     onDelete: (policyType: PremiumPolicyType) => void,
-    formatPrice: (amount: number) => string
+    formatPrice: (amount: number) => string,
+    t: (key: string, fallback: string) => string
 ): ColumnDef<PremiumPolicyType>[] => [
         {
             accessorKey: "name",
             header: ({ column }) => (
-                <DataTableColumnHeader column={column} title="Policy Name" />
+                <DataTableColumnHeader column={column} title={t('common.column.name', 'Policy Name')} />
             ),
         },
         {
             accessorKey: "price",
             header: ({ column }) => (
-                <DataTableColumnHeader column={column} title="Price (FCFA)" />
+                <DataTableColumnHeader column={column} title={t('premium_policies.price', 'Price (FCFA)')} />
             ),
             cell: ({ row }) => {
                 return <div>{formatPrice(parseFloat(row.getValue("price")))}</div>
@@ -29,21 +31,21 @@ export const columns = (
         },
         {
             accessorKey: "criteria",
-            header: "Criteria Counts",
+            header: t('premium_policies.criteria_count', 'Criteria Counts'),
             cell: ({ row }) => {
                 const criteria = row.original.criteria || []
-                return <div>{criteria.length} Criteria</div>
+                return <div>{criteria.length} {t('premium_policies.criteria', 'Criteria')}</div>
             },
             accessorFn: (row) => row.criteria?.length || 0,
         },
         {
             accessorKey: "is_active",
-            header: "Status",
+            header: t('common.column.status', 'Status'),
             cell: ({ row }) => {
                 const isActive = row.getValue("is_active") as boolean
                 return (
                     <Badge variant={isActive ? "default" : "secondary"}>
-                        {isActive ? "Active" : "Inactive"}
+                        {isActive ? t('status.active', 'Active') : t('status.inactive', 'Inactive')}
                     </Badge>
                 )
             },

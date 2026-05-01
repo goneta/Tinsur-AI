@@ -56,7 +56,7 @@ export default function PolicyServicesPage() {
     }, [loadServices]);
 
     const handleDelete = async (id: string) => {
-        if (confirm('Are you sure you want to delete this service?')) {
+        if (confirm(t('services.confirm_delete', 'Are you sure you want to delete this service?'))) {
             try {
                 await policyServiceApi.delete(id);
                 loadServices();
@@ -71,7 +71,7 @@ export default function PolicyServicesPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight">{t('admin.tabs.services', 'Policy Services')}</h2>
-                    <p className="text-muted-foreground">Manage optional services and add-ons for policies.</p>
+                    <p className="text-muted-foreground">{t('services.subtitle', 'Manage optional services and add-ons for policies.')}</p>
                 </div>
                 <Button onClick={() => setIsCreateOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
@@ -127,7 +127,7 @@ export default function PolicyServicesPage() {
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant={service.is_active ? 'default' : 'secondary'}>
-                                                {service.is_active ? 'Active' : 'Inactive'}
+                                                {service.is_active ? t('status.active', 'Active') : t('status.inactive', 'Inactive')}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">

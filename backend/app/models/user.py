@@ -32,6 +32,7 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
     mfa_enabled = Column(Boolean, default=False)
     mfa_secret = Column(String(255))
+    backup_codes = Column(Text, nullable=True)  # JSON array of hashed backup codes
     profile_picture = Column(String(500), nullable=True)
     compliance_status = Column(String(50), default="pending")  # 'pending', 'approved', 'flagged'
     is_high_risk = Column(Boolean, default=False)

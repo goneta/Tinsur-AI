@@ -156,7 +156,7 @@ export default function CompanyRegistrationPage() {
                             />
 
                             <div className="text-center text-xs text-gray-400 font-medium px-4">
-                                By continuing, you agree to our <a href="#" className="underline">Terms of Service</a> and <a href="#" className="underline">Privacy Policy</a>.
+                                {t('register.terms_agreement', 'By continuing, you agree to our')} <a href="#" className="underline">{t('register.terms_of_service', 'Terms of Service')}</a> {t('common.and', 'and')} <a href="#" className="underline">{t('register.privacy_policy', 'Privacy Policy')}</a>.
                             </div>
 
                             <div className="text-center text-sm pt-2">
@@ -330,7 +330,7 @@ export default function CompanyRegistrationPage() {
                                     onClick={() => setShowEmailForm(false)}
                                     className="text-gray-500 hover:text-gray-700 mt-4"
                                 >
-                                    ← Back to social options
+                                    ← {t('register.back_to_social', 'Back to social options')}
                                 </button>
 
                                 <div className="text-slate-500 font-medium pt-2">

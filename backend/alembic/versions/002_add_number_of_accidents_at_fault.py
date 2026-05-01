@@ -1,7 +1,7 @@
 """Add number_of_accidents_at_fault field to clients and drivers tables
 
-Revision ID: 002
-Revises: 001
+Revision ID: 002b_accidents
+Revises: 002, f030116eb968
 Create Date: 2026-03-27 22:05:00.000000
 
 """
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '002'
-down_revision = '001'
+revision = '002b_accidents'
+down_revision = ('002', 'f030116eb968')
 branch_labels = None
 depends_on = None
 
