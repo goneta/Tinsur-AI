@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 
 import { QueryProvider } from "@/components/query-provider";
 import { LanguageProvider } from "@/contexts/language-context";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 // import { cookies } from 'next/headers';
 // import { I18nProvider } from "@/components/i18n-provider";
@@ -43,6 +44,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning translate="no" className="notranslate">
       <body className={`${inter.className} antialiased`}>
+        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
         <ThemeProvider defaultTheme="light" storageKey="insurance-saas-theme">
           <LanguageProvider>
             <QueryProvider>
@@ -55,6 +57,7 @@ export default async function RootLayout({
             </QueryProvider>
           </LanguageProvider>
         </ThemeProvider>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );
