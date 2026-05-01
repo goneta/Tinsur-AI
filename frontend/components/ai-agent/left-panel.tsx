@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -201,7 +201,10 @@ ${t('ai_manager.upload_hint')}`
         }
     };
 
-    const handleSendMessage = async (textOverride?: string) => {
+    const streamCleanupRef = useRef<(() => void) | null>(null);
+    const streamingStartedRef = useRef(false);
+
+    const handleSendMessage = useCallback(async (textOverride?: string) => {
         const userMsg = textOverride || inputValue.trim();
         if ((!userMsg && !selectedFile) || isLoading) return;
 
@@ -212,7 +215,7 @@ ${t('ai_manager.upload_hint')}`
         if (editingField) {
             finalMsg = `Update ${editingField} to ${userMsg}`;
             setEditingField(null);
-            setActiveInteraction(null); // Clear active interaction once we respond
+            setActiveInteraction(null);
         }
 
         // Add User Message
@@ -223,62 +226,74 @@ ${t('ai_manager.upload_hint')}`
         setMessages(newMessages);
         setIsLoading(true);
 
-        try {
-            console.log("Sending message...", userMsg);
+        // Clean up any prior stream
+        streamCleanupRef.current?.();
+        streamingStartedRef.current = false;
 
-            // Handle File Upload via documents API
-            let imagePath: string | undefined = undefined;
-            if (selectedFile) {
-                try {
-                    const formData = new FormData();
-                    formData.append('file', selectedFile);
-                    const { api } = await import('@/lib/api');
-                    const uploadRes = await api.post('/documents/upload', formData, {
-                        headers: { 'Content-Type': 'multipart/form-data' }
-                    });
-                    imagePath = uploadRes.data?.path || uploadRes.data?.file_path;
-                } catch (uploadErr) {
-                    console.warn("File upload failed, sending message without attachment:", uploadErr);
-                    toast({ title: t('ai_manager.upload_error', 'Upload Failed'), description: t('ai_manager.upload_error_desc', 'Could not upload file. Sending message without attachment.'), variant: "destructive" });
-                }
-                setSelectedFile(null);
+        // Handle File Upload via documents API
+        let imagePath: string | undefined = undefined;
+        if (selectedFile) {
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                const { api } = await import('@/lib/api');
+                const uploadRes = await api.post('/documents/upload', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                imagePath = uploadRes.data?.path || uploadRes.data?.file_path;
+            } catch (uploadErr) {
+                console.warn("File upload failed, sending without attachment:", uploadErr);
+                toast({ title: t('ai_manager.upload_error', 'Upload Failed'), description: t('ai_manager.upload_error_desc', 'Could not upload file. Sending message without attachment.'), variant: "destructive" });
             }
-
-            // Call API with optional image path
-            const response = await AiAPI.chat(userMsg, undefined, undefined, imagePath);
-
-            // Checks for Preview Data in response
-            parsePreviewData(response.response);
-
-            // Add Assistant Response
-            setMessages(prev => [
-                ...prev,
-                { role: 'assistant', content: response.response }
-            ]);
-
-            // Refresh status to update badge if on credit plan
-            if (subStatus?.plan === 'CREDIT') {
-                loadSubscription();
-            }
-
-        } catch (error: any) {
-            console.error("Failed to send message:", error);
-
-            if (error.response?.status === 402) {
-                setIsCreditModalOpen(true);
-                return;
-            }
-
-            toast({
-                title: "Error",
-                description: error.response?.data?.detail || "Failed to communicate with the AI Agent.",
-                variant: "destructive"
-            });
-            // Optionally remove user message or add error message
-        } finally {
-            setIsLoading(false);
+            setSelectedFile(null);
         }
-    };
+
+        // Try WebSocket streaming first, HTTP fallback handled inside streamChat
+        const cleanup = AiAPI.streamChat(
+            finalMsg,
+            newMessages.slice(0, -1) as ChatMessage[], // history without the just-added user msg
+            (chunk) => {
+                // Progressive token rendering
+                setMessages(prev => {
+                    if (!streamingStartedRef.current) {
+                        streamingStartedRef.current = true;
+                        return [...prev, { role: 'assistant', content: chunk }];
+                    }
+                    const updated = [...prev];
+                    updated[updated.length - 1] = {
+                        ...updated[updated.length - 1],
+                        content: updated[updated.length - 1].content + chunk,
+                    };
+                    return updated;
+                });
+            },
+            (fullText) => {
+                // Stream complete — parse preview data and refresh credit balance
+                parsePreviewData(fullText);
+                if (subStatus?.plan === 'CREDIT') {
+                    loadSubscription();
+                }
+                setIsLoading(false);
+                streamingStartedRef.current = false;
+            },
+            (code) => {
+                // Error (including 402 credit limit comes via HTTP fallback)
+                if (code === 402) {
+                    setIsCreditModalOpen(true);
+                } else if (!streamingStartedRef.current) {
+                    toast({
+                        title: "Error",
+                        description: t('ai_manager.error', 'Failed to communicate with the AI Agent.'),
+                        variant: "destructive",
+                    });
+                }
+                setIsLoading(false);
+                streamingStartedRef.current = false;
+            },
+            undefined, // policy_id
+        );
+        streamCleanupRef.current = cleanup;
+    }, [inputValue, selectedFile, isLoading, editingField, messages, subStatus, t]);
 
     const runDebugDemo = () => {
         // Debug function to force a preview
