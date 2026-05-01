@@ -4,9 +4,13 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Users, Award, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Heart, Users, Award, TrendingUp, Gift, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatDate } from '@/lib/utils';
+import { useToast } from '@/components/ui/use-toast';
 
 interface LoyaltyStats {
     total_points: number;
@@ -25,12 +29,39 @@ import { useLanguage } from '@/contexts/language-context';
 
 export default function LoyaltyPage() {
     const { t } = useLanguage();
+    const { toast } = useToast();
     const [stats, setStats] = useState<LoyaltyStats | null>(null);
     const [loading, setLoading] = useState(true);
+    const [redeemClientId, setRedeemClientId] = useState('');
+    const [redeemPoints, setRedeemPoints] = useState('');
+    const [redeeming, setRedeeming] = useState(false);
 
     useEffect(() => {
         fetchStats();
     }, []);
+
+    const handleRedeem = async () => {
+        if (!redeemClientId.trim() || !redeemPoints || parseInt(redeemPoints) <= 0) return;
+        setRedeeming(true);
+        try {
+            const res = await api.post(`/loyalty/${redeemClientId}/redeem?points=${parseInt(redeemPoints)}`);
+            toast({
+                title: t('loyalty.redeem_success', 'Points Redeemed'),
+                description: `${res.data.message} — Discount: ${parseFloat(res.data.discount_amount).toLocaleString()} XOF`,
+            });
+            setRedeemClientId('');
+            setRedeemPoints('');
+            fetchStats();
+        } catch (err: any) {
+            toast({
+                title: t('loyalty.redeem_error', 'Redemption Failed'),
+                description: err.response?.data?.detail || t('common.error.try_again', 'Please try again.'),
+                variant: 'destructive',
+            });
+        } finally {
+            setRedeeming(false);
+        }
+    };
 
     const fetchStats = async () => {
         try {
@@ -135,28 +166,77 @@ export default function LoyaltyPage() {
                         </Table>
                     </CardContent>
                 </Card>
-                <Card className="col-span-3">
-                    <CardHeader>
-                        <CardTitle>{t('loyalty.tier_distribution')}</CardTitle>
-                        <CardDescription>{t('loyalty.tier_distribution_desc', 'Customer breakdown by tier status.')}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {['platinum', 'gold', 'silver', 'bronze'].map(tier => (
-                            <div key={tier} className="flex items-center justify-between">
-                                <span className="capitalize text-sm font-medium">{tier}</span>
-                                <div className="flex items-center gap-2">
-                                    <div className="h-2 w-32 bg-muted rounded-full overflow-hidden">
-                                        <div
-                                            className="h-full bg-primary"
-                                            style={{ width: `${(stats?.tiers[tier] || 0) / (stats?.active_members || 1) * 100}%` }}
-                                        />
+                <div className="col-span-3 space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>{t('loyalty.tier_distribution')}</CardTitle>
+                            <CardDescription>{t('loyalty.tier_distribution_desc', 'Customer breakdown by tier status.')}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {['platinum', 'gold', 'silver', 'bronze'].map(tier => (
+                                <div key={tier} className="flex items-center justify-between">
+                                    <span className="capitalize text-sm font-medium">{tier}</span>
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-2 w-32 bg-muted rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-primary"
+                                                style={{ width: `${(stats?.tiers[tier] || 0) / (stats?.active_members || 1) * 100}%` }}
+                                            />
+                                        </div>
+                                        <span className="text-xs text-muted-foreground">{stats?.tiers[tier] || 0}</span>
                                     </div>
-                                    <span className="text-xs text-muted-foreground">{stats?.tiers[tier] || 0}</span>
                                 </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+
+                    {/* Redeem Points */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Gift className="h-5 w-5 text-primary" />
+                                {t('loyalty.redeem_title', 'Redeem Points')}
+                            </CardTitle>
+                            <CardDescription>
+                                {t('loyalty.redeem_desc', '100 points = 1,000 XOF discount. Enter the client ID and points to redeem.')}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>{t('loyalty.client_id', 'Client ID')}</Label>
+                                <Input
+                                    placeholder={t('loyalty.client_id_placeholder', 'e.g. uuid of client')}
+                                    value={redeemClientId}
+                                    onChange={(e) => setRedeemClientId(e.target.value)}
+                                />
                             </div>
-                        ))}
-                    </CardContent>
-                </Card>
+                            <div className="space-y-2">
+                                <Label>{t('loyalty.points_to_redeem', 'Points to Redeem')}</Label>
+                                <Input
+                                    type="number"
+                                    min={100}
+                                    step={100}
+                                    placeholder="100"
+                                    value={redeemPoints}
+                                    onChange={(e) => setRedeemPoints(e.target.value)}
+                                />
+                                {redeemPoints && parseInt(redeemPoints) >= 100 && (
+                                    <p className="text-xs text-muted-foreground">
+                                        = {(parseInt(redeemPoints) / 100 * 1000).toLocaleString()} XOF {t('loyalty.discount', 'discount')}
+                                    </p>
+                                )}
+                            </div>
+                            <Button
+                                onClick={handleRedeem}
+                                disabled={!redeemClientId || !redeemPoints || parseInt(redeemPoints) < 100 || redeeming}
+                                className="w-full"
+                            >
+                                {redeeming && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                                {t('loyalty.redeem_btn', 'Redeem Points')}
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     );
