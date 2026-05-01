@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { X, Bot, Sparkles, Send, User } from 'lucide-react';
-import { api } from '@/lib/api';
 import { useLanguage } from '@/contexts/language-context';
+import { AiAPI, ChatMessage } from '@/lib/ai-api';
 
 interface AIChatPanelProps {
     isOpen: boolean;
@@ -25,26 +25,58 @@ export function AIChatPanel({ isOpen, onClose, className }: AIChatPanelProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
+    const streamingPlaceholderAdded = useRef(false);
+    const cleanupRef = useRef<(() => void) | null>(null);
 
     if (!isOpen) return null;
 
-    const sendMessage = async () => {
+    const sendMessage = useCallback(() => {
         if (!input.trim() || loading) return;
 
         const userMessage = input.trim();
         setInput('');
+        const history: ChatMessage[] = messages.map(m => ({ role: m.role, content: m.content }));
         setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
         setLoading(true);
+        streamingPlaceholderAdded.current = false;
 
-        try {
-            const response = await api.post('/chat', { message: userMessage });
-            setMessages(prev => [...prev, { role: 'assistant', content: response.data.response }]);
-        } catch (error) {
-            setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
-        } finally {
-            setLoading(false);
-        }
-    };
+        // Clean up any previous stream
+        cleanupRef.current?.();
+
+        const cleanup = AiAPI.streamChat(
+            userMessage,
+            history,
+            (chunk) => {
+                // Append streamed token
+                setMessages(prev => {
+                    if (!streamingPlaceholderAdded.current) {
+                        streamingPlaceholderAdded.current = true;
+                        return [...prev, { role: 'assistant', content: chunk }];
+                    }
+                    const updated = [...prev];
+                    updated[updated.length - 1] = {
+                        ...updated[updated.length - 1],
+                        content: updated[updated.length - 1].content + chunk,
+                    };
+                    return updated;
+                });
+            },
+            (_fullText) => {
+                setLoading(false);
+                streamingPlaceholderAdded.current = false;
+            },
+            (_code) => {
+                if (!streamingPlaceholderAdded.current) {
+                    setMessages(prev => [...prev, {
+                        role: 'assistant',
+                        content: t('ai.chat.error', 'Sorry, I encountered an error. Please try again.'),
+                    }]);
+                }
+                setLoading(false);
+            },
+        );
+        cleanupRef.current = cleanup;
+    }, [input, loading, messages, t]);
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
