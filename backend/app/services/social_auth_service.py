@@ -1,6 +1,7 @@
 """
 Social authentication service for handling Google login and automatic provisioning.
 """
+import logging
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.models.user import User
@@ -18,6 +19,8 @@ import random
 
 from app.core.config import settings
 from google.oauth2 import id_token
+
+logger = logging.getLogger(__name__)
 from google.auth.transport import requests as google_requests
 
 class SocialAuthService:
@@ -38,7 +41,7 @@ class SocialAuthService:
             )
 
         if not settings.GOOGLE_CLIENT_ID:
-            print("WARNING: GOOGLE_CLIENT_ID not configured. Using MOCK verification.")
+            logger.warning("WARNING: GOOGLE_CLIENT_ID not configured. Using MOCK verification.")
             return self.verify_google_token_mock(token)
 
         # Check if it looks like a JWT (ID Token)
@@ -59,7 +62,7 @@ class SocialAuthService:
                     "picture": idinfo.get('picture')
                 }
             except Exception as e:
-                print(f"Google ID Token Verification Error: {str(e)}")
+                logger.error(f"Google ID Token Verification Error: {str(e)}")
                 # Fall through to try as access_token
         
         # Try as Access Token by calling Google userinfo endpoint
@@ -87,7 +90,7 @@ class SocialAuthService:
                     "picture": userinfo.get('picture')
                 }
         except Exception as e:
-            print(f"Google Access Token Verification Error: {str(e)}")
+            logger.error(f"Google Access Token Verification Error: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=f"Token verification failed: {str(e)}"
@@ -119,10 +122,10 @@ class SocialAuthService:
 
         # Priority: If it's explicitly mock or not configured, use mock.
         if not settings.FACEBOOK_APP_ID or settings.FACEBOOK_APP_ID == "mock-fb-id":
-            print(f"DEBUG: FACEBOOK_APP_ID ({settings.FACEBOOK_APP_ID}) is mock. Using MOCK verification.")
+            logger.debug(f"DEBUG: FACEBOOK_APP_ID ({settings.FACEBOOK_APP_ID}) is mock. Using MOCK verification.")
             return self.verify_facebook_token_mock(token)
 
-        print(f"DEBUG: Verifying Facebook token with real Graph API (App ID: {settings.FACEBOOK_APP_ID})")
+        logger.debug(f"DEBUG: Verifying Facebook token with real Graph API (App ID: {settings.FACEBOOK_APP_ID})")
         import httpx
         try:
             async with httpx.AsyncClient() as client:
@@ -139,7 +142,7 @@ class SocialAuthService:
                 
                 if response.status_code != 200:
                     fb_error = response.json().get('error', {}).get('message', 'Failed to verify Facebook token')
-                    print(f"Facebook Graph API Error: {fb_error}")
+                    logger.error(f"Facebook Graph API Error: {fb_error}")
                     raise HTTPException(
                         status_code=status.HTTP_401_UNAUTHORIZED,
                         detail=f"Facebook verification failed: {fb_error}"
@@ -159,7 +162,7 @@ class SocialAuthService:
         except HTTPException:
             raise
         except Exception as e:
-            print(f"Facebook Access Token Verification Error: {str(e)}")
+            logger.error(f"Facebook Access Token Verification Error: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=f"Token verification failed: {str(e)}"
@@ -218,7 +221,7 @@ class SocialAuthService:
             )
 
         if not settings.APPLE_CLIENT_ID:
-            print("WARNING: APPLE_CLIENT_ID not configured. Using MOCK verification.")
+            logger.warning("WARNING: APPLE_CLIENT_ID not configured. Using MOCK verification.")
             return self.verify_apple_token_mock(token)
 
         import httpx
@@ -265,7 +268,7 @@ class SocialAuthService:
             }
 
         except Exception as e:
-            print(f"Apple Token Verification Error: {str(e)}")
+            logger.error(f"Apple Token Verification Error: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=f"Apple token verification failed: {str(e)}"
@@ -338,7 +341,7 @@ class SocialAuthService:
             )
             self.db.add(user)
             self.db.flush()
-            print(f"DEBUG: Automatically registered new {user_role}: {email} via {provider_name}")
+            logger.debug(f"DEBUG: Automatically registered new {user_role}: {email} via {provider_name}")
 
         # IDEMPOTENCY: If it's a client but missing a Client profile, create it now
         if user.role == "client":
@@ -357,9 +360,9 @@ class SocialAuthService:
                         company_id=default_company_id
                     )
                     await self.client_service.create_client(client_data, user_id=user.id)
-                    print(f"DEBUG: Provisioned Missing Client and Driver for existing social user: {email}")
+                    logger.debug(f"DEBUG: Provisioned Missing Client and Driver for existing social user: {email}")
                 except Exception as e:
-                    print(f"ERROR: Failed to provision Missing Client/Driver for social user {email}: {str(e)}")
+                    logger.error(f"ERROR: Failed to provision Missing Client/Driver for social user {email}: {str(e)}")
         
         self.db.commit()
         return self.auth_service.login_manual_inject(user)
