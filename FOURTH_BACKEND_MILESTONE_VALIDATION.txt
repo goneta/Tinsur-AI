@@ -1,0 +1,73 @@
+Tinsur.AI Fourth Backend Milestone Validation
+Milestone 4: Product and Coverage Engine for Car, Travel, and Home Insurance
+Date: 2026-05-02
+Branch: kenbot_branche
+
+Implementation Summary
+
+Milestone 4 adds a tenant-scoped, versioned product catalog engine that allows Tinsur.AI to configure car, travel, and home insurance products without hard-coding coverage structures in quote endpoints. The implementation creates a reusable foundation for automatic policy acquisition flows where a customer can enter their personal details and insured-asset details, then receive insurance product guidance from active catalog definitions.
+
+Delivered Components
+
+1. Product and coverage ORM models
+   - Added InsuranceProduct for tenant-scoped product families.
+   - Added ProductVersion for effective-dated active or draft catalog versions.
+   - Added CoverageDefinition for required and optional coverage modules.
+   - Added CoverageOption for selectable limits, deductibles, package options, and extensions.
+   - Added RatingFactor for product-specific premium factor tables.
+   - Added ProductUnderwritingRule for eligibility, referral, and decline rules.
+   - Added QuoteWizardSchema for configurable portal and admin quote intake forms.
+
+2. Product catalog schemas
+   - Added nested Pydantic create, update, response, and summary schemas.
+   - Added validation that product lines are constrained to car, travel, and home.
+   - Added validation that quote wizard schemas include at least one intake step.
+
+3. Product catalog service
+   - Added nested product creation with versions, coverages, options, rating factors, underwriting rules, and wizard schemas.
+   - Added tenant-scoped catalog listing and summary helpers.
+   - Added idempotent default seed support for the first three supported lines: car, travel, and home.
+
+4. API endpoints
+   - Added /api/v1/product-catalog endpoints for listing, summary retrieval, nested product creation, product detail lookup, version creation, and default seeding.
+   - Registered the endpoint module in the central v1 API router.
+   - Preserved tenant scoping through the authenticated user's company context.
+
+5. Default product definitions
+   - Added Comprehensive Car Insurance with own damage, third-party liability, personal accident, theft, young driver, no-claims, and unlicensed/high-value underwriting logic.
+   - Added Single Trip Travel Insurance with emergency medical, cancellation, baggage, adventure sports, duration, age, sanctioned-destination, and medical-referral logic.
+   - Added Comprehensive Home Insurance with building, contents, liability, flood extension, rebuild-value, security-device, vacant-home, and high-value-art underwriting logic.
+
+6. AI context awareness
+   - Extended tenant AI context payloads to include active product catalog summaries.
+   - Added active version, base rate, minimum premium, coverage summaries, rating-factor counts, underwriting-rule counts, and wizard channels so AI agents can explain available products and required details.
+
+7. Migration
+   - Added Alembic revision e4f5a6b7c8d9_add_product_catalog_engine.py.
+   - The migration creates tables for products, product versions, coverage definitions, coverage options, rating factors, underwriting rules, and quote wizard schemas.
+   - The revision is attached to both current heads so Alembic reports a single resulting head: e4f5a6b7c8d9.
+
+Validation Evidence
+
+Command 1:
+cd /home/ubuntu/Tinsur-AI-kenbot-milestones-1777649530/backend && DATABASE_URL=sqlite:///./milestone4_test.db PYTHONPATH=$PWD python3.11 -m compileall app/models/product_catalog.py app/schemas/product_catalog.py app/services/product_catalog_service.py app/api/v1/endpoints/product_catalog.py app/services/ai_context_service.py
+
+Result: Passed. All new and modified Python modules compiled successfully.
+
+Command 2:
+cd /home/ubuntu/Tinsur-AI-kenbot-milestones-1777649530/backend && DATABASE_URL=sqlite:///./milestone4_test.db PYTHONPATH=$PWD alembic heads
+
+Result: Passed. Alembic reported one head: e4f5a6b7c8d9.
+
+Command 3:
+cd /home/ubuntu/Tinsur-AI-kenbot-milestones-1777649530/backend && DATABASE_URL=sqlite:///./milestone4_test.db PYTHONPATH=$PWD pytest -q tests/test_product_catalog_engine.py
+
+Result: Passed. 4 tests passed.
+
+Notes
+
+The focused pytest file intentionally avoids the repository-wide SQLite database fixture because unrelated legacy models still include dialect-specific UUID columns that do not compile under SQLite. The Milestone 4 test harness therefore validates the new product engine through schema parsing, nested ORM construction, AI summary generation, and wizard validation without being blocked by older unrelated test-fixture incompatibilities.
+
+Warnings Observed
+
+Pytest emitted existing non-blocking warnings from passlib, Pydantic protected namespace notices in pre-existing model schemas, and an existing SQLAlchemy overlap warning on QuoteUnderwritingSnapshot. These warnings are not introduced by the Milestone 4 product catalog engine and did not fail validation.

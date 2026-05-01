@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models.client import Client, client_company
 from app.models.policy import Policy
 from app.models.premium_policy import PremiumPolicyType
+from app.models.product_catalog import InsuranceProduct, ProductVersion, CoverageDefinition
 from app.models.quote import Quote
 
 
@@ -25,6 +26,7 @@ MAX_QUOTES = 20
 MAX_POLICIES = 20
 MAX_CLIENTS = 20
 MAX_POLICY_TYPES = 20
+MAX_PRODUCT_CATALOG_ITEMS = 20
 
 
 def _coerce_uuid(value: Any) -> Optional[uuid.UUID]:
@@ -134,6 +136,45 @@ def _summarise_policy_type(policy_type: PremiumPolicyType) -> dict[str, Any]:
     }
 
 
+def _select_active_product_version(product: InsuranceProduct) -> Optional[ProductVersion]:
+    versions = list(product.versions or [])
+    active_versions = [version for version in versions if version.status == "active"]
+    candidates = active_versions or versions
+    if not candidates:
+        return None
+    return sorted(candidates, key=lambda version: version.created_at or datetime.min, reverse=True)[0]
+
+
+def _summarise_product_catalog(product: InsuranceProduct) -> dict[str, Any]:
+    active_version = _select_active_product_version(product)
+    coverages = list(active_version.coverages or []) if active_version else []
+    return {
+        "code": product.code,
+        "name": product.name,
+        "product_line": product.product_line,
+        "description": _compact_text(product.description),
+        "active_version": active_version.version if active_version else None,
+        "base_rate": _safe_scalar(active_version.base_rate) if active_version else None,
+        "minimum_premium": _safe_scalar(active_version.minimum_premium) if active_version else None,
+        "rating_strategy": active_version.rating_strategy if active_version else None,
+        "coverages": [
+            {
+                "code": coverage.code,
+                "name": coverage.name,
+                "type": coverage.coverage_type,
+                "required": coverage.is_required,
+                "default_limit": _safe_scalar(coverage.default_limit),
+                "option_count": len(coverage.options or []),
+            }
+            for coverage in sorted(coverages, key=lambda item: item.display_order or 100)
+            if coverage.is_active
+        ],
+        "rating_factor_count": len(active_version.rating_factors or []) if active_version else 0,
+        "underwriting_rule_count": len(active_version.underwriting_rules or []) if active_version else 0,
+        "wizard_channels": [schema.channel for schema in (active_version.wizard_schemas or []) if schema.is_active] if active_version else [],
+    }
+
+
 def build_tenant_context_payload(db: Session, company_id: Any) -> dict[str, Any]:
     """
     Build a JSON-serialisable tenant context payload for AI agents.
@@ -151,6 +192,7 @@ def build_tenant_context_payload(db: Session, company_id: Any) -> dict[str, Any]
             "policies": [],
             "clients": [],
             "premium_products": [],
+            "product_catalog": [],
         }
 
     recent_quotes = (
@@ -192,6 +234,21 @@ def build_tenant_context_payload(db: Session, company_id: Any) -> dict[str, Any]
         .all()
     )
 
+    product_catalog = (
+        db.query(InsuranceProduct)
+        .options(
+            joinedload(InsuranceProduct.versions).joinedload(ProductVersion.coverages).joinedload(CoverageDefinition.options),
+            joinedload(InsuranceProduct.versions).joinedload(ProductVersion.rating_factors),
+            joinedload(InsuranceProduct.versions).joinedload(ProductVersion.underwriting_rules),
+            joinedload(InsuranceProduct.versions).joinedload(ProductVersion.wizard_schemas),
+        )
+        .filter(InsuranceProduct.company_id == company_uuid)
+        .filter(InsuranceProduct.is_active.is_(True))
+        .order_by(InsuranceProduct.display_order.asc(), InsuranceProduct.name.asc())
+        .limit(MAX_PRODUCT_CATALOG_ITEMS)
+        .all()
+    )
+
     return {
         "tenant_scope": {"company_id": str(company_uuid), "is_scoped": True},
         "record_counts": {
@@ -199,11 +256,13 @@ def build_tenant_context_payload(db: Session, company_id: Any) -> dict[str, Any]
             "active_policies": len(active_policies),
             "clients": len(clients),
             "premium_products": len(premium_products),
+            "product_catalog": len(product_catalog),
         },
         "quotes": [_summarise_quote(quote) for quote in recent_quotes],
         "policies": [_summarise_policy(policy) for policy in active_policies],
         "clients": [_summarise_client(client) for client in clients],
         "premium_products": [_summarise_policy_type(policy_type) for policy_type in premium_products],
+        "product_catalog": [_summarise_product_catalog(product) for product in product_catalog],
     }
 
 
