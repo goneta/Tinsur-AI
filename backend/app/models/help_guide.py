@@ -56,7 +56,7 @@ class GuideCompletion(Base):
     __tablename__ = "guide_completions"
 
     id = Column(String, primary_key=True, index=True)
-    user_id = Column(String, ForeignKey("user.id"), index=True)
+    user_id = Column(String, ForeignKey("users.id"), index=True)
     guide_id = Column(String, ForeignKey("help_guides.id"), index=True)
     completed_at = Column(DateTime, default=datetime.utcnow)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -73,7 +73,7 @@ class GuideAccess(Base):
     __tablename__ = "guide_accesses"
 
     id = Column(String, primary_key=True, index=True)
-    user_id = Column(String, ForeignKey("user.id"), index=True, nullable=True)
+    user_id = Column(String, ForeignKey("users.id"), index=True, nullable=True)
     guide_id = Column(String, ForeignKey("help_guides.id"), index=True)
     section_accessed = Column(String, nullable=True)  # Specific section within guide
     accessed_at = Column(DateTime, default=datetime.utcnow, index=True)
@@ -92,7 +92,7 @@ class OnboardingStatus(Base):
     __tablename__ = "onboarding_status"
 
     id = Column(String, primary_key=True, index=True)
-    user_id = Column(String, ForeignKey("user.id"), unique=True, index=True)
+    user_id = Column(String, ForeignKey("users.id"), unique=True, index=True)
     current_step = Column(Integer, default=0)  # Current step in onboarding wizard
     completed = Column(Boolean, default=False)
     skipped = Column(Boolean, default=False)

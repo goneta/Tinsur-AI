@@ -5,7 +5,8 @@ from a2a.utils import new_agent_text_message
 from google.adk.agents import Agent
 from .tools import get_eligible_policies, update_client_profile, generate_insurance_quote, search_clients, list_recent_clients
 from app.core.database import SessionLocal
-from app.models.client import Client
+from app.models.client import Client, client_company
+from app.services.ai_context_service import build_tenant_context_summary
 import uuid
 import json
 import re
@@ -87,10 +88,13 @@ class QuoteAgentExecutor(AgentExecutor):
             
             # If not staff, we must find the client profile linked to this user
             if not is_staff:
-                client = db.query(Client).filter(
-                    Client.user_id == uuid.UUID(str(user_id)),
-                    Client.company_id == uuid.UUID(str(company_id))
-                ).first()
+                client = (
+                    db.query(Client)
+                    .join(client_company, client_company.c.client_id == Client.id)
+                    .filter(Client.user_id == uuid.UUID(str(user_id)))
+                    .filter(client_company.c.company_id == uuid.UUID(str(company_id)))
+                    .first()
+                )
                 
                 if not client:
                      event_queue.enqueue_event(new_agent_text_message("I could not find your client profile. Please contact support."))
@@ -115,12 +119,21 @@ class QuoteAgentExecutor(AgentExecutor):
                 if target_client_id:
                      ctx_vars["Target_Client_ID"] = str(target_client_id)
                      # Also try to find the name if possible to be helpful
-                     tc = db.query(Client).filter(Client.id == uuid.UUID(str(target_client_id))).first()
+                     tc = (
+                         db.query(Client)
+                         .join(client_company, client_company.c.client_id == Client.id)
+                         .filter(Client.id == uuid.UUID(str(target_client_id)))
+                         .filter(client_company.c.company_id == uuid.UUID(str(company_id)))
+                         .first()
+                     )
                      if tc:
                          ctx_vars["Target_Client_Name"] = f"{tc.first_name} {tc.last_name}"
             
             # 4. Construct Prompt with Context
+            tenant_context_summary = build_tenant_context_summary(db, company_id)
             context_prompt = f"""
+            
+            {tenant_context_summary}
             
             [SYSTEM CONTEXT VARIABLES]
             {json.dumps(ctx_vars, indent=2)}

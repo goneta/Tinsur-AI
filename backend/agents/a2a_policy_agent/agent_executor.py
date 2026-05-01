@@ -8,6 +8,7 @@ from app.core.database import SessionLocal
 from app.models.quote import Quote
 from app.models.policy_type import PolicyType
 from app.models.policy import Policy
+from app.services.ai_context_service import build_tenant_context_summary
 from sqlalchemy.orm import joinedload
 import json
 import uuid
@@ -49,8 +50,8 @@ class PolicyAgentExecutor(AgentExecutor):
             } for q in quotes
         ]
 
-    async def _parse_input(self, history: list) -> PolicyCreationRequest:
-        """Uses Gemini to extract policy details from chat history (Structured Output)."""
+    async def _parse_input(self, history: list, tenant_context_summary: str = "") -> PolicyCreationRequest:
+        """Uses Gemini to extract policy details from chat history and tenant database context."""
         if not history:
             return PolicyCreationRequest()
 
@@ -75,7 +76,7 @@ class PolicyAgentExecutor(AgentExecutor):
                 output_type=PolicyCreationRequest
             )
             
-            extracted = await extractor.run(f"Extract from this history:\n\n{history_text}")
+            extracted = await extractor.run(f"{tenant_context_summary}\n\nExtract from this history:\n\n{history_text}")
             
             if isinstance(extracted, PolicyCreationRequest):
                 return extracted
@@ -109,6 +110,9 @@ class PolicyAgentExecutor(AgentExecutor):
 
             db = SessionLocal()
             try:
+                company_id = context.metadata.get("company_id")
+                tenant_context_summary = build_tenant_context_summary(db, company_id)
+
                 # Check for "create a policy" or keywords
                 if "create" in user_input.lower() and "policy" in user_input.lower():
                     quotes = self._get_draft_quotes(db, context.metadata.get("company_id"))
@@ -125,12 +129,11 @@ class PolicyAgentExecutor(AgentExecutor):
                     return
 
                 # Normal Policy Creation Flow (if Quote ID provided)
-                req = await self._parse_input(history)
+                req = await self._parse_input(history, tenant_context_summary)
                 if not req.quote_id or "UNKNOWN" in req.quote_id:
                      response_text = "Please select a quote from the list or provide a quote number to create a policy."
                 else:
                      # Look up quote with company isolation
-                     company_id = context.metadata.get("company_id")
                      if not company_id:
                          event_queue.enqueue_event(new_agent_text_message("Error: Access denied. Company context missing."))
                          return
