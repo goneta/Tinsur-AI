@@ -53,6 +53,11 @@ celery_app.conf.beat_schedule = {
         'task': 'app.tasks.policy_tasks.auto_lapse_policies',
         'schedule': crontab(hour=1, minute=0),  # 1 AM daily
     },
+    # Auto-renew policies with auto_renew=True (runs daily at 2 AM)
+    'auto-renew-policies': {
+        'task': 'app.tasks.policy_tasks.auto_renew_policies',
+        'schedule': crontab(hour=2, minute=0),  # 2 AM daily
+    },
     # Generate daily financial report
     'generate-daily-report': {
         'task': 'app.tasks.report_tasks.generate_daily_report',

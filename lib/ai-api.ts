@@ -99,4 +99,90 @@ export const AiAPI = {
             throw error;
         }
     },
+
+    /**
+     * Stream a chat response via WebSocket for real-time token-by-token output.
+     * Calls onToken for each streamed chunk, then onDone when complete.
+     * Falls back to HTTP POST on any WebSocket error.
+     *
+     * @param message      User message to send
+     * @param onToken      Called with each text chunk as it arrives
+     * @param onDone       Called once with the full accumulated text
+     * @param onError      Called with error code string on failure
+     * @param policy_id    Optional policy context
+     */
+    streamChat: (
+        message: string,
+        onToken: (chunk: string) => void,
+        onDone: (fullText: string) => void,
+        onError: (code: string) => void,
+        policy_id?: string,
+    ): (() => void) => {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+        if (!token) {
+            onError('unauthenticated');
+            return () => {};
+        }
+
+        const baseUrl = (api.defaults.baseURL || 'http://localhost:8000/api/v1')
+            .replace(/^http/, 'ws')
+            .replace('/api/v1', '');
+
+        const wsUrl = `${baseUrl}/api/v1/chat/ws?token=${encodeURIComponent(token)}`;
+        let ws: WebSocket | null = null;
+        let accumulated = '';
+        let done = false;
+
+        try {
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                ws!.send(JSON.stringify({ message, policy_id: policy_id ?? null }));
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'token' && data.text) {
+                        accumulated += data.text;
+                        onToken(data.text);
+                    } else if (data.type === 'done') {
+                        done = true;
+                        onDone(accumulated);
+                        ws?.close();
+                    } else if (data.type === 'error') {
+                        onError(data.detail || 'server_error');
+                        ws?.close();
+                    }
+                } catch {
+                    // Ignore JSON parse errors
+                }
+            };
+
+            ws.onerror = () => {
+                if (!done) onError('websocket_error');
+            };
+
+            ws.onclose = (ev) => {
+                if (!done && ev.code !== 1000) {
+                    // Unexpected close — treat accumulated text as done if we have any
+                    if (accumulated) {
+                        onDone(accumulated);
+                    } else {
+                        onError('connection_closed');
+                    }
+                }
+            };
+        } catch (err) {
+            console.error('[AI_WS] WebSocket init error:', err);
+            onError('init_error');
+        }
+
+        // Return cleanup function
+        return () => {
+            if (ws && ws.readyState < WebSocket.CLOSING) {
+                ws.close(1000, 'component unmounted');
+            }
+        };
+    },
 };

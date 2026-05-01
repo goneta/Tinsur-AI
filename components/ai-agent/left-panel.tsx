@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -201,7 +201,7 @@ ${t('ai_manager.upload_hint')}`
         }
     };
 
-    const handleSendMessage = async (textOverride?: string) => {
+    const handleSendMessage = useCallback(async (textOverride?: string) => {
         const userMsg = textOverride || inputValue.trim();
         if ((!userMsg && !selectedFile) || isLoading) return;
 
@@ -212,61 +212,85 @@ ${t('ai_manager.upload_hint')}`
         if (editingField) {
             finalMsg = `Update ${editingField} to ${userMsg}`;
             setEditingField(null);
-            setActiveInteraction(null); // Clear active interaction once we respond
+            setActiveInteraction(null);
         }
 
         // Add User Message
-        const newMessages: ChatMessage[] = [
-            ...messages,
-            { role: 'user', content: userMsg }
-        ];
-        setMessages(newMessages);
+        setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
         setIsLoading(true);
 
-        try {
-            console.log("Sending message...", userMsg);
-
-            // TODO: Handle File Upload via API if selectedFile exists
-            if (selectedFile) {
-                console.log("File upload would happen here:", selectedFile.name);
-                setSelectedFile(null);
-            }
-
-            // Call API
-            const response = await AiAPI.chat(userMsg);
-
-            // Checks for Preview Data in response
-            parsePreviewData(response.response);
-
-            // Add Assistant Response
-            setMessages(prev => [
-                ...prev,
-                { role: 'assistant', content: response.response }
-            ]);
-
-            // Refresh status to update badge if on credit plan
-            if (subStatus?.plan === 'CREDIT') {
-                loadSubscription();
-            }
-
-        } catch (error: any) {
-            console.error("Failed to send message:", error);
-
-            if (error.response?.status === 402) {
-                setIsCreditModalOpen(true);
-                return;
-            }
-
-            toast({
-                title: "Error",
-                description: error.response?.data?.detail || "Failed to communicate with the AI Agent.",
-                variant: "destructive"
-            });
-            // Optionally remove user message or add error message
-        } finally {
-            setIsLoading(false);
+        if (selectedFile) {
+            console.log("File upload would happen here:", selectedFile.name);
+            setSelectedFile(null);
         }
-    };
+
+        // ── Attempt WebSocket streaming first ──────────────────────────────
+        const streamingPlaceholderAdded = { current: false };
+        let cleanupWs: (() => void) | null = null;
+
+        const useStreaming = (): Promise<boolean> =>
+            new Promise((resolve) => {
+                let success = false;
+                cleanupWs = AiAPI.streamChat(
+                    finalMsg,
+                    // onToken: progressively update the last assistant message
+                    (chunk) => {
+                        success = true;
+                        setMessages(prev => {
+                            if (!streamingPlaceholderAdded.current) {
+                                streamingPlaceholderAdded.current = true;
+                                return [...prev, { role: 'assistant', content: chunk }];
+                            }
+                            const updated = [...prev];
+                            updated[updated.length - 1] = {
+                                ...updated[updated.length - 1],
+                                content: updated[updated.length - 1].content + chunk,
+                            };
+                            return updated;
+                        });
+                    },
+                    // onDone
+                    (fullText) => {
+                        parsePreviewData(fullText);
+                        setIsLoading(false);
+                        if (subStatus?.plan === 'CREDIT') loadSubscription();
+                        resolve(true);
+                    },
+                    // onError — fall back to HTTP
+                    (_code) => {
+                        resolve(false);
+                    },
+                );
+                // If WebSocket doesn't open in 3 s, fall back
+                setTimeout(() => { if (!success) resolve(false); }, 3000);
+            });
+
+        const streamOk = await useStreaming();
+
+        if (!streamOk) {
+            // ── HTTP POST fallback ─────────────────────────────────────────
+            try {
+                const response = await AiAPI.chat(finalMsg);
+                parsePreviewData(response.response);
+                setMessages(prev => [...prev, { role: 'assistant', content: response.response }]);
+                if (subStatus?.plan === 'CREDIT') loadSubscription();
+            } catch (error: any) {
+                console.error("Failed to send message:", error);
+                if (error.response?.status === 402) {
+                    setIsCreditModalOpen(true);
+                    setIsLoading(false);
+                    return;
+                }
+                toast({
+                    title: "Error",
+                    description: error.response?.data?.detail || "Failed to communicate with the AI Agent.",
+                    variant: "destructive",
+                });
+            } finally {
+                setIsLoading(false);
+            }
+        }
+    }, [inputValue, isLoading, editingField, selectedFile, messages, subStatus, setMessages, parsePreviewData, loadSubscription]);
 
     const runDebugDemo = () => {
         // Debug function to force a preview

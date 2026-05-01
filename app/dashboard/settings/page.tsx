@@ -56,6 +56,7 @@ import Image from "next/image"
 import { UserPermissionsModal } from "@/components/user-permissions-modal"
 import { AiSubscriptionSettings } from "@/components/settings/ai-subscription-settings"
 import { SuperAdminAISettings } from "@/components/admin/super-admin-ai-settings"
+import { TwoFactorSettings } from "@/components/settings/two-factor-settings"
 import { useAuth } from "@/lib/auth"
 import { PermissionDeniedModal } from "@/components/shared/permission-denied-modal"
 import { useLanguage } from "@/contexts/language-context"
@@ -346,6 +347,9 @@ export default function SettingsPage() {
                     </Button>
                 </div>
             </div>
+
+            {/* Two-Factor Authentication */}
+            <TwoFactorSettings />
 
             {/* Theme & Language */}
             <Card>
