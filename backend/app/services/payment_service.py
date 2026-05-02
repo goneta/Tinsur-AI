@@ -18,6 +18,7 @@ from app.services.commission_service import CommissionService
 from app.services.payment_gateway_api import PaymentGatewayAPI
 from app.services.payment_ledger_reconciliation_service import PaymentLedgerReconciliationService
 from app.models.company import Company
+from app.services.production_launch_control_service import ActorContext, ProductionActionControlService
 
 
 class PaymentService:
@@ -67,13 +68,26 @@ class PaymentService:
     def process_payment(
         self,
         payment_id: UUID,
-        payment_details: Dict[str, Any]
+        payment_details: Dict[str, Any],
+        actor_id: Optional[UUID] = None,
+        actor_roles: Optional[list[str]] = None,
+        payment_live_mode: Optional[bool] = None
     ) -> Payment:
         """Process a payment through the appropriate gateway."""
         payment = self.payment_repo.get_by_id(payment_id)
         
         if not payment:
             raise ValueError("Payment not found")
+
+        ProductionActionControlService(self.db).enforce_action(
+            action_key="take_payment",
+            actor=ActorContext(actor_id=actor_id, company_id=payment.company_id, roles=tuple(actor_roles or ())),
+            company_id=payment.company_id,
+            target_type="payment",
+            target_id=payment_id,
+            payload={"amount": str(payment.amount), "payment_method": payment.payment_method},
+            payment_live_mode=payment_live_mode,
+        )
         
         # Update status to processing
         payment.status = 'processing'
@@ -232,13 +246,28 @@ class PaymentService:
         self,
         payment_id: UUID,
         refund_amount: Decimal,
-        reason: str
+        reason: str,
+        actor_id: Optional[UUID] = None,
+        actor_roles: Optional[list[str]] = None,
+        approval_request_id: Optional[UUID] = None,
+        payment_live_mode: Optional[bool] = None
     ) -> Payment:
         """Process a payment refund."""
         payment = self.payment_repo.get_by_id(payment_id)
         
         if not payment or payment.status != 'completed':
             raise ValueError("Payment cannot be refunded")
+
+        ProductionActionControlService(self.db).enforce_action(
+            action_key="refund_payment",
+            actor=ActorContext(actor_id=actor_id, company_id=payment.company_id, roles=tuple(actor_roles or ())),
+            company_id=payment.company_id,
+            target_type="payment",
+            target_id=payment_id,
+            payload={"refund_amount": str(refund_amount), "reason": reason},
+            approval_request_id=approval_request_id,
+            payment_live_mode=payment_live_mode,
+        )
         
         # In production, this would call the gateway's refund API
         payment.status = 'refunded'

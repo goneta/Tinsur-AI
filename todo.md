@@ -246,4 +246,34 @@ Milestone 9 implements **automatic initial payment orchestration for product-cat
 - [x] Run syntax checks and targeted pytest validation for the AI-control implementation.
 - [x] Create `AI_CONTROL_GUARDRAILS_VALIDATION.txt` documenting scope, changed files, validation evidence, and remaining risks.
 - [x] Commit the AI-control implementation locally on `kenbot_branche`.
-- [ ] Push and verify remote branch heads if remote synchronization is requested after implementation.
+- [x] Push and verify remote branch heads if remote synchronization is requested after implementation.
+
+## AI control guardrails remote synchronization
+- [x] Push AI-control guardrails commit `10655f4d135646795119349daf97943b30d47a16` to `origin/kenbot_branch`, `origin/main`, and `origin/master` using non-persistent GitHub authentication.
+- [x] Verify `origin/kenbot_branch`, `origin/main`, and `origin/master` resolve to commit `10655f4d135646795119349daf97943b30d47a16` after push.
+
+## Pull request description drafting
+- [x] Draft a pull request description for merging `kenbot_branch` into `main` covering the AI guardrails implementation, validation evidence, and review considerations.
+
+## Production readiness assessment
+- [x] Assess whether the completed Tinsur.AI milestone work is sufficient for production launch or whether an additional production-hardening feature is needed first.
+
+## Production Launch Control Layer planning
+- [x] Draft a practical implementation plan for the Production Launch Control Layer covering scope, phases, technical controls, validation, and go-live criteria.
+
+## Production Launch Control Layer implementation
+- [x] Re-read `/home/ubuntu/skills/tinsur-ai-repo-workflow/SKILL.md` and follow the repository workflow for this production-hardening implementation.
+- [x] Confirm the active branch (`kenbot_branche`), current commit (`10655f4d135646795119349daf97943b30d47a16`), and working tree state before implementation; only this traceability checklist is pending.
+- [x] Add `ConsequentialActionRegistry` and deterministic action-control policy definitions for restricted production insurance operations.
+- [x] Add ORM models for consequential action policies, approval requests, approval decisions, production audit events, legal document template approvals, and launch readiness checks.
+- [x] Register the new models in `backend/app/models/__init__.py` and add matching Pydantic schemas with exports where appropriate.
+- [x] Add an Alembic migration for all Production Launch Control Layer tables after checking current migration heads.
+- [x] Implement `ProductionActionControlService`, `EnvironmentReadinessService`, `DocumentReleaseService`, and `LaunchChecklistService` with fail-closed production behavior.
+- [x] Patch highest-risk policy, cancellation, claim, document, payment, refund, fee-waiver, and AI handoff paths to route through deterministic control checks or reusable guard methods.
+- [x] Add focused tests for allowed actions, unauthorized blocking, approval workflow states, immutable audit events, readiness checks, legal template approval, and AI bypass prevention.
+- [x] Run syntax compilation and targeted pytest validation with isolated SQLite `DATABASE_URL`.
+- [x] Create `PRODUCTION_LAUNCH_CONTROL_VALIDATION.txt` documenting scope, changed files, validation evidence, and remaining risks.
+- [x] Update `todo.md` for completion traceability.
+- [ ] Commit the Production Launch Control Layer locally on `kenbot_branche` with message `Add Production Launch Control Layer`.
+- [ ] Push the implementation commit to `origin/kenbot_branch`, `origin/main`, and `origin/master` using non-persistent authentication.
+- [ ] Verify `origin/kenbot_branch`, `origin/main`, and `origin/master` resolve to the implementation commit after push.

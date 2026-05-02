@@ -31,7 +31,7 @@ async def create_claim(
         claim_data.created_by = current_user.id
     
     try:
-        claim = service.create_claim(claim_data)
+        claim = service.create_claim(claim_data, actor_roles=[str(getattr(current_user, "role", ""))])
         return claim
     except ValueError as e:
         raise HTTPException(
@@ -92,7 +92,13 @@ async def update_claim(
             detail="Claim not found"
         )
         
-    updated_claim = await service.update_claim(claim_id, update_data, current_user.id)
+    updated_claim = await service.update_claim(
+        claim_id,
+        update_data,
+        current_user.id,
+        actor_roles=[str(getattr(current_user, "role", ""))],
+        payment_live_mode=True,
+    )
     return updated_claim
 
 from typing import List, Optional, Dict, Any

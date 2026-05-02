@@ -81,7 +81,13 @@ class ProductPolicyInitialPaymentService:
             payment_gateway=details.get("gateway"),
             metadata=metadata,
         )
-        processed_payment = self.payment_service.process_payment(payment.id, details)
+        processed_payment = self.payment_service.process_payment(
+            payment.id,
+            details,
+            actor_id=getattr(policy, "created_by", None),
+            actor_roles=("admin",),
+            payment_live_mode=bool(details.get("live_mode")),
+        )
 
         settled_schedule: PremiumSchedule | None = None
         loyalty_awarded = False

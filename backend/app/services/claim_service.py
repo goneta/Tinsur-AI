@@ -22,6 +22,7 @@ from decimal import Decimal
 import json
 from app.services.ai_service import AiService
 from app.core.time import utcnow
+from app.services.production_launch_control_service import ActorContext, ProductionActionControlService
 
 class ClaimService:
     """Service for handling claim operations."""
@@ -49,7 +50,7 @@ class ClaimService:
         random_str = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
         return f"CLM-{date_str}-{random_str}"
         
-    def create_claim(self, claim_data: ClaimCreate) -> Claim:
+    def create_claim(self, claim_data: ClaimCreate, actor_roles: Optional[List[str]] = None) -> Claim:
         """Create a new claim."""
         # Verify policy exists
         policy = self.db.query(Policy).get(claim_data.policy_id)
@@ -65,6 +66,15 @@ class ClaimService:
              
         if policy.company_id != claim_data.company_id:
             raise ValueError("Policy does not belong to this company")
+
+        ProductionActionControlService(self.db).enforce_action(
+            action_key="create_claim_record",
+            actor=ActorContext(actor_id=claim_data.created_by, company_id=claim_data.company_id, roles=tuple(actor_roles or ())),
+            company_id=claim_data.company_id,
+            target_type="policy",
+            target_id=claim_data.policy_id,
+            payload={"claim_amount": str(claim_data.claim_amount), "incident_date": claim_data.incident_date.isoformat()},
+        )
 
         claim_number = self._generate_claim_number()
         
@@ -101,7 +111,7 @@ class ClaimService:
         """Get claims for a company."""
         return self.repository.get_all(company_id, skip, limit, status)
         
-    async def update_claim(self, claim_id: UUID, update_data: ClaimUpdate, user_id: Optional[UUID] = None) -> Optional[Claim]:
+    async def update_claim(self, claim_id: UUID, update_data: ClaimUpdate, user_id: Optional[UUID] = None, actor_roles: Optional[List[str]] = None, approval_request_id: Optional[UUID] = None, payment_live_mode: Optional[bool] = None) -> Optional[Claim]:
         """Update a claim with mandatory AML screening for payouts."""
         claim = self.repository.get_by_id(claim_id)
         if not claim:
@@ -117,8 +127,18 @@ class ClaimService:
             old_status = claim.status
             new_status = update_data.status
             
-            # AML Screening for Payouts
+            # Launch-control gates and AML screening for payouts
             if new_status in ['approved', 'paid'] and old_status not in ['approved', 'paid']:
+                ProductionActionControlService(self.db).enforce_action(
+                    action_key="settle_claim" if new_status == "paid" else "approve_claim",
+                    actor=ActorContext(actor_id=user_id, company_id=claim.company_id, roles=tuple(actor_roles or ())),
+                    company_id=claim.company_id,
+                    target_type="claim",
+                    target_id=claim_id,
+                    payload={"old_status": old_status, "new_status": new_status, "approved_amount": str(update_data.approved_amount or claim.approved_amount or claim.claim_amount)},
+                    approval_request_id=approval_request_id,
+                    payment_live_mode=payment_live_mode if new_status == "paid" else None,
+                )
                 try:
                     client = self.db.query(Client).get(claim.client_id)
                     if client:

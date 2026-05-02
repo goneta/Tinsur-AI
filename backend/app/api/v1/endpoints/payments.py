@@ -64,7 +64,10 @@ def process_payment(
     # Process the payment
     processed_payment = payment_service.process_payment(
         payment_id=payment.id,
-        payment_details=payment_request.payment_details
+        payment_details=payment_request.payment_details,
+        actor_id=current_user.id,
+        actor_roles=[str(getattr(current_user, "role", ""))],
+        payment_live_mode=bool(payment_request.payment_details.get("live_mode"))
     )
     
     # If successful, update premium schedule and award loyalty points
@@ -248,7 +251,10 @@ def refund_payment(
         refunded_payment = payment_service.refund_payment(
             payment_id=payment_id,
             refund_amount=refund_data.refund_amount,
-            reason=refund_data.reason
+            reason=refund_data.reason,
+            actor_id=current_user.id,
+            actor_roles=[str(getattr(current_user, "role", ""))],
+            payment_live_mode=True
         )
         return refunded_payment
     except ValueError as e:

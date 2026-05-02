@@ -18,6 +18,7 @@ from app.models.company import Company
 from app.models.client import Client
 from app.models.document import Document, DocumentLabel
 from app.models.document_template import DocumentTemplate
+from app.services.production_launch_control_service import ActorContext, ProductionActionControlService
 
 
 class DocumentService:
@@ -207,7 +208,7 @@ class DocumentService:
             code = self._generate_verification_code()
         return code
 
-    def generate_documents(self, db, policy: Policy, client: Client, company: Company) -> List[str]:
+    def generate_documents(self, db, policy: Policy, client: Client, company: Company, actor_roles: Optional[List[str]] = None) -> List[str]:
         """
         Generates all insurance documents for a given policy.
         Returns a list of generated file paths (relative to static/documents).
@@ -222,7 +223,19 @@ class DocumentService:
         data_mapping = self._build_data_mapping(policy, client, company, vehicle)
 
         templates = db.query(DocumentTemplate).order_by(DocumentTemplate.created_at.asc()).all()
+        action_control = ProductionActionControlService(db)
         for template in templates:
+            action_control.enforce_action(
+                action_key="issue_document",
+                actor=ActorContext(actor_id=policy.created_by, company_id=company.id, roles=tuple(actor_roles or ())),
+                company_id=company.id,
+                target_type="policy_document",
+                target_id=policy.id,
+                payload={"template_code": template.code, "policy_number": policy.policy_number},
+                template_key=template.code,
+                template_version="1.0",
+                jurisdiction="default",
+            )
             content = template.template_html
             placeholders = template.placeholders or self._extract_placeholders(content)
             for key, value in data_mapping.items():

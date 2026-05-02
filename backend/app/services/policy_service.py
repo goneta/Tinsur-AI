@@ -25,6 +25,7 @@ from app.services.document_service import document_service
 from app.models.underwriting import QuoteUnderwritingSnapshot
 from app.repositories.client_repository import ClientRepository
 from app.repositories.company_repository import CompanyRepository
+from app.services.production_launch_control_service import ActorContext, ProductionActionControlService
 
 class PolicyService:
     """Service for policy-related business logic."""
@@ -57,7 +58,12 @@ class PolicyService:
         self,
         quote_id: UUID,
         start_date: date,
-        created_by: UUID
+        created_by: UUID,
+        actor_roles: Optional[List[str]] = None,
+        approval_request_id: Optional[UUID] = None,
+        template_key: str = "policy_contract",
+        template_version: str = "1.0",
+        jurisdiction: str = "default"
     ) -> Optional[Policy]:
         """Create a policy from an accepted quote with underwriting snapshot validation."""
         quote = self.quote_repo.get_by_id(quote_id)
@@ -90,6 +96,19 @@ class PolicyService:
 
         if snapshot.valid_until and snapshot.valid_until < utcnow():
             return None
+
+        ProductionActionControlService(self.policy_repo.db).enforce_action(
+            action_key="bind_policy",
+            actor=ActorContext(actor_id=created_by, company_id=quote.company_id, roles=tuple(actor_roles or ())),
+            company_id=quote.company_id,
+            target_type="quote",
+            target_id=quote_id,
+            payload={"quote_status": quote.status, "underwriting_decision": decision},
+            approval_request_id=approval_request_id,
+            template_key=template_key,
+            template_version=template_version,
+            jurisdiction=jurisdiction,
+        )
         
         # Calculate end_date based on duration
         end_date = start_date + timedelta(days=quote.duration_months * 30)
@@ -190,9 +209,26 @@ class PolicyService:
 
         details: Optional[dict] = None,
         inventory_deductions: Optional[List[dict]] = None,
-        services: Optional[List[dict]] = None
+        services: Optional[List[dict]] = None,
+        actor_roles: Optional[List[str]] = None,
+        approval_request_id: Optional[UUID] = None,
+        template_key: str = "policy_contract",
+        template_version: str = "1.0",
+        jurisdiction: str = "default"
     ) -> Policy:
         """Create a policy directly (not from quote)."""
+        ProductionActionControlService(self.policy_repo.db).enforce_action(
+            action_key="bind_policy",
+            actor=ActorContext(actor_id=created_by, company_id=company_id, roles=tuple(actor_roles or ())),
+            company_id=company_id,
+            target_type="policy",
+            target_id="new",
+            payload={"coverage_amount": str(coverage_amount), "premium_amount": str(premium_amount)},
+            approval_request_id=approval_request_id,
+            template_key=template_key,
+            template_version=template_version,
+            jurisdiction=jurisdiction,
+        )
         policy_number = self.generate_policy_number(company_id, "GEN")
         
         policy = Policy(
@@ -300,9 +336,30 @@ class PolicyService:
         self,
         policy_id: UUID,
         reason: str,
-        effective_date: Optional[date] = None
+        effective_date: Optional[date] = None,
+        actor_id: Optional[UUID] = None,
+        actor_roles: Optional[List[str]] = None,
+        approval_request_id: Optional[UUID] = None,
+        template_key: str = "policy_cancellation_notice",
+        template_version: str = "1.0",
+        jurisdiction: str = "default"
     ) -> Optional[Policy]:
         """Cancel a policy."""
+        policy = self.policy_repo.get_by_id(policy_id)
+        if not policy:
+            return None
+        ProductionActionControlService(self.policy_repo.db).enforce_action(
+            action_key="cancel_policy",
+            actor=ActorContext(actor_id=actor_id, company_id=policy.company_id, roles=tuple(actor_roles or ())),
+            company_id=policy.company_id,
+            target_type="policy",
+            target_id=policy_id,
+            payload={"reason": reason, "effective_date": effective_date.isoformat() if effective_date else None},
+            approval_request_id=approval_request_id,
+            template_key=template_key,
+            template_version=template_version,
+            jurisdiction=jurisdiction,
+        )
         return self.policy_repo.cancel(policy_id, reason)
     
     def check_and_expire_policies(self, company_id: UUID) -> int:

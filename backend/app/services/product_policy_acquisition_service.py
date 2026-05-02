@@ -254,7 +254,12 @@ class ProductPolicyAcquisitionService:
             QuoteRepository(self.db),
             EndorsementRepository(self.db),
         )
-        return policy_service.create_from_quote(quote.id, start_date, created_by)
+        return policy_service.create_from_quote(
+            quote.id,
+            start_date,
+            created_by,
+            actor_roles=("admin",),
+        )
 
     def _get_existing_policy(self, quote_id: UUID) -> Optional[Policy]:
         return self.db.query(Policy).filter(Policy.quote_id == quote_id).first()

@@ -344,7 +344,7 @@ async def create_my_claim(
     claim_data.company_id = current_client.company_id
     
     try:
-        claim = service.create_claim(claim_data)
+        claim = service.create_claim(claim_data, actor_roles=["client"])
         return claim
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -384,7 +384,10 @@ async def process_my_payment(
     
     processed_payment = payment_service.process_payment(
         payment_id=payment.id,
-        payment_details=payment_request.payment_details
+        payment_details=payment_request.payment_details,
+        actor_id=current_client.id,
+        actor_roles=["client"],
+        payment_live_mode=bool(payment_request.payment_details.get("live_mode"))
     )
     
     if processed_payment.status == 'completed':

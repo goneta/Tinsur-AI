@@ -31,10 +31,15 @@ class RestrictedInsuranceOperation(str, Enum):
     BIND_POLICY = "bind_policy"
     CANCEL_POLICY = "cancel_policy"
     TAKE_PAYMENT = "take_payment"
+    REFUND_PAYMENT = "refund_payment"
     WAIVE_PAYMENT_OR_FEE = "waive_payment_or_fee"
+    WAIVE_FEE = "waive_fee"
     CREATE_CLAIM_RECORD = "create_claim_record"
+    APPROVE_CLAIM = "approve_claim"
     SETTLE_CLAIM = "settle_claim"
+    ISSUE_DOCUMENT = "issue_document"
     CHANGE_LEGAL_POLICY_RECORD = "change_legal_policy_record"
+    CHANGE_POLICY_RECORD = "change_policy_record"
     MUTATE_PRODUCT_CONFIGURATION = "mutate_product_configuration"
 
 
@@ -85,16 +90,31 @@ class AiActionControlService:
         RestrictedInsuranceOperation.TAKE_PAYMENT: (
             "Taking or posting payment changes financial records and must be executed by the deterministic payment service."
         ),
+        RestrictedInsuranceOperation.REFUND_PAYMENT: (
+            "Refunding payment changes financial records and must be executed by deterministic payment controls with approval."
+        ),
         RestrictedInsuranceOperation.WAIVE_PAYMENT_OR_FEE: (
+            "Waiving fees changes financial obligations and must be executed by deterministic billing controls."
+        ),
+        RestrictedInsuranceOperation.WAIVE_FEE: (
             "Waiving fees changes financial obligations and must be executed by deterministic billing controls."
         ),
         RestrictedInsuranceOperation.CREATE_CLAIM_RECORD: (
             "Creating a claim is a legal/operational record change and must be submitted through deterministic claims intake."
         ),
+        RestrictedInsuranceOperation.APPROVE_CLAIM: (
+            "Approving claim liability or amount is a consequential claim decision and must be executed by deterministic claim services."
+        ),
         RestrictedInsuranceOperation.SETTLE_CLAIM: (
             "Claim settlement can trigger financial and inter-company obligations and must be executed by deterministic claim services."
         ),
+        RestrictedInsuranceOperation.ISSUE_DOCUMENT: (
+            "Issuing legal documents requires approved templates and deterministic document-release controls."
+        ),
         RestrictedInsuranceOperation.CHANGE_LEGAL_POLICY_RECORD: (
+            "Legal policy record changes require deterministic validation, auditability, and authorization."
+        ),
+        RestrictedInsuranceOperation.CHANGE_POLICY_RECORD: (
             "Legal policy record changes require deterministic validation, auditability, and authorization."
         ),
         RestrictedInsuranceOperation.MUTATE_PRODUCT_CONFIGURATION: (
@@ -169,12 +189,14 @@ class AiActionControlService:
 
     @staticmethod
     def _handoff_target_for(operation: RestrictedInsuranceOperation) -> str:
-        if operation in {RestrictedInsuranceOperation.BIND_POLICY, RestrictedInsuranceOperation.CANCEL_POLICY, RestrictedInsuranceOperation.CHANGE_LEGAL_POLICY_RECORD}:
+        if operation in {RestrictedInsuranceOperation.BIND_POLICY, RestrictedInsuranceOperation.CANCEL_POLICY, RestrictedInsuranceOperation.CHANGE_LEGAL_POLICY_RECORD, RestrictedInsuranceOperation.CHANGE_POLICY_RECORD}:
             return "policy_lifecycle_service"
-        if operation in {RestrictedInsuranceOperation.TAKE_PAYMENT, RestrictedInsuranceOperation.WAIVE_PAYMENT_OR_FEE}:
+        if operation in {RestrictedInsuranceOperation.TAKE_PAYMENT, RestrictedInsuranceOperation.REFUND_PAYMENT, RestrictedInsuranceOperation.WAIVE_PAYMENT_OR_FEE, RestrictedInsuranceOperation.WAIVE_FEE}:
             return "payment_or_billing_service"
-        if operation in {RestrictedInsuranceOperation.CREATE_CLAIM_RECORD, RestrictedInsuranceOperation.SETTLE_CLAIM}:
+        if operation in {RestrictedInsuranceOperation.CREATE_CLAIM_RECORD, RestrictedInsuranceOperation.APPROVE_CLAIM, RestrictedInsuranceOperation.SETTLE_CLAIM}:
             return "claims_intake_or_settlement_service"
+        if operation == RestrictedInsuranceOperation.ISSUE_DOCUMENT:
+            return "document_release_service"
         if operation == RestrictedInsuranceOperation.MUTATE_PRODUCT_CONFIGURATION:
             return "product_admin_service"
         return "deterministic_service"
@@ -183,7 +205,7 @@ class AiActionControlService:
 AI_CONSEQUENTIAL_ACTION_INSTRUCTIONS = """
 AI ACTION CONTROL POLICY:
 - You may recommend coverage, explain policy/payment/claim status, triage incidents, and draft documents or escalation notes.
-- You must not directly bind/issue policies, cancel policies, take or post payments, waive fees, settle claims, or change legal policy records.
+- You must not directly bind/issue policies, cancel policies, take or post payments, refund payments, waive fees, create or approve claims, settle claims, issue legal documents, or change legal policy records.
 - When a user asks for a consequential action, gather the minimum details needed, explain what will happen, and hand off to the deterministic service or a human-controlled workflow.
 - Never tell the user that a restricted legal or financial action has been completed unless a deterministic service response explicitly confirms it.
 """.strip()

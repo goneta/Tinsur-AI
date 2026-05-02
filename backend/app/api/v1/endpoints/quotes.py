@@ -336,7 +336,8 @@ def approve_quote(
     policy = policy_service.create_from_quote(
         quote_id=quote_id,
         start_date=start_date,
-        created_by=current_user.id
+        created_by=current_user.id,
+        actor_roles=[str(getattr(current_user, "role", ""))]
     )
     
     if not policy:
@@ -451,7 +452,8 @@ def convert_quote_to_policy(
     policy = policy_service.create_from_quote(
         quote_id=quote_id,
         start_date=conversion_data.start_date,
-        created_by=current_user.id
+        created_by=current_user.id,
+        actor_roles=[str(getattr(current_user, "role", ""))]
     )
     
     if not policy:
@@ -479,7 +481,14 @@ def convert_quote_to_policy(
             }
         )
         if conversion_data.process_payment:
-            payment = payment_service.process_payment(payment.id, conversion_data.payment_details or {})
+            details = conversion_data.payment_details or {}
+            payment = payment_service.process_payment(
+                payment.id,
+                details,
+                actor_id=current_user.id,
+                actor_roles=[str(getattr(current_user, "role", ""))],
+                payment_live_mode=bool(details.get("live_mode")),
+            )
     
     response = {
         "message": "Quote converted to policy successfully",

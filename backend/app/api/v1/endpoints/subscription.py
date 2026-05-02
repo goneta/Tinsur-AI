@@ -265,7 +265,13 @@ async def initiate_topup(
         "cancel_url": request.cancel_url
     }
     
-    result = payment_service.process_payment(payment.id, details)
+    result = payment_service.process_payment(
+        payment.id,
+        details,
+        actor_id=current_user.id,
+        actor_roles=[str(getattr(current_user, "role", ""))],
+        payment_live_mode=bool(getattr(request, "live_mode", False)),
+    )
     
     # Find the initiated transaction to get redirection info
     transaction = db.query(PaymentRepository.model_transaction).filter(

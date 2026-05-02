@@ -25,6 +25,7 @@ from app.repositories.endorsement_repository import EndorsementRepository
 from app.repositories.premium_schedule_repository import PremiumScheduleRepository
 from app.services.policy_service import PolicyService
 from app.services.premium_service import PremiumService
+from app.services.production_launch_control_service import ActorContext, ProductionActionControlService
 
 router = APIRouter()
 
@@ -60,7 +61,8 @@ def create_policy(
         details=policy_data.details,
 
         inventory_deductions=policy_data.inventory_deductions,
-        services=policy_data.services
+        services=policy_data.services,
+        actor_roles=[str(getattr(current_user, "role", ""))]
     )
     
     # Generate payment schedule
@@ -246,6 +248,16 @@ def update_policy(
             detail="Policy not found"
         )
     
+    before = {field: getattr(policy, field, None) for field in policy_data.model_dump(exclude_unset=True).keys()}
+    ProductionActionControlService(db).enforce_action(
+        action_key="change_policy_record",
+        actor=ActorContext(actor_id=current_user.id, company_id=current_user.company_id, roles=(str(getattr(current_user, "role", "")),)),
+        company_id=current_user.company_id,
+        target_type="policy",
+        target_id=policy_id,
+        payload={"changed_fields": sorted(policy_data.model_dump(exclude_unset=True).keys()), "before": {k: str(v) for k, v in before.items()}},
+    )
+
     # Update fields
     for field, value in policy_data.model_dump(exclude_unset=True).items():
         setattr(policy, field, value)
@@ -305,7 +317,9 @@ def cancel_policy(
     
     canceled_policy = policy_service.cancel_policy(
         policy_id=policy_id,
-        reason=cancellation_data.cancellation_reason
+        reason=cancellation_data.cancellation_reason,
+        actor_id=current_user.id,
+        actor_roles=[str(getattr(current_user, "role", ""))]
     )
     
     return canceled_policy

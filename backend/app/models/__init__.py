@@ -43,6 +43,7 @@ from app.models.premium_policy import PremiumPolicyCriteria, PremiumPolicyType
 from app.models.underwriting import Vehicle, Driver, DriverClaimHistory, DriverConvictionHistory, VehicleRiskProfile, UnderwritingRuleSet, UnderwritingRule, UnderwritingDecision, QuoteUnderwritingSnapshot
 from app.models.product_catalog import InsuranceProduct, ProductVersion, CoverageDefinition, CoverageOption, RatingFactor, ProductUnderwritingRule, QuoteWizardSchema
 from app.models.product_application_detail import ProductApplicationDetail, ProductRatingSnapshot, ProductClaimDetail
+from app.models.production_launch_control import ConsequentialActionPolicy, ApprovalRequest, ApprovalDecision, ProductionAuditEvent, DocumentTemplateApproval, LaunchReadinessCheck
 from app.models.quote_element import QuoteElement
 from app.models.sales import SalesTransaction, SalesTarget
 from app.models.task import Task
@@ -117,6 +118,12 @@ __all__ = [
     "ProductApplicationDetail",
     "ProductRatingSnapshot",
     "ProductClaimDetail",
+    "ConsequentialActionPolicy",
+    "ApprovalRequest",
+    "ApprovalDecision",
+    "ProductionAuditEvent",
+    "DocumentTemplateApproval",
+    "LaunchReadinessCheck",
     "PolicyService",
     "QuoteElement",
     "SalesTransaction",

@@ -1,0 +1,72 @@
+Production Launch Control Layer Validation
+==========================================
+
+Repository: /home/ubuntu/Tinsur-AI-kenbot-milestones-1777649530
+Branch: kenbot_branche
+Implementation date: 2026-05-02
+
+Scope implemented
+-----------------
+This implementation adds a deterministic Production Launch Control Layer for legally and financially consequential insurance operations. The layer is designed to keep AI assistance out of direct production execution for actions that bind policies, cancel policies, mutate legal policy records, create or settle claims, issue legal documents, capture or refund payments, and waive fees. It centralizes restricted-action definitions, stores approval and audit evidence, checks legal document template release status, and surfaces launch readiness gates.
+
+Core backend additions
+----------------------
+- Added `backend/app/services/consequential_action_registry.py` with canonical restricted production action definitions for policy binding, cancellation, payment capture/refund, legal document issuance, claim creation/approval/settlement, fee waiver, and legal policy mutation.
+- Added `backend/app/models/production_launch_control.py` with ORM records for consequential action policies, approval requests, approval decisions, production audit events, document template approvals, and launch readiness checks.
+- Added append-only SQLAlchemy protections for `ProductionAuditEvent`; attempted update or delete raises a deterministic error before persistence.
+- Added `backend/app/schemas/production_launch_control.py` with Pydantic records for policies, approvals, audit events, template approvals, readiness checks, and service decision payloads.
+- Registered new models and schemas in the existing model/schema package registries.
+- Added `backend/alembic/versions/a7b8c9d0e1f2_add_production_launch_control.py` as the new migration head for all launch-control tables and constraints.
+- Added `backend/app/services/production_launch_control_service.py` with `ProductionActionControlService`, `EnvironmentReadinessService`, `DocumentReleaseService`, `LaunchChecklistService`, and `ProductionActionBlockedError`.
+
+Production path integration
+---------------------------
+The highest-risk service and endpoint paths now route production consequences through deterministic launch-control checks or carry actor context into services that perform those checks.
+
+| Area | Files patched | Control behavior |
+| --- | --- | --- |
+| Policy binding and legal policy changes | `policy_service.py`, `policies.py`, `quotes.py`, `product_policy_acquisition_service.py` | Production binding/cancellation/legal mutations require actor roles, approved document templates where configured, and human approval where configured. |
+| Claim creation, approval, and settlement | `claim_service.py`, `claims.py`, `portal.py` | Production claim records and status consequences are evaluated through the launch-control registry and audit trail. |
+| Payments and refunds | `payment_service.py`, `payments.py`, `portal.py`, `subscription.py`, `product_policy_initial_payment_service.py` | Production financial consequences require authorized roles and live-mode checks where configured. |
+| Legal document issuance | `document_service.py` | Production legal document issuance checks approved template release status before execution. |
+| AI handoff boundary | `ai_action_control_service.py` | AI action restrictions now align with the launch-control registry and explicitly direct restricted operations to deterministic gates. |
+
+Focused tests added
+-------------------
+Added `backend/tests/test_production_launch_control.py` with isolated SQLite table setup for the launch-control models only. The tests cover:
+
+| Test coverage | Evidence |
+| --- | --- |
+| Non-production actions | Allowed for developer velocity while still producing audit events. |
+| Unauthorized production actor blocking | Blocks actor roles outside the registered allowed roles. |
+| AI direct execution blocking | Blocks AI actors at the production gate and keeps AI action-control handoff active. |
+| Human approval workflow | Creates approval requests, records decisions, allows approved production binding, and consumes approvals by marking them executed. |
+| Legal document template approval | Blocks production document release until a template/version/jurisdiction is approved. |
+| Immutable audit events | Verifies attempted audit update and delete both fail as append-only operations. |
+| Readiness checklist | Surfaces blocking failures for production dev endpoints and missing runtime settings. |
+
+Validation commands executed
+----------------------------
+1. Syntax compilation:
+   `python3.11 -m py_compile backend/app/models/production_launch_control.py backend/app/schemas/production_launch_control.py backend/app/services/consequential_action_registry.py backend/app/services/production_launch_control_service.py backend/app/services/ai_action_control_service.py backend/app/services/policy_service.py backend/app/services/payment_service.py backend/app/services/claim_service.py backend/app/services/document_service.py backend/app/api/v1/endpoints/policies.py backend/app/api/v1/endpoints/payments.py backend/app/api/v1/endpoints/claims.py backend/app/api/v1/endpoints/quotes.py backend/app/api/v1/endpoints/portal.py backend/app/api/v1/endpoints/subscription.py backend/tests/test_production_launch_control.py`
+
+2. Focused pytest validation:
+   `PYTHONPATH=backend DATABASE_URL=sqlite:///./test_production_launch_control.db pytest -q backend/tests/test_production_launch_control.py`
+
+   Result: `6 passed`.
+
+3. Alembic head validation:
+   `(cd backend && PYTHONPATH=. DATABASE_URL=sqlite:///./alembic_launch_control_validation.db alembic heads)`
+
+   Result: `a7b8c9d0e1f2 (head)`.
+
+Observed warnings
+-----------------
+Focused pytest validation emitted existing repository warnings unrelated to this implementation: passlib `crypt` deprecation, Pydantic protected namespace warnings for existing model fields, and a SQLAlchemy overlap warning involving `QuoteUnderwritingSnapshot.quote` and `Quote.underwriting_snapshot`. These warnings did not fail the focused launch-control tests.
+
+Remaining risks and recommended follow-up
+-----------------------------------------
+- The new gates are deterministic and fail closed in production, but production role naming should be reviewed against the live authorization model so expected operator roles are not accidentally excluded.
+- Existing broad repository tests still include unrelated SQLite UUID compatibility issues in some global fixtures; the focused launch-control tests intentionally avoid those unrelated tables.
+- The launch readiness checks verify critical baseline settings, dev endpoint state, and registry presence. Future milestones should add provider-specific checks for payment gateway live credentials, document storage immutability, observability, backup readiness, and incident response runbooks.
+- Production rollout should seed and review the generated `consequential_action_policies` rows before enabling real customer traffic, especially approval requirements and required roles per company.
