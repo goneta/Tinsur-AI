@@ -155,9 +155,9 @@ Milestone 8 will implement **automatic premium schedule orchestration for produc
 - [x] Run syntax checks and targeted pytest validation.
 - [x] Create `NINTH_BACKEND_MILESTONE_VALIDATION.txt` documenting scope, files changed, validation evidence, and remaining risks.
 - [x] Update `todo.md` for traceability.
-- [ ] Commit Milestone 9 changes locally on `kenbot_branche`.
-- [ ] Push Milestone 9 to `origin/kenbot_branche`, `origin/main`, and `origin/master`.
-- [ ] Verify that all three remote branch heads resolve to the expected Milestone 9 commit.
+- [x] Commit Milestone 9 changes locally on `kenbot_branche` (`ab4b897e0b8aa2aa930bc7d3847b16ec7ef9de2d`).
+- [x] Push Milestone 9 to `origin/kenbot_branche`, `origin/main`, and `origin/master`.
+- [x] Verify that all three remote branch heads resolve to the expected Milestone 9 commit (`ab4b897e0b8aa2aa930bc7d3847b16ec7ef9de2d`).
 
 
 ### Milestone 9 Scope Decision
