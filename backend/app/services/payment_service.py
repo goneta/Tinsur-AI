@@ -16,6 +16,7 @@ from app.repositories.payment_repository import PaymentRepository
 from app.repositories.commission_repository import CommissionRepository
 from app.services.commission_service import CommissionService
 from app.services.payment_gateway_api import PaymentGatewayAPI
+from app.services.payment_ledger_reconciliation_service import PaymentLedgerReconciliationService
 from app.models.company import Company
 
 
@@ -27,6 +28,7 @@ class PaymentService:
         self.payment_repo = payment_repo
         from app.services.accounting_service import AccountingService
         self.accounting_service = AccountingService(db)
+        self.ledger_reconciliation_service = PaymentLedgerReconciliationService(db, payment_repo, self.accounting_service)
     
     def generate_payment_number(self, company_id: UUID) -> str:
         """Generate unique payment number."""
@@ -200,45 +202,13 @@ class PaymentService:
         }
     
     def _post_payment_to_ledger(self, payment: Payment):
-        """Post successful payment to general ledger."""
+        """Post successful payment to general ledger through idempotent reconciliation service."""
         try:
-            from app.schemas.ledger import JournalEntryCreate, LedgerEntryCreate
-            
-            # 1. Initialize accounts if needed
-            self.accounting_service.initialize_chart_of_accounts(payment.company_id)
-            
-            # 2. Get standard accounts
-            cash_acc = self.accounting_service.get_or_create_account(payment.company_id, "1000", "Cash", "Asset")
-            revenue_acc = self.accounting_service.get_or_create_account(payment.company_id, "4000", "Premium Income", "Revenue")
-            
-            # 3. Create Balanced Entry
-            description = f"AI credit purchase"
-            if payment.policy:
-                description = f"Premium payment received for Policy {payment.policy.policy_number}"
-                
-            entry_data = JournalEntryCreate(
-                description=description,
-                reference=str(payment.payment_number),
-                entries=[
-                    LedgerEntryCreate(account_id=cash_acc.id, debit=payment.amount, credit=Decimal('0')),
-                    LedgerEntryCreate(account_id=revenue_acc.id, debit=Decimal('0'), credit=payment.amount)
-                ]
-            )
-            
-            # Standard user for automated postings or system ID
-            creator_id = payment.created_by or payment.company.admin_id if hasattr(payment.company, 'admin_id') else None
-            if not creator_id:
-                # Fallback to a super admin or first user
-                from app.models.user import User
-                sys_user = self.db.query(User).filter(User.company_id == payment.company_id).first()
-                creator_id = sys_user.id if sys_user else None
-
-            if creator_id:
-                self.accounting_service.post_journal_entry(payment.company_id, entry_data, creator_id)
-                
+            return self.ledger_reconciliation_service.ensure_payment_posted_to_ledger(payment)
         except Exception as e:
             # Log error but don't fail the payment process
             print(f"Failed to post payment to ledger: {str(e)}")
+            return None
 
     def _process_bank_transfer(self, payment: Payment, details: Dict[str, Any]) -> Dict[str, Any]:
         """Process bank transfer payment."""

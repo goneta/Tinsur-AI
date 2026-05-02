@@ -1,0 +1,78 @@
+Tinsur.AI Payments, Ledger, and Reconciliation Milestone Validation
+=================================================================
+
+Scope
+-----
+This milestone implements a focused backend capability for payments, ledger posting, and reconciliation. The implementation centralizes ledger posting for completed payments, makes posting idempotent through existing payment journal references, records normalized ledger metadata on the payment record, and exposes an operator-facing reconciliation summary through the payments API.
+
+The selected scope intentionally avoids broad schema migrations. It reuses the existing ledger models, accounting service journal-entry contract, payment repository patterns, and payment endpoint authorization flow. The implementation is tenant-scoped by company_id and only reconciles completed payments belonging to the requested company.
+
+Implementation Summary
+----------------------
+1. Added a dedicated payment-ledger-reconciliation service that:
+   - Posts completed payments to the existing accounting ledger through balanced debit and credit journal entries.
+   - Reuses existing payment journal entries when available so repeated side effects remain idempotent.
+   - Stores payment metadata such as ledger_posting_status, ledger_journal_entry_id, ledger_reference, ledger_posted_at, reconciliation_status, and reconciliation_checked_at.
+   - Computes reconciliation results across gateway status, payment status, and ledger amount.
+   - Supports optional auto-posting of missing ledger entries during reconciliation.
+
+2. Rewired successful payment side effects so payment completion calls the shared reconciliation service rather than maintaining a separate ledger-posting path inside PaymentService.
+
+3. Added repository support to list completed payments in a tenant-scoped date range for reconciliation.
+
+4. Added payment reconciliation request, item, and response schemas that normalize reconciliation metadata for API consumers.
+
+5. Added an operator endpoint under the existing payments API surface for reconciliation execution.
+
+Changed Files
+-------------
+- backend/app/services/payment_ledger_reconciliation_service.py
+  New service for idempotent payment ledger posting and payment-ledger-gateway reconciliation summaries.
+
+- backend/app/services/payment_service.py
+  Delegates successful-payment ledger side effects to the new shared reconciliation service.
+
+- backend/app/repositories/payment_repository.py
+  Adds tenant-scoped completed-payment lookup for reconciliation windows.
+
+- backend/app/schemas/payment.py
+  Adds PaymentReconciliationRequest, PaymentReconciliationItem, and PaymentReconciliationResponse contracts.
+
+- backend/app/api/v1/endpoints/payments.py
+  Adds the operator reconciliation endpoint and wires it to the new service.
+
+- backend/tests/test_payments_ledger_reconciliation_milestone.py
+  Adds focused unit-style tests for idempotent posting, auto-post reconciliation, mismatch detection, pending gateway detection, and invalid date-range validation.
+
+- todo.md
+  Tracks workflow, implementation, validation, and pending synchronization status for this milestone.
+
+Validation Evidence
+-------------------
+Syntax compilation passed for the changed backend modules and the focused test file with:
+
+DATABASE_URL=sqlite:///./test_payments_reconciliation.db python3.11 -m compileall backend/app/services/payment_ledger_reconciliation_service.py backend/app/services/payment_service.py backend/app/repositories/payment_repository.py backend/app/schemas/payment.py backend/app/api/v1/endpoints/payments.py backend/tests/test_payments_ledger_reconciliation_milestone.py
+
+Focused pytest validation passed with:
+
+PYTHONPATH=backend DATABASE_URL=sqlite:///./test_payments_reconciliation.db python3.11 -m pytest backend/tests/test_payments_ledger_reconciliation_milestone.py -q
+
+Result:
+
+5 passed
+
+Validated Behaviors
+-------------------
+- Completed payment ledger posting creates a balanced journal entry and stores ledger metadata.
+- Repeated posting for the same payment reuses the existing payment journal instead of creating duplicates.
+- Reconciliation with auto_post_missing=True posts missing ledger entries and marks the payment reconciled.
+- Existing ledger entries with mismatched amounts are flagged as amount_mismatch without reposting.
+- Completed payments without a successful gateway transaction are flagged as gateway_pending.
+- Reconciliation rejects an inverted date range before querying or mutating payment data.
+
+Remaining Risks and Follow-Up
+-----------------------------
+- The milestone does not add a database migration because it stores ledger and reconciliation references in existing payment metadata and uses existing ledger tables.
+- Real gateway settlement files or external bank statements are not imported yet; this milestone reconciles internal payment, transaction, and ledger state.
+- The new endpoint should be exercised in an integrated API test once the broader test fixture suite is modernized for the current application imports.
+- Refund reconciliation can be expanded in a later milestone to post reversal journals and match gateway refund transactions against ledger reversals.

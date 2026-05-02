@@ -164,3 +164,19 @@ Milestone 8 will implement **automatic premium schedule orchestration for produc
 
 Milestone 9 implements **automatic initial payment orchestration for product-catalog policy acquisition**. After Milestone 8, the acquisition flow could rate, persist, issue a policy, generate documents, and build a premium schedule, but it still left the first payment as a separate follow-up operation. This milestone connects acquisition to the existing payment subsystem through an explicit opt-in request block, creates or reuses an idempotent initial payment, settles the first pending premium schedule when payment completes, optionally awards loyalty points, and returns normalized payment metadata in the acquisition response.
 
+
+
+## Tinsur.AI Payments, Ledger, and Reconciliation Milestone
+
+- [x] Re-read `/home/ubuntu/skills/tinsur-ai-repo-workflow/SKILL.md` and follow the repository workflow for this payments-ledger-reconciliation milestone.
+- [x] Confirm the repository branch, remote head alignment, and clean working tree before implementation; only the new checklist update is pending.
+- [x] Audit existing payment models, repositories, services, endpoints, ledger-adjacent structures, reconciliation gaps, and tests.
+- [x] Define a focused backend scope for payments, ledger posting, and reconciliation that fits existing service boundaries.
+- [x] Implement the selected tenant-safe backend capability without broad unrelated changes.
+- [x] Add focused tests for payment ledger entries, reconciliation matching, idempotency, and tenant isolation.
+- [x] Run syntax checks and targeted pytest validation.
+- [x] Create `PAYMENTS_LEDGER_RECONCILIATION_MILESTONE_VALIDATION.txt` documenting scope, changed files, validation evidence, and remaining risks.
+- [x] Update `todo.md` for completion traceability.
+- [ ] Commit the milestone locally on `kenbot_branche`.
+- [ ] Push the milestone to `origin/kenbot_branche`, `origin/main`, and `origin/master`.
+- [ ] Verify that all three remote branch heads resolve to the expected milestone commit.

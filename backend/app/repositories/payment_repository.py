@@ -3,7 +3,7 @@ Repository for payment operations.
 """
 from typing import List, Optional
 from uuid import UUID
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, func
 from datetime import datetime, date
 from app.core.time import utcnow
@@ -150,6 +150,27 @@ class PaymentRepository:
             'total_payments': result.total_payments or 0
         }
     
+    def get_completed_payments_for_reconciliation(
+        self,
+        company_id: UUID,
+        start_date: date,
+        end_date: date
+    ) -> List[Payment]:
+        """Get completed payments with gateway transactions for ledger reconciliation."""
+        return self.db.query(Payment).options(
+            joinedload(Payment.transactions),
+            joinedload(Payment.policy),
+            joinedload(Payment.client),
+            joinedload(Payment.company),
+        ).filter(
+            and_(
+                Payment.company_id == company_id,
+                Payment.status == 'completed',
+                func.date(Payment.paid_at) >= start_date,
+                func.date(Payment.paid_at) <= end_date
+            )
+        ).order_by(Payment.paid_at.asc(), Payment.created_at.asc()).all()
+
     def get_payment_breakdown(self, company_id: UUID, start_date: date, end_date: date) -> List[dict]:
         """Get payment breakdown by method."""
         results = self.db.query(

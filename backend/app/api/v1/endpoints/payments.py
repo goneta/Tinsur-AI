@@ -16,12 +16,15 @@ from app.schemas.payment import (
     PaymentListResponse,
     PaymentProcessRequest,
     PaymentRefundRequest,
-    WebhookPayload
+    WebhookPayload,
+    PaymentReconciliationRequest,
+    PaymentReconciliationResponse
 )
 from app.repositories.payment_repository import PaymentRepository
 from app.repositories.premium_schedule_repository import PremiumScheduleRepository
 from app.services.payment_service import PaymentService
 from app.services.premium_service import PremiumService
+from app.services.payment_ledger_reconciliation_service import PaymentLedgerReconciliationService
 
 router = APIRouter()
 
@@ -173,6 +176,35 @@ def get_payments_by_policy(
         
     payments = repo.get_by_policy(policy_id)
     return payments
+
+
+@router.post("/reconcile", response_model=PaymentReconciliationResponse)
+def reconcile_payments(
+    request: PaymentReconciliationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Reconcile completed payments against gateway transactions and ledger postings."""
+    if request.end_date < request.start_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="end_date must be on or after start_date"
+        )
+
+    service = PaymentLedgerReconciliationService(db, PaymentRepository(db))
+    try:
+        return service.reconcile_payments(
+            current_user.company_id,
+            request.start_date.date(),
+            request.end_date.date(),
+            auto_post_missing=request.auto_post_missing,
+            creator_id=current_user.id,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc)
+        )
 
 
 @router.get("/{payment_id}", response_model=PaymentResponse)

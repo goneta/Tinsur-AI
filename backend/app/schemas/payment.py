@@ -3,7 +3,7 @@ Pydantic schemas for payments.
 """
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List, Dict, Any
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 from decimal import Decimal
 
@@ -124,3 +124,44 @@ class PaymentReceiptResponse(BaseModel):
     payment_date: datetime
     reference_number: Optional[str]
     receipt_url: Optional[str]
+
+
+class PaymentReconciliationRequest(BaseModel):
+    """Schema for operator-triggered payment reconciliation."""
+    start_date: datetime
+    end_date: datetime
+    auto_post_missing: bool = False
+
+
+class PaymentReconciliationItem(BaseModel):
+    """Schema for a single reconciled payment row."""
+    payment_id: UUID
+    payment_number: str
+    policy_id: Optional[UUID] = None
+    client_id: Optional[UUID] = None
+    payment_amount: Decimal
+    currency: str
+    payment_status: str
+    gateway_transaction_id: Optional[str] = None
+    gateway_status: str
+    journal_entry_id: Optional[UUID] = None
+    journal_reference: Optional[str] = None
+    ledger_amount: Decimal
+    reconciliation_status: str
+    notes: List[str] = []
+
+
+class PaymentReconciliationResponse(BaseModel):
+    """Schema for payment-ledger reconciliation summary."""
+    company_id: UUID
+    start_date: datetime | date
+    end_date: datetime | date
+    auto_post_missing: bool
+    total_payments: int
+    reconciled_payments: int
+    unreconciled_payments: int
+    reconciled_amount: Decimal
+    ledger_amount: Decimal
+    status_counts: Dict[str, int]
+    items: List[PaymentReconciliationItem]
+    generated_at: datetime
