@@ -1,0 +1,55 @@
+# TENTH BACKEND MILESTONE VALIDATION
+
+Author: Manus AI
+Date: 2026-05-02
+Branch: kenbot_branche
+Repository path: /home/ubuntu/Tinsur-AI-kenbot-milestones-1777649530
+
+## Milestone scope
+
+Milestone 10 implements a focused **AI production hardening** layer for the Tinsur.AI backend. The work stays within the existing backend service and chat endpoint boundaries and avoids unrelated schema, payment, policy, product, or frontend changes. The implemented scope adds centralized prompt-safety assessment, tenant-scoped and redacted AI observability metadata, and bounded retry/fallback helpers for transient provider failures.
+
+## Changed files
+
+| File | Purpose |
+|---|---|
+| `backend/app/services/ai_hardening_service.py` | New centralized service for prompt-injection detection, secret/PII redaction, tenant-safe observability payload creation, and bounded async retry/fallback execution. |
+| `backend/app/services/ai_service.py` | Wires AI hardening into `AiService.chat`, blocks unsafe prompts before provider lookup, routes provider generation through bounded retries, and extends AI usage logging with optional redacted request metadata. |
+| `backend/app/api/v1/endpoints/chat.py` | Adds prompt-safety checks and observability metadata to HTTP and WebSocket chat ingress while preserving existing routing and quota behavior. |
+| `backend/tests/test_ai_hardening.py` | Adds focused tests for prompt blocking, redaction, tenant-scoped observability payloads, retry recovery, fallback exhaustion, usage-log metadata, and pre-provider blocking in `AiService.chat`. |
+| `todo.md` | Updates Milestone 10 checklist traceability. |
+
+## Implementation notes
+
+The new hardening service treats user prompts as untrusted input and performs lightweight deterministic screening before external AI provider calls. It detects common prompt-injection patterns, such as attempts to override system instructions or exfiltrate hidden prompts, and returns a safe refusal message for blocked prompts. It also redacts common sensitive values, including emails and key-like secrets, before prompts or errors are stored in observability metadata.
+
+The AI observability payload records tenant scope, user identifier, agent/action/route labels, prompt hash, redacted prompt preview, safety status, history count, provider/model information, retry attempts, fallback usage, and redacted errors. This gives operators useful production diagnostics without storing raw prompts by default. The retry helper is intentionally bounded and defaults to short exponential backoff with jitter to avoid unbounded provider loops.
+
+## Validation evidence
+
+All validation commands below were executed from `/home/ubuntu/Tinsur-AI-kenbot-milestones-1777649530/backend` with explicit `PYTHONPATH=.` and a SQLite `DATABASE_URL` override, following the repository's prior focused-test validation pattern.
+
+| Validation command | Result |
+|---|---|
+| `PYTHONPATH=. DATABASE_URL=sqlite:///./test_milestone10.db python3.11 -m py_compile app/services/ai_hardening_service.py app/services/ai_service.py app/api/v1/endpoints/chat.py tests/test_ai_hardening.py` | Passed with no syntax errors. |
+| `PYTHONPATH=. DATABASE_URL=sqlite:///./test_milestone10.db python3.11 -m pytest tests/test_ai_hardening.py -q --disable-warnings` | Passed: `6 passed`. |
+
+## Test coverage summary
+
+| Test area | Covered behavior |
+|---|---|
+| Prompt safety | Blocks prompt-injection attempts that try to override system instructions or reveal hidden prompts. |
+| Redaction | Removes raw emails and key-like secrets from prompt previews and provider error traces. |
+| Tenant isolation metadata | Stores company-scoped observability payloads with explicit `company_id` and `is_scoped` markers. |
+| Retry reliability | Retries a transient provider failure and succeeds on the second attempt with redacted error evidence. |
+| Fallback behavior | Uses a bounded fallback path after repeated provider failures without leaking raw secrets. |
+| Usage logging | Persists optional observability metadata into AI usage logs without storing raw prompt content. |
+| Provider preflight | `AiService.chat` blocks unsafe prompts before provider configuration or external provider lookup. |
+
+## Remaining risks and follow-up recommendations
+
+This milestone deliberately avoids a broader AI governance buildout. The deterministic prompt-safety patterns should be treated as a first production-hardening layer rather than a complete adversarial AI defense. Future milestones should consider provider-specific content safety APIs, tenant-configurable safety policy levels, structured telemetry export to the production logging stack, rate limiting by tenant/user/route, and red-team regression suites for prompt-injection variants. Streaming WebSocket fallback now uses sanitized prompts, but true token-level streaming observability remains limited to final usage logging because the current router interface does not expose per-token metadata.
+
+## Completion status
+
+Milestone 10 implementation and focused validation are complete locally on `kenbot_branche`. The next steps are to commit the implementation and synchronize the requested remote branches after reviewing the final diff.

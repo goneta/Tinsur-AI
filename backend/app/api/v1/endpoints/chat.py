@@ -13,6 +13,7 @@ from app.models.user import User
 from app.core.agent_client import AgentClient
 from app.services.security_service import SecurityService
 from app.services.ai_service import AiService
+from app.services.ai_hardening_service import AiHardeningService
 from app.models.client import Client, client_company
 from app.services.ai_context_service import build_tenant_context_summary
 from app.models.chat import ChatChannel, ChatChannelMember, ChatMessage as ChatMessageModel
@@ -73,6 +74,25 @@ async def chat(
     }
     
     ai_service = AiService(db)
+    hardening = AiHardeningService()
+    safety = hardening.assess_prompt(request.message)
+    if safety.blocked:
+        logger = logging.getLogger("api.chat")
+        logger.warning(
+            "Blocked unsafe AI chat request",
+            extra=hardening.build_observability_payload(
+                company_id=current_user.company_id,
+                user_id=current_user.id,
+                agent_name="orchestrator_agent",
+                action="chat_request",
+                route="api.chat.http",
+                safety=safety,
+                history_count=len(request.history or []),
+                status="blocked",
+            ),
+        )
+        return ChatResponse(response=safety.fallback_message())
+
     api_key, plan, can_use = ai_service.get_effective_ai_config(str(current_user.company_id))
 
     if not can_use:
@@ -164,7 +184,21 @@ async def chat(
                 ai_service.log_and_consume_usage(
                     str(current_user.company_id),
                     str(current_user.id),
-                    "orchestrator_agent"
+                    "orchestrator_agent",
+                    request_payload=hardening.build_observability_payload(
+                        company_id=current_user.company_id,
+                        user_id=current_user.id,
+                        agent_name="orchestrator_agent",
+                        action="chat_request",
+                        route="api.chat.http.direct",
+                        safety=safety,
+                        history_count=len(request.history or []),
+                        status="completed",
+                        provider="gemini",
+                        model="multi_agent_executor",
+                        attempt_count=1,
+                        fallback_used=False,
+                    ),
                 )
 
             return ChatResponse(response=response_text)
@@ -190,7 +224,19 @@ async def chat(
             ai_service.log_and_consume_usage(
                 str(current_user.company_id),
                 str(current_user.id),
-                "orchestrator_agent"
+                "orchestrator_agent",
+                request_payload=hardening.build_observability_payload(
+                    company_id=current_user.company_id,
+                    user_id=current_user.id,
+                    agent_name="orchestrator_agent",
+                    action="chat_request",
+                    route="api.chat.http.agent_client",
+                    safety=safety,
+                    history_count=len(request.history or []),
+                    status="completed",
+                    attempt_count=1,
+                    fallback_used=True,
+                ),
             )
 
         if "error" in response:
@@ -270,6 +316,24 @@ async def chat_websocket(
 
             # ── Check AI access ────────────────────────────────────────────
             company_id = str(current_user.company_id) if current_user.company_id else None
+            hardening = AiHardeningService()
+            safety = hardening.assess_prompt(message)
+            if safety.blocked:
+                await websocket.send_json({"type": "error", "detail": "prompt_blocked", "message": safety.fallback_message()})
+                _ws_logger.warning(
+                    "Blocked unsafe AI websocket request",
+                    extra=hardening.build_observability_payload(
+                        company_id=company_id,
+                        user_id=current_user.id,
+                        agent_name="websocket_chat",
+                        action="streaming_chat_request",
+                        route="api.chat.websocket",
+                        safety=safety,
+                        history_count=len(history or []),
+                        status="blocked",
+                    ),
+                )
+                continue
             _api_key, plan, can_use = ai_service.get_effective_ai_config(company_id)
             if not can_use:
                 code = "no_credits" if plan == "CREDIT" else "plan_restricted"
@@ -290,14 +354,14 @@ async def chat_websocket(
 
             collected_text = ""
             try:
-                async for chunk in router.stream(message, max_tokens=1024):
+                async for chunk in router.stream(safety.sanitized_prompt, max_tokens=1024):
                     if chunk:
                         collected_text += chunk
                         await websocket.send_json({"type": "token", "text": chunk})
             except Exception as stream_err:
                 _ws_logger.error(f"Streaming error: {stream_err}")
                 # Fall back to non-streaming
-                resp = await router.generate(message, history=history)
+                resp = await router.generate(safety.sanitized_prompt, history=history)
                 collected_text = resp.text
                 await websocket.send_json({"type": "token", "text": collected_text})
 
@@ -313,6 +377,18 @@ async def chat_websocket(
                     str(current_user.company_id),
                     str(current_user.id),
                     "websocket_chat",
+                    request_payload=hardening.build_observability_payload(
+                        company_id=current_user.company_id,
+                        user_id=current_user.id,
+                        agent_name="websocket_chat",
+                        action="streaming_chat_request",
+                        route="api.chat.websocket",
+                        safety=safety,
+                        history_count=len(history or []),
+                        status="completed",
+                        provider=router.provider,
+                        model=router.model,
+                    ),
                 )
                 # Refresh company balance
                 from app.models.company import Company

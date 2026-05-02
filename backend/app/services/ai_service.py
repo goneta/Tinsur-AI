@@ -13,6 +13,7 @@ from app.models.company import Company
 from app.models.system_settings import SystemSettings, AiUsageLog
 from app.core.config import settings
 from app.core.time import utcnow
+from app.services.ai_hardening_service import AiHardeningService
 
 logger = logging.getLogger(__name__)
 
@@ -366,8 +367,16 @@ class AiService:
             "risk_factors": risk_factors
         }
 
-    def log_and_consume_usage(self, company_id: str, user_id: str, agent_name: str, cost: float = 0.05):
-        """Deduct credits and log the interaction."""
+    def log_and_consume_usage(
+        self,
+        company_id: str,
+        user_id: str,
+        agent_name: str,
+        cost: float = 0.05,
+        action: str = "chat_interaction",
+        request_payload: Optional[Dict[str, Any]] = None,
+    ):
+        """Deduct credits and log the interaction with optional safe observability metadata."""
         import uuid
         
         # Ensure UUID objects
@@ -387,8 +396,9 @@ class AiService:
                 company_id=c_id,
                 user_id=u_id,
                 agent_name=agent_name,
-                action="chat_interaction",
-                credits_consumed=cost
+                action=action,
+                credits_consumed=cost,
+                request_payload=request_payload,
             )
             self.db.add(log)
             self.db.commit()
@@ -453,23 +463,92 @@ class AiService:
         Unified chat method — uses whichever AI provider is configured.
         Falls back to a helpful error message if no key is available.
         """
+        hardening = AiHardeningService()
+        safety = hardening.assess_prompt(prompt)
+        if safety.blocked:
+            return {
+                "text": safety.fallback_message(),
+                "provider": "none",
+                "model": "none",
+                "error": "prompt_blocked",
+                "observability": hardening.build_observability_payload(
+                    company_id=company_id,
+                    user_id=None,
+                    agent_name="ai_service_chat",
+                    action="chat_completion",
+                    route="ai_service.chat",
+                    safety=safety,
+                    history_count=len(history or []),
+                    status="blocked",
+                ),
+            }
+
         router = self.get_llm_router(company_id=company_id, system_prompt=system_prompt)
         if router is None:
             return {
                 "text": "AI service is currently unavailable. Please configure an API key.",
                 "provider": "none",
+                "model": "none",
                 "error": "no_api_key",
+                "observability": hardening.build_observability_payload(
+                    company_id=company_id,
+                    user_id=None,
+                    agent_name="ai_service_chat",
+                    action="chat_completion",
+                    route="ai_service.chat",
+                    safety=safety,
+                    history_count=len(history or []),
+                    status="unavailable",
+                ),
             }
 
-        resp = await router.generate(
-            prompt=prompt,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            history=history or [],
+        from app.services.llm_router import LLMResponse
+
+        async def _operation(_attempt: int) -> LLMResponse:
+            candidate = await router.generate(
+                prompt=safety.sanitized_prompt,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                history=history or [],
+            )
+            if candidate.error:
+                raise RuntimeError(candidate.error)
+            return candidate
+
+        async def _fallback(last_error: BaseException, _errors: List[str]) -> LLMResponse:
+            return LLMResponse(
+                text="AI service is temporarily unavailable. Please try again shortly.",
+                provider="none",
+                model="none",
+                error=hardening.redact_text(last_error),
+            )
+
+        execution = await hardening.execute_with_retries(
+            _operation,
+            max_attempts=2,
+            fallback=_fallback,
+            operation_name="ai_service.chat",
         )
+        resp = execution.result
+        status = "fallback" if execution.fallback_used else "completed"
         return {
             "text": resp.text,
             "provider": resp.provider,
             "model": resp.model,
             "error": resp.error,
+            "observability": hardening.build_observability_payload(
+                company_id=company_id,
+                user_id=None,
+                agent_name="ai_service_chat",
+                action="chat_completion",
+                route="ai_service.chat",
+                safety=safety,
+                history_count=len(history or []),
+                status=status,
+                provider=resp.provider,
+                model=resp.model,
+                attempt_count=execution.attempt_count,
+                fallback_used=execution.fallback_used,
+                error=resp.error,
+            ),
         }
