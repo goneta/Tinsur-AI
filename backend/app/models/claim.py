@@ -56,6 +56,7 @@ class Claim(Base):
     adjuster = relationship("User", foreign_keys=[adjuster_id])
     creator = relationship("User", foreign_keys=[created_by])
     activities = relationship("ClaimActivity", back_populates="claim", cascade="all, delete-orphan")
+    product_claim_detail = relationship("ProductClaimDetail", back_populates="claim", uselist=False, cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Claim {self.claim_number}>"

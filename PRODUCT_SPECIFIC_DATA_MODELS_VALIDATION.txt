@@ -1,0 +1,64 @@
+Product-specific data models validation
+=======================================
+
+Scope implemented
+-----------------
+This implementation adds tenant-scoped, product-versioned detail attachment records so the platform no longer needs to rely only on generic Quote, Policy, or Claim JSON payloads for product-specific insurance data. The core Quote, Policy, and Claim models remain generic, while product-specific detail records attach to them through one-to-one relationships.
+
+Implemented tables and model responsibilities:
+
+1. product_application_details
+   - Attaches to quotes through quote_id.
+   - Links every record to company_id and insurance_product_versions.id through product_version_id.
+   - Optionally links to product_quote_wizard_schemas.id through quote_wizard_schema_id.
+   - Stores schema_version, validation_schema_ref, application_data, validation_status, validation_errors, created_at, and updated_at.
+
+2. product_rating_snapshots
+   - Attaches to policies through policy_id.
+   - Links every record to company_id and insurance_product_versions.id through product_version_id.
+   - Stores schema_version, validation_schema_ref, rating_data, validation_status, validation_errors, created_at, and updated_at.
+
+3. product_claim_details
+   - Attaches to claims through claim_id.
+   - Links every record to company_id and insurance_product_versions.id through product_version_id.
+   - Stores schema_version, validation_schema_ref, claim_data, validation_status, validation_errors, created_at, and updated_at.
+
+Files changed
+-------------
+- backend/app/models/product_application_detail.py
+- backend/app/models/__init__.py
+- backend/app/models/quote.py
+- backend/app/models/policy.py
+- backend/app/models/claim.py
+- backend/app/models/product_catalog.py
+- backend/app/schemas/product_application_detail.py
+- backend/alembic/versions/f6a7b8c9d0e1_add_product_specific_detail_models.py
+- backend/tests/test_product_specific_models.py
+- todo.md
+
+Validation evidence
+-------------------
+1. Syntax compilation passed:
+   PYTHONPATH=backend python3.11 -m py_compile backend/app/models/product_application_detail.py backend/app/schemas/product_application_detail.py backend/alembic/versions/f6a7b8c9d0e1_add_product_specific_detail_models.py backend/tests/test_product_specific_models.py
+
+2. Initial pytest attempt using the default environment failed before loading the focused test because the repository default DATABASE_URL selected the MySQL dialect and the sandbox does not have the MySQLdb driver installed. No product-specific implementation assertion ran in that failed attempt.
+
+3. Targeted pytest validation passed using an isolated SQLite database URL:
+   DATABASE_URL=sqlite:////tmp/tinsur_product_specific_models_test.db PYTHONPATH=backend pytest -q backend/tests/test_product_specific_models.py
+
+   Result: 5 passed.
+
+4. Alembic head validation passed using an isolated SQLite database URL:
+   cd backend && DATABASE_URL=sqlite:////tmp/tinsur_product_specific_alembic_head.db PYTHONPATH=. python3.11 -m alembic heads
+
+   Result: f6a7b8c9d0e1 (head).
+
+Focused test coverage
+---------------------
+The new focused tests validate that each new table contains tenant, product-version, schema version, validation status, validation errors, and product-specific payload fields. The tests also validate Pydantic DTO behavior for non-empty schema versions, required product-specific payloads, and structured validation errors for invalid records. Relationship tests confirm that Quote, Policy, and Claim retain their generic details payloads while attaching separate product-specific application, rating, and claim-detail objects.
+
+Remaining risks and follow-up recommendations
+---------------------------------------------
+1. The new tables and schemas provide the persistence and validation contract, but existing quote acquisition, rating, policy binding, and claim intake services should be updated in a later milestone to persist these records automatically during normal workflows.
+2. The schema currently validates structural requirements at the DTO level. Deep JSON Schema validation against product_quote_wizard_schemas.validation_schema or future claim-specific schemas should be added at the service layer so validation errors can be normalized before records are stored.
+3. No public API endpoints were added in this focused model milestone. Existing endpoints can remain backward-compatible, and new endpoint or service integration should be introduced deliberately once the workflow touchpoints are selected.

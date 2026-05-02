@@ -42,6 +42,7 @@ from app.models.ledger import Account, JournalEntry, LedgerEntry
 from app.models.premium_policy import PremiumPolicyCriteria, PremiumPolicyType
 from app.models.underwriting import Vehicle, Driver, DriverClaimHistory, DriverConvictionHistory, VehicleRiskProfile, UnderwritingRuleSet, UnderwritingRule, UnderwritingDecision, QuoteUnderwritingSnapshot
 from app.models.product_catalog import InsuranceProduct, ProductVersion, CoverageDefinition, CoverageOption, RatingFactor, ProductUnderwritingRule, QuoteWizardSchema
+from app.models.product_application_detail import ProductApplicationDetail, ProductRatingSnapshot, ProductClaimDetail
 from app.models.quote_element import QuoteElement
 from app.models.sales import SalesTransaction, SalesTarget
 from app.models.task import Task
@@ -113,6 +114,9 @@ __all__ = [
     "RatingFactor",
     "ProductUnderwritingRule",
     "QuoteWizardSchema",
+    "ProductApplicationDetail",
+    "ProductRatingSnapshot",
+    "ProductClaimDetail",
     "PolicyService",
     "QuoteElement",
     "SalesTransaction",

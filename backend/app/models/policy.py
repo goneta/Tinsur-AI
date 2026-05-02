@@ -69,6 +69,7 @@ class Policy(Base):
     endorsements = relationship("Endorsement", back_populates="policy", cascade="all, delete-orphan")
 
     claims = relationship("Claim", back_populates="policy", cascade="all, delete-orphan")
+    product_rating_snapshot = relationship("ProductRatingSnapshot", back_populates="policy", uselist=False, cascade="all, delete-orphan")
     co_insurance_shares = relationship("CoInsuranceShare", back_populates="policy", cascade="all, delete-orphan")
     
     # Services

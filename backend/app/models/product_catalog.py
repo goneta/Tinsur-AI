@@ -81,6 +81,9 @@ class ProductVersion(Base):
     rating_factors = relationship("RatingFactor", back_populates="product_version", cascade="all, delete-orphan")
     underwriting_rules = relationship("ProductUnderwritingRule", back_populates="product_version", cascade="all, delete-orphan")
     wizard_schemas = relationship("QuoteWizardSchema", back_populates="product_version", cascade="all, delete-orphan")
+    application_details = relationship("ProductApplicationDetail", back_populates="product_version")
+    rating_snapshots = relationship("ProductRatingSnapshot", back_populates="product_version")
+    claim_details = relationship("ProductClaimDetail", back_populates="product_version")
 
     def __repr__(self) -> str:
         return f"<ProductVersion {self.version} product={self.product_id}>"

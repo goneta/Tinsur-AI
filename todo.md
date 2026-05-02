@@ -222,3 +222,18 @@ Milestone 9 implements **automatic initial payment orchestration for product-cat
 - [ ] Commit Milestone 11 locally on `kenbot_branche`.
 - [ ] Push Milestone 11 to `origin/kenbot_branche`, `origin/main`, and `origin/master` only if explicitly continuing remote synchronization.
 - [ ] Verify all required remote branch heads resolve to the expected Milestone 11 commit if pushed.
+
+## Product-specific data models: versioned application, rating, and claim-detail structures
+
+- [x] Re-read `/home/ubuntu/skills/tinsur-ai-repo-workflow/SKILL.md` and follow the repository workflow for this model implementation.
+- [x] Confirm the active branch (`kenbot_branche`), current commit (`9df4f083f8ebf200f0760cb28104ef9843bd93d0`), remote alignment across `origin/kenbot_branche`, `origin/main`, and `origin/master`, and working tree state before implementation; only this traceability checklist is pending.
+- [x] Audit existing quote, policy, claim, product, application, rating, schema, migration, and test coverage to determine whether this capability is already implemented.
+- [x] Define a focused implementation scope that keeps core `Quote`, `Policy`, and `Claim` generic while attaching product-specific, versioned, validated application, rating, and claim-detail records.
+- [x] Implement missing product-specific data model and validation support without broad unrelated changes.
+- [x] Add focused tests for schema versioning, validation behavior, tenant/product linkage, and generic core-record attachment behavior.
+- [x] Run syntax checks and targeted pytest validation.
+- [x] Create `PRODUCT_SPECIFIC_DATA_MODELS_VALIDATION.txt` documenting scope, changed files, validation evidence, and remaining risks.
+- [x] Update `todo.md` for completion traceability.
+- [x] Commit the product-specific data model implementation locally on `kenbot_branche`.
+- [ ] Push the commit to `origin/kenbot_branche`, `origin/main`, and `origin/master` if remote synchronization continues to be requested.
+- [ ] Verify all required remote branch heads resolve to the expected implementation commit if pushed.
