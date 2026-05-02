@@ -177,6 +177,6 @@ Milestone 9 implements **automatic initial payment orchestration for product-cat
 - [x] Run syntax checks and targeted pytest validation.
 - [x] Create `PAYMENTS_LEDGER_RECONCILIATION_MILESTONE_VALIDATION.txt` documenting scope, changed files, validation evidence, and remaining risks.
 - [x] Update `todo.md` for completion traceability.
-- [ ] Commit the milestone locally on `kenbot_branche`.
-- [ ] Push the milestone to `origin/kenbot_branche`, `origin/main`, and `origin/master`.
-- [ ] Verify that all three remote branch heads resolve to the expected milestone commit.
+- [x] Commit the milestone locally on `kenbot_branche` (`f2d61aa3ea23bb2cc8a29493f4d39704c371f236`).
+- [x] Push the milestone to `origin/kenbot_branche`, `origin/main`, and `origin/master`.
+- [x] Verify that all three remote branch heads resolve to the expected milestone commit (`f2d61aa3ea23bb2cc8a29493f4d39704c371f236`).
