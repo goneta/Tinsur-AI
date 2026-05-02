@@ -235,5 +235,15 @@ Milestone 9 implements **automatic initial payment orchestration for product-cat
 - [x] Create `PRODUCT_SPECIFIC_DATA_MODELS_VALIDATION.txt` documenting scope, changed files, validation evidence, and remaining risks.
 - [x] Update `todo.md` for completion traceability.
 - [x] Commit the product-specific data model implementation locally on `kenbot_branche`.
-- [ ] Push the commit to `origin/kenbot_branche`, `origin/main`, and `origin/master` if remote synchronization continues to be requested.
-- [ ] Verify all required remote branch heads resolve to the expected implementation commit if pushed.
+- [ ] Push commit `3dcc7158179d9f5bbb4d2d10e748619aeeeca422` to `origin/kenbot_branche`, `origin/main`, and `origin/master` using the user-provided GitHub authentication for this synchronization attempt.
+- [ ] Verify `origin/kenbot_branche`, `origin/main`, and `origin/master` all resolve to commit `3dcc7158179d9f5bbb4d2d10e748619aeeeca422` after push.
+
+## AI production control guardrails
+- [x] Audit existing chatbot, agent, AI service, policy, payment, cancellation, document, and quote workflow boundaries to identify where AI may request or perform consequential actions.
+- [x] Define a focused implementation scope that allows AI recommendations, explanations, triage, and document drafting while blocking direct binding, cancellation, payment, and legal policy record changes.
+- [x] Implement repository-native guardrails and deterministic handoff behavior for restricted insurance operations.
+- [x] Add focused tests proving allowed AI assistance paths and blocked consequential action paths.
+- [x] Run syntax checks and targeted pytest validation for the AI-control implementation.
+- [x] Create `AI_CONTROL_GUARDRAILS_VALIDATION.txt` documenting scope, changed files, validation evidence, and remaining risks.
+- [x] Commit the AI-control implementation locally on `kenbot_branche`.
+- [ ] Push and verify remote branch heads if remote synchronization is requested after implementation.

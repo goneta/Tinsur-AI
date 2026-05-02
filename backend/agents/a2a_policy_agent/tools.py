@@ -57,94 +57,19 @@ def list_draft_quotes(company_id: str) -> str:
 @tool
 def convert_quote_to_policy(quote_id: str, company_id: str, user_id: str, start_date: str = None) -> str:
     """
-    Converts an accepted quote into an active insurance policy.
-    quote_id: The UUID or quote_number of the quote to convert.
-    start_date: Optional policy start date in YYYY-MM-DD format. Defaults to today.
-    Returns the new policy details.
+    Prepares a deterministic handoff for converting an accepted quote into an active insurance policy.
+    The AI layer may explain readiness but must not bind/issue the policy directly.
     """
     _get_backend_root()
     try:
-        from app.core.database import SessionLocal
-        from app.models.quote import Quote
-        from app.models.policy import Policy
-        from app.repositories.endorsement_repository import EndorsementRepository
-        from app.repositories.policy_repository import PolicyRepository
-        from app.repositories.quote_repository import QuoteRepository
-        from app.services.policy_service import PolicyService
+        from app.services.ai_action_control_service import AiActionControlService, RestrictedInsuranceOperation
 
-        db = SessionLocal()
-        try:
-            cid = uuid.UUID(company_id)
-
-            # Find quote by quote_number or UUID
-            quote = db.query(Quote).filter(
-                Quote.company_id == cid,
-                Quote.quote_number == quote_id
-            ).first()
-
-            if not quote:
-                try:
-                    quote = db.query(Quote).filter(
-                        Quote.company_id == cid,
-                        Quote.id == uuid.UUID(quote_id)
-                    ).first()
-                except (ValueError, AttributeError):
-                    pass
-
-            if not quote:
-                return json.dumps({"status": "error", "message": f"Quote '{quote_id}' not found."})
-
-            existing_policy = db.query(Policy).filter(Policy.quote_id == quote.id).first()
-            if existing_policy:
-                return json.dumps({
-                    "status": "success",
-                    "message": f"Quote {quote.quote_number} has already been converted to Policy {existing_policy.policy_number}.",
-                    "policy": {
-                        "policy_number": existing_policy.policy_number,
-                        "quote_number": quote.quote_number,
-                        "client_name": quote.client_name,
-                        "coverage_amount": float(existing_policy.coverage_amount) if existing_policy.coverage_amount else 0,
-                        "premium_amount": float(existing_policy.premium_amount) if existing_policy.premium_amount else 0,
-                        "start_date": existing_policy.start_date.isoformat() if existing_policy.start_date else "",
-                        "end_date": existing_policy.end_date.isoformat() if existing_policy.end_date else "",
-                        "status": existing_policy.status,
-                        "idempotent": True,
-                    },
-                })
-
-            # Determine dates
-            if start_date:
-                try:
-                    policy_start = datetime.strptime(start_date, "%Y-%m-%d").date()
-                except ValueError:
-                    policy_start = datetime.now().date()
-            else:
-                policy_start = datetime.now().date()
-
-            policy_service = PolicyService(
-                PolicyRepository(db),
-                QuoteRepository(db),
-                EndorsementRepository(db),
-            )
-            new_policy = policy_service.create_from_quote(quote.id, policy_start, uuid.UUID(user_id))
-
-            return json.dumps({
-                "status": "success",
-                "message": f"Policy {new_policy.policy_number} created successfully from Quote {quote.quote_number}.",
-                "policy": {
-                    "policy_number": new_policy.policy_number,
-                    "quote_number": quote.quote_number,
-                    "client_name": quote.client_name,
-                    "coverage_amount": float(new_policy.coverage_amount) if new_policy.coverage_amount else 0,
-                    "premium_amount": float(new_policy.premium_amount) if new_policy.premium_amount else 0,
-                    "start_date": new_policy.start_date.isoformat() if new_policy.start_date else "",
-                    "end_date": new_policy.end_date.isoformat() if new_policy.end_date else "",
-                    "status": new_policy.status,
-                    "idempotent": False,
-                }
-            })
-        finally:
-            db.close()
+        return AiActionControlService().restricted_response_json(
+            RestrictedInsuranceOperation.BIND_POLICY,
+            requested_by="policy_agent.convert_quote_to_policy",
+            record_reference=quote_id,
+            next_step="Use the deterministic policy lifecycle workflow to issue the policy after authorization and audit checks."
+        )
     except Exception as e:
         return json.dumps({"status": "error", "message": str(e)})
 
@@ -256,36 +181,18 @@ def get_policy_details(policy_number: str, company_id: str) -> str:
 @tool
 def cancel_policy(policy_number: str, company_id: str, reason: str) -> str:
     """
-    Cancels an active policy with a reason.
+    Prepares a deterministic handoff for policy cancellation.
+    The AI layer may collect the reason and explain the process but must not cancel the policy directly.
     """
     _get_backend_root()
     try:
-        from app.core.database import SessionLocal
-        from app.models.policy import Policy
+        from app.services.ai_action_control_service import AiActionControlService, RestrictedInsuranceOperation
 
-        db = SessionLocal()
-        try:
-            policy = db.query(Policy).filter(
-                Policy.company_id == uuid.UUID(company_id),
-                Policy.policy_number == policy_number
-            ).first()
-
-            if not policy:
-                return json.dumps({"status": "error", "message": f"Policy '{policy_number}' not found."})
-
-            if policy.status == 'cancelled':
-                return json.dumps({"status": "error", "message": f"Policy {policy_number} is already cancelled."})
-
-            policy.status = 'cancelled'
-            if hasattr(policy, 'cancellation_reason'):
-                policy.cancellation_reason = reason
-            db.commit()
-
-            return json.dumps({
-                "status": "success",
-                "message": f"Policy {policy_number} has been cancelled. Reason: {reason}"
-            })
-        finally:
-            db.close()
+        return AiActionControlService().restricted_response_json(
+            RestrictedInsuranceOperation.CANCEL_POLICY,
+            requested_by="policy_agent.cancel_policy",
+            record_reference=policy_number,
+            next_step="Create a cancellation request for the deterministic policy lifecycle workflow instead of changing policy status from the AI tool."
+        )
     except Exception as e:
         return json.dumps({"status": "error", "message": str(e)})

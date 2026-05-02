@@ -14,6 +14,7 @@ from app.models.system_settings import SystemSettings, AiUsageLog
 from app.core.config import settings
 from app.core.time import utcnow
 from app.services.ai_hardening_service import AiHardeningService
+from app.services.ai_action_control_service import AI_CONSEQUENTIAL_ACTION_INSTRUCTIONS
 
 logger = logging.getLogger(__name__)
 
@@ -483,7 +484,12 @@ class AiService:
                 ),
             }
 
-        router = self.get_llm_router(company_id=company_id, system_prompt=system_prompt)
+        enforced_system_prompt = (
+            f"{system_prompt.strip()}\n\n{AI_CONSEQUENTIAL_ACTION_INSTRUCTIONS}"
+            if system_prompt
+            else AI_CONSEQUENTIAL_ACTION_INSTRUCTIONS
+        )
+        router = self.get_llm_router(company_id=company_id, system_prompt=enforced_system_prompt)
         if router is None:
             return {
                 "text": "AI service is currently unavailable. Please configure an API key.",

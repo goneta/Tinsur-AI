@@ -242,47 +242,24 @@ def get_user_claims(client_id: str) -> str:
 @tool
 def cancel_policy(client_id: str, policy_id: str, reason: str) -> str:
     """
-    Cancels an active insurance policy.
-    Requires the policy_id and a valid reason for cancellation.
+    Prepares a deterministic handoff for policy cancellation.
+    The AI layer may collect the cancellation reason but must not change policy status directly.
     """
-    print(f"DEBUG: cancel_policy called for client {client_id}, policy {policy_id}")
+    print(f"DEBUG: cancel_policy handoff requested for client {client_id}, policy {policy_id}")
     backend_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
     if backend_root not in sys.path: sys.path.append(backend_root)
     
     try:
-        from app.core.database import SessionLocal
-        from app.models.policy import Policy
-        db = SessionLocal()
-        
-        # Verify ownership and state
-        policy = db.query(Policy).filter(
-            Policy.id == uuid.UUID(policy_id),
-            Policy.client_id == uuid.UUID(client_id)
-        ).first()
-        
-        if not policy:
-            # Try by policy_number if UUID conversion failed or not found by ID
-            policy = db.query(Policy).filter(
-                Policy.policy_number == policy_id,
-                Policy.client_id == uuid.UUID(client_id)
-            ).first()
+        from app.services.ai_action_control_service import AiActionControlService, RestrictedInsuranceOperation
 
-        if not policy:
-            return f"Error: Policy {policy_id} not found or you do not have permission to cancel it."
-            
-        if policy.status == 'canceled':
-            return f"Policy {policy.policy_number} is already canceled."
-            
-        policy.status = 'canceled'
-        policy.cancellation_reason = reason
-        db.commit()
-        
-        return f"Policy {policy.policy_number} has been successfully canceled. Reason: {reason}. You will receive a confirmation email shortly."
+        return AiActionControlService().restricted_response_json(
+            RestrictedInsuranceOperation.CANCEL_POLICY,
+            requested_by="support_agent.cancel_policy",
+            record_reference=policy_id,
+            next_step="Route the collected reason to the deterministic policy lifecycle workflow for authorization and audit logging."
+        )
     except Exception as e:
-        if db: db.rollback()
-        return f"Error canceling policy: {str(e)}"
-    finally:
-        db.close()
+        return f"Error preparing cancellation handoff: {str(e)}"
 
 @tool
 def schedule_callback(client_id: str, company_id: str, preferred_time: str, topic: str) -> str:
@@ -376,57 +353,24 @@ def analyze_incident_image(image_path: str) -> str:
 @tool
 def automated_claim_registration(client_id: str, company_id: str, policy_number: str, ai_assessment_json: str, image_url: str) -> str:
     """
-    Automatically creates a claim record based on an AI assessment of an incident image.
-    'ai_assessment_json' should be the output from 'analyze_incident_image'.
+    Prepares a deterministic handoff for claim intake based on an AI incident assessment.
+    The AI layer may triage damage and draft intake details but must not create claim records directly.
     """
-    print(f"DEBUG: automated_claim_registration called for policy {policy_number}")
+    print(f"DEBUG: automated_claim_registration handoff requested for policy {policy_number}")
     backend_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
     if backend_root not in sys.path: sys.path.append(backend_root)
     
     try:
-        from app.core.database import SessionLocal
-        from app.models.claim import Claim
-        from app.models.policy import Policy
-        import json
-        from datetime import datetime
-        
-        assessment = json.loads(ai_assessment_json)
-        db = SessionLocal()
-        
-        # Find the policy to get policy_id
-        policy = db.query(Policy).filter(
-            Policy.policy_number == policy_number,
-            Policy.client_id == uuid.UUID(client_id)
-        ).first()
-        
-        if not policy:
-            return f"Error: Policy {policy_number} not found for this client."
-            
-        claim_number = f"CLM-{uuid.uuid4().hex[:8].upper()}"
-        
-        new_claim = Claim(
-            claim_number=claim_number,
-            policy_id=policy.id,
-            client_id=uuid.UUID(client_id),
-            company_id=uuid.UUID(company_id),
-            incident_date=datetime.now().date(),
-            incident_description=assessment.get("damage_description", "No description provided."),
-            status='submitted',
-            claim_amount=assessment.get("estimated_repair_cost", 0.0),
-            evidence_files=[image_url],
-            ai_assessment=assessment
+        from app.services.ai_action_control_service import AiActionControlService, RestrictedInsuranceOperation
+
+        return AiActionControlService().restricted_response_json(
+            RestrictedInsuranceOperation.CREATE_CLAIM_RECORD,
+            requested_by="support_agent.automated_claim_registration",
+            record_reference=policy_number,
+            next_step="Submit the AI assessment as a draft to deterministic claims intake for validation and record creation."
         )
-        
-        db.add(new_claim)
-        db.commit()
-        db.refresh(new_claim)
-        
-        return f"Successfully registered claim {claim_number}! AI Assessment Summary: Severity {assessment.get('severity_score')}/10, Estimated Cost: ${assessment.get('estimated_repair_cost')}. An adjuster has been notified."
     except Exception as e:
-        if db: db.rollback()
-        return f"Error registering claim: {str(e)}"
-    finally:
-        db.close()
+        return f"Error preparing claim-intake handoff: {str(e)}"
 
 @tool
 def get_proactive_alerts(client_id: str) -> str:
@@ -497,30 +441,21 @@ def get_proactive_alerts(client_id: str) -> str:
 @tool
 def waive_late_fee(schedule_id: str) -> str:
     """
-    Waives the late fee for a specific premium schedule as a gesture of intelligent care.
+    Prepares a deterministic handoff for fee-waiver review.
+    The AI layer may recommend or explain a waiver but must not alter billing records directly.
     """
-    print(f"DEBUG: waive_late_fee called for schedule {schedule_id}")
+    print(f"DEBUG: waive_late_fee handoff requested for schedule {schedule_id}")
     backend_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
     if backend_root not in sys.path: sys.path.append(backend_root)
     
     try:
-        from app.core.database import SessionLocal
-        from app.models.premium_schedule import PremiumSchedule
-        
-        db = SessionLocal()
-        schedule = db.query(PremiumSchedule).filter(PremiumSchedule.id == uuid.UUID(schedule_id)).first()
-        
-        if not schedule:
-            return f"Error: Premium Schedule {schedule_id} not found."
-            
-        schedule.status = 'waived'
-        schedule.late_fee = 0
-        schedule.late_fee_applied = False
-        
-        db.commit()
-        return f"Successfully waived late fee for {schedule.installment_number} of Policy {schedule.policy.policy_number}. The customer has been notified of this courtesy."
+        from app.services.ai_action_control_service import AiActionControlService, RestrictedInsuranceOperation
+
+        return AiActionControlService().restricted_response_json(
+            RestrictedInsuranceOperation.WAIVE_PAYMENT_OR_FEE,
+            requested_by="support_agent.waive_late_fee",
+            record_reference=schedule_id,
+            next_step="Create a billing-review request for deterministic authorization instead of changing the premium schedule from the AI tool."
+        )
     except Exception as e:
-        if db: db.rollback()
-        return f"Error waiving late fee: {str(e)}"
-    finally:
-        db.close()
+        return f"Error preparing fee-waiver handoff: {str(e)}"

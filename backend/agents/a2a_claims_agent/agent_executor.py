@@ -5,13 +5,13 @@ from a2a.utils import new_agent_text_message
 from google.adk.agents import Agent
 from .models import ClaimRequest, ClaimResponse
 import json
-import uuid
-import re
-from datetime import datetime
-from decimal import Decimal
 from app.core.database import SessionLocal
 from app.core.security_context import SecurityService
-from app.services.claim_service import ClaimService
+from app.services.ai_action_control_service import (
+    AI_CONSEQUENTIAL_ACTION_INSTRUCTIONS,
+    AiActionControlService,
+    RestrictedInsuranceOperation,
+)
 
 class ClaimsAgentExecutor(AgentExecutor):
     def __init__(self):
@@ -19,9 +19,11 @@ class ClaimsAgentExecutor(AgentExecutor):
             name="claims_agent",
             model="gemini-2.0-flash",
             description="Agent that processes claims and detects fraud",
-            instruction="""
+            instruction=f"""
             You are a Claims Agent.
-            Analyze claims for fraud.
+            Analyze incidents for claim triage, fraud indicators, explanatory guidance, and draft intake notes.
+
+            {AI_CONSEQUENTIAL_ACTION_INSTRUCTIONS}
             """,
         )
 
@@ -69,13 +71,16 @@ class ClaimsAgentExecutor(AgentExecutor):
         fraud_score = 0
         status = "Approved"
         
+        amount = float(request.amount or 0)
+        description = request.description or ""
+
         # Rule 1: High Amount
-        if request.amount > 5000:
+        if amount > 5000:
             fraud_score += 30
             
         # Rule 2: Suspicious Keywords
         suspicious_words = ["stolen", "lost", "cash", "unknown"]
-        if any(w in request.description.lower() for w in suspicious_words):
+        if any(w in description.lower() for w in suspicious_words):
             fraud_score += 40
             
         # Rule 3: Policy Check (Mock)
@@ -130,118 +135,45 @@ class ClaimsAgentExecutor(AgentExecutor):
                     event_queue.enqueue_event(new_agent_text_message(response_text))
                     return
 
-                # 2. Parse Input
-                if "share" in user_input.lower() or "settle" in user_input.lower():
-                    # Inter-company Settlement Logic
-                    from app.models.inter_company_share import InterCompanyShare
-                    from app.models.company import Company
-                    
-                    # Extract target company (mock logic or simple search)
-                    target_company_name = "Settlement Corp" # Mock
-                    if "with" in user_input.lower():
-                        target_company_name = user_input.lower().split("with")[-1].strip()
-                    
-                    target_company = db.query(Company).filter(Company.name.ilike(f"%{target_company_name}%")).first()
-                    if not target_company:
-                         # Fallback to a seeded one if exists
-                         target_company = db.query(Company).filter(Company.name != "My Insurance Co").first()
-
-                    if not target_company:
-                        response_text = f"Error: Could not find a target company for settlement."
-                        event_queue.enqueue_event(new_agent_text_message(response_text))
-                        return
-
-                    new_share = InterCompanyShare(
-                        from_company_id=uuid.UUID(context.metadata.get("company_id")) if context.metadata.get("company_id") else None,
-                        to_company_id=target_company.id,
-                        resource_type="claim_settlement",
-                        resource_id=uuid.UUID(final_policy_id) if final_policy_id != "UNKNOWN" else None,
-                        amount=Decimal("0.0"), # TBD
-                        currency="XOF",
-                        access_level="full"
-                    )
-                    db.add(new_share)
-                    db.commit()
-                    
-                    response_text = f"Inter-company settlement initiated with {target_company.name} for policy {final_policy_id}."
-                    event_queue.enqueue_event(new_agent_text_message(response_text))
-                    return
-
+                # 2. Parse Input and enforce AI action controls before any legal/financial record mutation.
                 req = await self._parse_input(history)
-                
-                # Override policy_id from context if available
                 final_policy_id = policy_id_ctx if policy_id_ctx else req.policy_id
-                
-                if not final_policy_id or final_policy_id == "UNKNOWN":
-                     response_text = "Error: Could not determine Policy ID. Please provide a policy ID for claim processing."
-                     event_queue.enqueue_event(new_agent_text_message(response_text))
-                     return
+                control = AiActionControlService()
 
-                # 3. Process Logic (Fraud Check)
-                # We do this BEFORE saving to determine initial status
-                # Update request with real policy ID for the check
-                req.policy_id = final_policy_id
-                
-                # Logic from _process_claim (inline or call it)
-                # We'll use the existing method but we need to modify it to NOT return a fixed response, 
-                # or we just use its logic here.
-                # Let's use the method to get the 'status' and 'fraud_score'
-                
+                if "share" in user_input.lower() or "settle" in user_input.lower():
+                    payload = control.restricted_response(
+                        RestrictedInsuranceOperation.SETTLE_CLAIM,
+                        requested_by="claims_agent.execute",
+                        record_reference=final_policy_id,
+                        next_step="Prepare settlement context and send it to deterministic inter-company settlement services for authorization."
+                    )
+                    payload["settlement_triage_draft"] = {
+                        "policy_id": final_policy_id,
+                        "user_request": user_input,
+                        "recommended_next_step": "Validate coverage, counterparty, amount, and authorization outside the AI layer before creating settlement records."
+                    }
+                    event_queue.enqueue_event(new_agent_text_message(json.dumps(payload, sort_keys=True)))
+                    return
+
                 mock_resp = self._process_claim(req)
-                
-                # 4. Persistence
-                from app.models.policy import Policy
-                from app.models.claim import Claim
-                
-                # Fetch Policy to get client_id and company_id
-                # SECURITY: Enforce company_id isolation
-                context_company_id = context.metadata.get("company_id")
-                if not context_company_id:
-                    response_text = "Error: Security context missing (company_id). Access denied."
-                    event_queue.enqueue_event(new_agent_text_message(response_text))
-                    return
-
-                policy = db.query(Policy).filter(
-                    Policy.id == uuid.UUID(final_policy_id),
-                    Policy.company_id == uuid.UUID(context_company_id)
-                ).first()
-                if not policy:
-                    response_text = f"Error: Policy {final_policy_id} not found or access denied for your company."
-                    event_queue.enqueue_event(new_agent_text_message(response_text))
-                    return
-
-                new_claim = Claim(
-                    claim_number=f"CLM-{uuid.uuid4().hex[:8].upper()}",
-                    policy_id=policy.id,
-                    client_id=policy.client_id,
-                    company_id=policy.company_id,
-                    incident_date=datetime.utcnow().date(), # Default to today if not parsed
-                    incident_description=req.description,
-                    claim_amount=req.amount,
-                    status=mock_resp.status.lower().replace(" ", "_"), # 'Under Review' -> 'under_review'
-                    # For now, we accept the DB doesn't have fraud_score column based on previous view_file
-                    # We will store it in metadata if possible, or ignore.
-                    # Wait, Claim model has no fraud_score column. 
-                    # We can append it to description or ignore.
+                payload = control.restricted_response(
+                    RestrictedInsuranceOperation.CREATE_CLAIM_RECORD,
+                    requested_by="claims_agent.execute",
+                    record_reference=final_policy_id,
+                    next_step="Submit this triage draft to deterministic claims intake for validation, authorization, and auditable record creation."
                 )
-                
-                if mock_resp.fraud_score > 0:
-                     new_claim.incident_description += f" [Fraud Score: {mock_resp.fraud_score}]"
+                payload["claim_triage_draft"] = {
+                    "policy_id": final_policy_id,
+                    "incident_description": req.description,
+                    "estimated_amount": req.amount,
+                    "incident_date": req.incident_date,
+                    "triage_status": mock_resp.status,
+                    "fraud_score": mock_resp.fraud_score,
+                    "triage_message": mock_resp.message,
+                }
+                event_queue.enqueue_event(new_agent_text_message(json.dumps(payload, sort_keys=True)))
+                return
 
-                db.add(new_claim)
-                db.commit()
-                db.refresh(new_claim)
-                
-                # Trigger co-insurance distribution if approved
-                if new_claim.status == 'approved':
-                    claim_service = ClaimService(db)
-                    claim_service._generate_co_insurance_settlements(new_claim)
-                
-                response_text = f"Claim created successfully! \nClaim ID: {new_claim.claim_number} \nStatus: {mock_resp.status}"
-                if mock_resp.message:
-                    response_text += f"\nNote: {mock_resp.message}"
-                
-                event_queue.enqueue_event(new_agent_text_message(response_text))
             
             except Exception as e:
                 db.rollback()

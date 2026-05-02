@@ -1,0 +1,64 @@
+AI Control Guardrails Validation
+================================
+
+Scope
+-----
+Implemented production-grade AI action controls so insurance AI agents and the general chatbot can assist with recommendations, explanations, triage, and document drafting while deterministic service boundaries remain responsible for binding policies, cancelling policies, taking or waiving payments, creating legal claim records, settling claims, and changing legal policy records.
+
+Design Summary
+--------------
+- Added a centralized AI action-control service that classifies restricted consequential insurance operations and returns stable deterministic-handoff decisions.
+- Restricted policy-agent binding and cancellation tools now return structured handoff responses instead of mutating policies.
+- Restricted support-agent cancellation, automated claim-registration, and late-fee waiver tools now return structured handoff responses instead of changing policy, claim, payment, or schedule records.
+- Claims-agent claim creation and settlement creation behavior was refactored into triage and draft/handoff behavior, with legacy mutation code removed rather than merely bypassed.
+- Policy, support, and generic AI chat prompts now include the same centralized action-control policy instruction so model-facing behavior aligns with tool-level enforcement.
+
+Changed Files
+-------------
+- backend/app/services/ai_action_control_service.py
+- backend/app/services/ai_service.py
+- backend/agents/a2a_policy_agent/tools.py
+- backend/agents/a2a_policy_agent/agent_executor.py
+- backend/agents/a2a_support_agent/tools.py
+- backend/agents/a2a_support_agent/agent_executor.py
+- backend/agents/a2a_claims_agent/agent_executor.py
+- backend/tests/test_ai_action_control.py
+- todo.md
+- AI_CONTROL_GUARDRAILS_VALIDATION.txt
+
+Validation Evidence
+-------------------
+Initial validation identified the default MySQL driver dependency during test collection when no isolated database URL was supplied:
+
+- Command: PYTHONPATH=. pytest -q tests/test_ai_action_control.py tests/test_ai_hardening.py
+- Result: Failed during conftest import because the default settings attempted to import MySQLdb.
+
+Validation was then rerun with an isolated SQLite database URL:
+
+- Command: DATABASE_URL=sqlite:///./ai_guardrails_test.db PYTHONPATH=. python3.11 -m py_compile app/services/ai_action_control_service.py app/services/ai_service.py agents/a2a_policy_agent/tools.py agents/a2a_support_agent/tools.py agents/a2a_policy_agent/agent_executor.py agents/a2a_support_agent/agent_executor.py agents/a2a_claims_agent/agent_executor.py tests/test_ai_action_control.py
+- Result: Passed.
+
+- Command: DATABASE_URL=sqlite:///./ai_guardrails_test.db PYTHONPATH=. pytest -q tests/test_ai_action_control.py tests/test_ai_hardening.py
+- Result: 11 passed.
+
+Test Coverage Added
+-------------------
+- Restricted operations are denied and require deterministic handoff.
+- Assistive/read-only operations remain allowed.
+- Restricted handoff responses are stable, JSON-serializable, and auditable.
+- Policy, support, and generic chatbot prompt surfaces reference the centralized action-control instruction.
+- Restricted agent tools no longer contain active direct mutation patterns for policy binding, cancellation, fee waiver, automated claim creation, or claim settlement creation.
+
+Warnings Observed
+-----------------
+The successful targeted pytest run emitted pre-existing warnings unrelated to this change:
+
+- passlib crypt deprecation warning.
+- Pydantic protected namespace warnings for existing model fields.
+- SQLAlchemy relationship overlap warning for QuoteUnderwritingSnapshot.quote and Quote.underwriting_snapshot.
+
+Remaining Risks
+---------------
+- The implementation enforces deterministic handoff at the currently inspected AI agent and generic chatbot surfaces. Future AI tools that perform consequential actions should import and use the centralized action-control service before exposing those tools to agents.
+- The handoff responses identify deterministic target services and next steps, but end-to-end deterministic approval workflows should continue to be validated separately at the service/API layer.
+- The focused tests intentionally avoid broad incompatible database fixtures and therefore validate guardrail behavior and source-level mutation removal rather than full multi-agent runtime execution with external AI SDKs.

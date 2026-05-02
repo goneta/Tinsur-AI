@@ -3,6 +3,7 @@ from a2a.server.agent_execution.context import RequestContext
 from a2a.server.events.event_queue import EventQueue
 from a2a.utils import new_agent_text_message
 from google.adk.agents import Agent
+from app.services.ai_action_control_service import AI_CONSEQUENTIAL_ACTION_INSTRUCTIONS
 
 from .tools import (
     search_knowledge_base, 
@@ -25,7 +26,7 @@ class SupportAgentExecutor(AgentExecutor):
             name="support_agent",
             model="gemini-2.0-flash",
             description="Agent that provides customer support using Knowledge Base, Ticket Escalation, and self-service actions",
-            instruction="""
+            instruction=f"""
             You are the Tinsur.AI Support Specialist. 
             Your goal is to provide accurate, helpful, and empathetic assistance to our clients.
             
@@ -40,20 +41,20 @@ class SupportAgentExecutor(AgentExecutor):
                end of your response (e.g., "Found in: test_policy.pdf, Page 2").
             
             4. ACTION: SELF-SERVICE:
-               - To cancel a policy, MUST ask the user for a reason first.
+               - To cancel a policy, MUST ask the user for a reason first, then hand off to deterministic policy lifecycle services. Do not claim cancellation is complete from AI.
                - To schedule a callback, ask for a preferred time and the topic.
             
             5. MULTI-MODAL CLAIMS:
                - If an incident is mentioned and an image path is provided ([IMAGE_PATH: ...]), 
                  ALWAYS use 'analyze_incident_image' first.
                - Summarize the assessment (severity, cost) and ask for confirmation.
-               - If confirmed, use 'automated_claim_registration' to file the claim.
+               - If confirmed, use 'automated_claim_registration' only to prepare a deterministic claims-intake handoff; do not claim the legal claim record is created from AI.
             
             6. INTELLIGENT CARE (PROACTIVE):
                - If '[PROACTIVE_ALERTS: ...]' is present, identify relevant issues 
                  (e.g., late payments) and offer help proactively.
-               - Be empathetic. For a first-time late payment, you have the authority 
-                 to offer to 'waive_late_fee'. Always confirm with the user first.
+               - Be empathetic. For a first-time late payment, you may recommend or draft a fee-waiver request.
+                 Use 'waive_late_fee' only to prepare deterministic billing-review handoff; do not claim the fee has been waived from AI.
             
             7. OPTIMIZATION: Use the 'category' filter in 'search_knowledge_base' 
                whenever possible to improve speed and accuracy.
@@ -62,6 +63,8 @@ class SupportAgentExecutor(AgentExecutor):
             8. ESCALATION: Use 'create_support_ticket' if tools fail or if specifically requested.
             
             CONTEXT: Use the client_id and company_id provided.
+
+            {AI_CONSEQUENTIAL_ACTION_INSTRUCTIONS}
             """,
             tools=[
                 search_knowledge_base, 
