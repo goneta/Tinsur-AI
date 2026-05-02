@@ -180,3 +180,14 @@ Milestone 9 implements **automatic initial payment orchestration for product-cat
 - [x] Commit the milestone locally on `kenbot_branche` (`f2d61aa3ea23bb2cc8a29493f4d39704c371f236`).
 - [x] Push the milestone to `origin/kenbot_branche`, `origin/main`, and `origin/master`.
 - [x] Verify that all three remote branch heads resolve to the expected milestone commit (`f2d61aa3ea23bb2cc8a29493f4d39704c371f236`).
+
+
+## Repeat GitHub Remote Push Verification
+
+- [x] Confirm the current local branch (`kenbot_branche`), current commit (`10b439788a7558e960dfba9a26e572cb45739d9b`), and working tree state before pushing.
+- [ ] Push the current commit to `origin/kenbot_branche` using the provided credential without exposing it in terminal output.
+- [ ] Push the same commit to `origin/main`.
+- [ ] Push the same commit to `origin/master`.
+- [ ] Verify all three remote branch heads resolve to the expected current commit.
+- [ ] Remove any temporary credential-helper files after the push.
+- [ ] Report the verified branch heads to the user.
