@@ -39,6 +39,10 @@ from app.schemas.product_catalog import (
     ProductCatalogSeedResponse,
     ProductCatalogSummaryItem,
     ProductCatalogSummaryResponse,
+    ProductQuoteRecommendationRequest,
+    ProductQuoteRecommendationResponse,
+    ProductQuoteRequest,
+    ProductQuoteResponse,
     ProductUnderwritingRuleCreate,
     ProductUnderwritingRuleResponse,
     ProductUnderwritingRuleUpdate,
@@ -53,6 +57,7 @@ from app.schemas.product_catalog import (
     RatingFactorUpdate,
 )
 from app.services.product_catalog_service import ProductCatalogService
+from app.services.product_quote_engine_service import ProductQuoteEngineService
 
 router = APIRouter()
 
@@ -97,6 +102,35 @@ def get_product_catalog_summary(
     """Return compact active product catalog metadata suitable for AI and quote wizard selection."""
     summary = ProductCatalogService(db).get_active_catalog_summary(current_user.company_id)
     return {"products": [ProductCatalogSummaryItem(**item) for item in summary], "total": len(summary)}
+
+
+@router.post("/quote/calculate", response_model=ProductQuoteResponse)
+def calculate_product_quote(
+    quote_request: ProductQuoteRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Calculate a deterministic product-catalog quote for car, travel, or home insurance."""
+    try:
+        return ProductQuoteEngineService(db).calculate_quote(current_user.company_id, quote_request)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/quote/recommendations", response_model=ProductQuoteRecommendationResponse)
+def recommend_product_quotes(
+    recommendation_request: ProductQuoteRecommendationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return ranked product-catalog quote recommendations for the current tenant."""
+    recommendations = ProductQuoteEngineService(db).recommend_quotes(current_user.company_id, recommendation_request)
+    recommended = next((item for item in recommendations if item.get("is_eligible")), None)
+    return {
+        "recommendations": recommendations,
+        "total": len(recommendations),
+        "recommended_product_id": recommended.get("product_id") if recommended else None,
+    }
 
 
 @router.post("/products", response_model=InsuranceProductResponse, status_code=status.HTTP_201_CREATED)

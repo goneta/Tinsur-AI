@@ -245,3 +245,75 @@ def list_recent_clients(company_id: str) -> str:
         return f"Error listing clients: {str(e)}"
     finally:
         db.close()
+
+
+@tool
+def recommend_catalog_insurance_quotes(company_id: str, product_line: str = None, applicant_json: str = "{}", risk_json: str = "{}", coverage_json: str = "[]", duration_months: int = 12) -> str:
+    """
+    Calculates ranked product-catalog quote recommendations for car, travel, or home insurance.
+
+    applicant_json and risk_json should be JSON objects. coverage_json should be a JSON array of
+    selected coverages using coverage_code, option_code, limit_amount, and deductible_amount keys.
+    """
+    print(f"DEBUG: recommend_catalog_insurance_quotes called for company {company_id}, product_line={product_line}")
+    backend_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+    if backend_root not in sys.path:
+        sys.path.append(backend_root)
+
+    db = None
+    try:
+        from app.core.database import SessionLocal
+        from app.schemas.product_catalog import ProductQuoteRecommendationRequest, ProductQuoteCoverageSelection
+        from app.services.product_quote_engine_service import ProductQuoteEngineService
+
+        applicant_data = json.loads(applicant_json or "{}")
+        risk_data = json.loads(risk_json or "{}")
+        coverage_data = json.loads(coverage_json or "[]")
+        if not isinstance(applicant_data, dict):
+            return "Error recommending catalog quotes: applicant_json must be a JSON object."
+        if not isinstance(risk_data, dict):
+            return "Error recommending catalog quotes: risk_json must be a JSON object."
+        if not isinstance(coverage_data, list):
+            return "Error recommending catalog quotes: coverage_json must be a JSON array."
+
+        allowed_lines = {"car", "travel", "home"}
+        line = product_line.lower() if product_line else None
+        if line and line not in allowed_lines:
+            return "Error recommending catalog quotes: product_line must be one of car, travel, or home."
+        selections = [ProductQuoteCoverageSelection(**item) for item in coverage_data]
+        request = ProductQuoteRecommendationRequest(
+            product_line=line,
+            applicant_data=applicant_data,
+            risk_data=risk_data,
+            coverage_selections=selections,
+            term_months=int(duration_months),
+            include_referred=True,
+        )
+
+        db = SessionLocal()
+        recommendations = ProductQuoteEngineService(db).recommend_quotes(uuid.UUID(company_id), request)
+        response = {
+            "total": len(recommendations),
+            "recommended_product_id": str(recommendations[0]["product_id"]) if recommendations else None,
+            "recommendations": [
+                {
+                    "product_id": str(item["product_id"]),
+                    "product_code": item["product_code"],
+                    "product_name": item["product_name"],
+                    "product_line": str(item["product_line"]),
+                    "estimated_premium": float(item["estimated_premium"]),
+                    "currency": item["currency"],
+                    "decision": item["decision"],
+                    "is_eligible": item["is_eligible"],
+                    "referral_required": item["referral_required"],
+                    "decision_reasons": item["decision_reasons"],
+                }
+                for item in recommendations
+            ],
+        }
+        return json.dumps(response)
+    except Exception as e:
+        return f"Error recommending catalog quotes: {str(e)}"
+    finally:
+        if db:
+            db.close()

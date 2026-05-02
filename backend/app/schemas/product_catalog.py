@@ -336,3 +336,106 @@ class ProductCatalogSummaryItem(BaseModel):
 class ProductCatalogSummaryResponse(BaseModel):
     products: list[ProductCatalogSummaryItem]
     total: int
+
+
+class ProductQuoteCoverageSelection(BaseModel):
+    coverage_code: str
+    option_code: Optional[str] = None
+    limit_amount: Optional[Decimal] = None
+    deductible_amount: Optional[Decimal] = None
+    is_selected: bool = True
+
+
+class ProductQuoteRequest(BaseModel):
+    product_id: Optional[UUID] = None
+    product_code: Optional[str] = None
+    product_line: Optional[ProductLine] = None
+    applicant_data: dict[str, Any] = Field(default_factory=dict)
+    risk_data: dict[str, Any] = Field(default_factory=dict)
+    coverage_selections: list[ProductQuoteCoverageSelection] = Field(default_factory=list)
+    channel: str = "portal"
+    term_months: int = Field(default=12, ge=1, le=36)
+
+    @field_validator("product_code")
+    @classmethod
+    def normalize_product_code(cls, value: Optional[str]) -> Optional[str]:
+        return value.upper() if value else value
+
+
+class ProductQuoteCoverageBreakdown(BaseModel):
+    coverage_code: str
+    coverage_name: str
+    option_code: Optional[str] = None
+    option_label: Optional[str] = None
+    limit_amount: Optional[Decimal] = None
+    deductible_amount: Optional[Decimal] = None
+    premium_delta: Decimal = Decimal("0")
+    rate_multiplier: Decimal = Decimal("1")
+
+
+class ProductQuoteFactorBreakdown(BaseModel):
+    code: str
+    name: str
+    factor_type: str
+    applies_to: str
+    input_path: str
+    matched_value: Optional[Any] = None
+    factor: Decimal = Decimal("1")
+    amount: Decimal = Decimal("0")
+    reason_code: Optional[str] = None
+
+
+class ProductQuoteUnderwritingDecision(BaseModel):
+    code: str
+    name: str
+    decision_effect: str
+    message: Optional[str] = None
+    authority_level: Optional[str] = None
+
+
+class ProductQuoteTaxFeeBreakdown(BaseModel):
+    code: str
+    name: Optional[str] = None
+    fee_type: str
+    amount: Decimal
+
+
+class ProductQuoteResponse(BaseModel):
+    product_id: UUID
+    product_code: str
+    product_name: str
+    product_line: ProductLine
+    product_version_id: UUID
+    product_version: str
+    currency: str
+    term_months: int
+    rating_base: Decimal
+    base_premium: Decimal
+    subtotal_premium: Decimal
+    taxes_and_fees_total: Decimal
+    estimated_premium: Decimal
+    is_eligible: bool
+    referral_required: bool = False
+    decision: str
+    decision_reasons: list[str] = Field(default_factory=list)
+    coverage_breakdown: list[ProductQuoteCoverageBreakdown] = Field(default_factory=list)
+    factor_breakdown: list[ProductQuoteFactorBreakdown] = Field(default_factory=list)
+    underwriting_decisions: list[ProductQuoteUnderwritingDecision] = Field(default_factory=list)
+    taxes_and_fees: list[ProductQuoteTaxFeeBreakdown] = Field(default_factory=list)
+    wizard_schema: Optional[QuoteWizardSchemaResponse] = None
+
+
+class ProductQuoteRecommendationRequest(BaseModel):
+    product_line: Optional[ProductLine] = None
+    applicant_data: dict[str, Any] = Field(default_factory=dict)
+    risk_data: dict[str, Any] = Field(default_factory=dict)
+    coverage_selections: list[ProductQuoteCoverageSelection] = Field(default_factory=list)
+    channel: str = "portal"
+    term_months: int = Field(default=12, ge=1, le=36)
+    include_referred: bool = True
+
+
+class ProductQuoteRecommendationResponse(BaseModel):
+    recommendations: list[ProductQuoteResponse]
+    total: int
+    recommended_product_id: Optional[UUID] = None
