@@ -120,17 +120,26 @@ Milestone 7 will implement **automatic policy document and certificate packet or
 
 - [x] Re-read `/home/ubuntu/skills/tinsur-ai-repo-workflow/SKILL.md` and follow the repository workflow for Milestone 8.
 - [x] Confirm the repository is on `kenbot_branche` and identify local traceability-only changes before implementation.
-- [ ] Inspect Milestone 7 validation artifacts, roadmap notes, backend models, services, endpoints, agents, and tests to define the Milestone 8 scope.
-- [ ] Implement the selected Milestone 8 backend capability using tenant-safe conventions and existing service boundaries.
-- [ ] Add focused tests that validate the new Milestone 8 behavior without broad incompatible fixtures.
-- [ ] Run syntax checks and targeted pytest validation.
-- [ ] Create `EIGHTH_BACKEND_MILESTONE_VALIDATION.txt` documenting scope, files changed, validation evidence, and remaining risks.
-- [ ] Update `todo.md` for traceability.
+- [x] Inspect Milestone 7 validation artifacts, roadmap notes, backend models, services, endpoints, agents, and tests to define the Milestone 8 scope.
+- [x] Implement the selected Milestone 8 backend capability using tenant-safe conventions and existing service boundaries.
+- [x] Add focused tests that validate the new Milestone 8 behavior without broad incompatible fixtures.
+- [x] Run syntax checks and targeted pytest validation.
+- [x] Create `EIGHTH_BACKEND_MILESTONE_VALIDATION.txt` documenting scope, files changed, validation evidence, and remaining risks.
+- [x] Update `todo.md` for traceability.
 - [x] Commit Milestone 8 changes locally on `kenbot_branche`.
-- [ ] Report implementation status and request or use approved credentials before remote synchronization.
+- [x] Report implementation status and request or use approved credentials before remote synchronization.
 
 
 ### Milestone 8 Scope Decision
 
 Milestone 8 will implement **automatic premium schedule orchestration for product-catalog policy acquisition**. After Milestone 7, product acquisition can rate, persist, issue a policy, and return document packet metadata, but policies issued through this acquisition path still bypass the existing premium schedule generation convention used by direct policy creation. The implementation will generate the first-class premium schedule immediately after an approved auto-issued policy is created, return schedule metadata in the acquisition response, and remain idempotent so repeated acquisition requests reuse the existing schedule instead of creating duplicate installments.
+
+
+## Milestone 8 Remote Synchronization
+
+- [x] Confirm the local Milestone 8 commit and masked remote configuration before pushing.
+- [x] Push the local Milestone 8 commit to `origin/kenbot_branche` using the provided credential without exposing it in logs.
+- [x] Push the same commit to `origin/main`.
+- [x] Push the same commit to `origin/master`.
+- [x] Verify that all three remote branch heads resolve to the expected Milestone 8 commit (`e82fbf7ba7d93310350f9178779a38f4976f701b`).
 
