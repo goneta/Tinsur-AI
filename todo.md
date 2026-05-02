@@ -143,3 +143,24 @@ Milestone 8 will implement **automatic premium schedule orchestration for produc
 - [x] Push the same commit to `origin/master`.
 - [x] Verify that all three remote branch heads resolve to the expected Milestone 8 commit (`e82fbf7ba7d93310350f9178779a38f4976f701b`).
 
+
+
+## Tinsur.AI Ninth Backend Milestone Implementation
+
+- [x] Re-read `/home/ubuntu/skills/tinsur-ai-repo-workflow/SKILL.md` and follow the repository workflow for Milestone 9.
+- [x] Confirm the repository is on `kenbot_branche` and identify local traceability-only changes before implementation.
+- [x] Inspect Milestone 8 validation artifacts, acquisition service, product-catalog schemas, payment service, premium schedule repository, and focused milestone tests to define the Milestone 9 scope.
+- [x] Implement the selected Milestone 9 backend capability using tenant-safe conventions and existing service boundaries.
+- [x] Add focused tests that validate the new Milestone 9 behavior without broad incompatible fixtures.
+- [x] Run syntax checks and targeted pytest validation.
+- [x] Create `NINTH_BACKEND_MILESTONE_VALIDATION.txt` documenting scope, files changed, validation evidence, and remaining risks.
+- [x] Update `todo.md` for traceability.
+- [ ] Commit Milestone 9 changes locally on `kenbot_branche`.
+- [ ] Push Milestone 9 to `origin/kenbot_branche`, `origin/main`, and `origin/master`.
+- [ ] Verify that all three remote branch heads resolve to the expected Milestone 9 commit.
+
+
+### Milestone 9 Scope Decision
+
+Milestone 9 implements **automatic initial payment orchestration for product-catalog policy acquisition**. After Milestone 8, the acquisition flow could rate, persist, issue a policy, generate documents, and build a premium schedule, but it still left the first payment as a separate follow-up operation. This milestone connects acquisition to the existing payment subsystem through an explicit opt-in request block, creates or reuses an idempotent initial payment, settles the first pending premium schedule when payment completes, optionally awards loyalty points, and returns normalized payment metadata in the acquisition response.
+

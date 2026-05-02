@@ -441,6 +441,14 @@ class ProductQuoteRecommendationResponse(BaseModel):
     recommended_product_id: Optional[UUID] = None
 
 
+class ProductPolicyInitialPaymentRequest(BaseModel):
+    collect_payment: bool = False
+    amount: Optional[Decimal] = Field(default=None, ge=0, multiple_of=Decimal('0.01'))
+    payment_details: dict[str, Any] = Field(default_factory=dict)
+    settle_first_premium_schedule: bool = True
+    award_loyalty_points: bool = True
+
+
 class ProductPolicyAcquisitionRequest(BaseModel):
     client_id: UUID
     quote_request: ProductQuoteRequest
@@ -455,6 +463,7 @@ class ProductPolicyAcquisitionRequest(BaseModel):
     regenerate_policy_documents: bool = False
     generate_premium_schedule: bool = True
     premium_grace_period_days: int = Field(default=15, ge=0, le=90)
+    initial_payment: ProductPolicyInitialPaymentRequest = Field(default_factory=ProductPolicyInitialPaymentRequest)
     idempotency_key: Optional[str] = Field(default=None, max_length=120)
     notes: Optional[str] = None
 
@@ -484,6 +493,19 @@ class ProductPolicyScheduleSummary(BaseModel):
     frequency: Optional[str] = None
 
 
+class ProductPolicyInitialPaymentItem(BaseModel):
+    payment_id: Optional[UUID] = None
+    payment_number: Optional[str] = None
+    amount: Decimal = Decimal("0")
+    currency: Optional[str] = None
+    payment_method: Optional[str] = None
+    payment_gateway: Optional[str] = None
+    status: Optional[str] = None
+    reference_number: Optional[str] = None
+    failure_reason: Optional[str] = None
+    gateway_response: dict[str, Any] = Field(default_factory=dict)
+
+
 class ProductPolicyAcquisitionResponse(BaseModel):
     status: str
     quote_id: UUID
@@ -499,4 +521,9 @@ class ProductPolicyAcquisitionResponse(BaseModel):
     premium_schedule_status: str = "not_requested"
     premium_schedule: list[ProductPolicyScheduleItem] = Field(default_factory=list)
     premium_schedule_summary: Optional[ProductPolicyScheduleSummary] = None
+    initial_payment_status: str = "not_requested"
+    initial_payment: Optional[ProductPolicyInitialPaymentItem] = None
+    initial_payment_schedule_settlement_status: str = "not_requested"
+    initial_payment_settled_schedule_id: Optional[UUID] = None
+    initial_payment_loyalty_awarded: bool = False
     idempotent: bool = False

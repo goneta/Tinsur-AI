@@ -1,0 +1,43 @@
+Tinsur.AI Ninth Backend Milestone Validation
+===========================================
+
+Milestone scope
+---------------
+Milestone 9 implements automatic initial payment orchestration for product-catalog policy acquisition. After Milestone 8, an approved acquisition could issue a policy and generate a premium schedule, but it still required a separate payment flow before the customer could complete the first premium action. This milestone adds an optional acquisition request block that can collect the first payment immediately, reuse repository-native payment processing, settle the first pending premium schedule when the payment completes, and return the resulting payment metadata in the acquisition response.
+
+Implementation summary
+----------------------
+1. `backend/app/schemas/product_catalog.py`
+   - Added `ProductPolicyInitialPaymentRequest` with an explicit opt-in `collect_payment` flag, optional amount override, gateway/payment details, premium-schedule settlement toggle, and loyalty-award toggle.
+   - Added `ProductPolicyInitialPaymentItem` and response fields that expose payment status, normalized payment metadata, first-schedule settlement status, settled schedule identifier, and loyalty side-effect status.
+
+2. `backend/app/services/product_policy_initial_payment_service.py`
+   - Added a thin Milestone 9 orchestration service that preserves tenant checks before collecting payment for an acquired policy.
+   - Reuses `PaymentService` for payment creation and processing rather than duplicating gateway logic.
+   - Resolves the amount from the first pending premium schedule when no explicit amount is supplied, otherwise falls back to the policy premium.
+   - Reuses existing acquisition initial payments idempotently when the same acquisition idempotency key is observed.
+   - Marks the first pending schedule as paid after a completed initial payment and optionally awards loyalty points through the existing loyalty service.
+   - Returns gateway response metadata from the latest payment transaction where available.
+
+3. `backend/app/services/product_policy_acquisition_service.py`
+   - Calls the Milestone 9 initial-payment orchestration after policy document and premium schedule packet generation.
+   - Preserves skip behavior when payment collection is not requested or no policy has been issued.
+   - Enriches `_build_response()` with initial-payment response fields while keeping previous document and premium-schedule response fields unchanged.
+
+4. `backend/tests/test_ninth_milestone_initial_payments.py`
+   - Added focused tests for default request behavior, successful first-payment settlement, idempotent existing-payment reuse, cross-tenant rejection, acquisition response enrichment, and skip behavior before a policy exists.
+
+Validation evidence
+-------------------
+The following commands were run from `/home/ubuntu/Tinsur-AI-kenbot-milestones-1777649530/backend` with a SQLite test database override so pytest did not require the local MySQL driver:
+
+- `DATABASE_URL=sqlite:///./test_milestone9.db python3.11 -m compileall app -q`
+- `DATABASE_URL=sqlite:///./test_milestone9.db python3.11 -m pytest tests/test_eighth_milestone_premium_schedules.py tests/test_ninth_milestone_initial_payments.py -q --disable-warnings`
+
+Validation result
+-----------------
+Both validation commands passed. The focused regression suite reported `12 passed`, covering the new Milestone 9 tests and the adjacent Milestone 8 premium-schedule tests.
+
+Remaining risks and notes
+-------------------------
+The implementation is intentionally backend-focused and unit-tested around the acquisition orchestration seam. Broader end-to-end payment gateway behavior still depends on configured Stripe or mobile-money gateway credentials and should be validated separately in an integrated staging environment. The focused tests use lightweight fakes to avoid requiring external gateways, a live database server, or asynchronous payment webhooks. Loyalty award failures are treated as non-blocking so that payment completion is not rolled back by a secondary rewards-side effect.

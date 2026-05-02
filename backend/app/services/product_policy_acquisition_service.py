@@ -26,6 +26,7 @@ from app.repositories.quote_repository import QuoteRepository
 from app.schemas.product_catalog import ProductPolicyAcquisitionRequest
 from app.services.policy_service import PolicyService
 from app.services.product_policy_document_packet_service import ProductPolicyDocumentPacketService
+from app.services.product_policy_initial_payment_service import ProductPolicyInitialPaymentService
 from app.services.product_policy_premium_schedule_service import ProductPolicyPremiumScheduleService
 from app.services.product_quote_engine_service import ProductQuoteEngineService
 
@@ -54,7 +55,8 @@ class ProductPolicyAcquisitionService:
                 policy = self._issue_policy(existing_quote, request, created_by)
             document_packet = self._document_packet(company_id, policy, request)
             schedule_packet = self._premium_schedule_packet(company_id, policy, request)
-            return self._build_response(existing_quote, quote_result, policy, idempotent=True, document_packet=document_packet, schedule_packet=schedule_packet)
+            initial_payment_packet = self._initial_payment_packet(company_id, policy, request)
+            return self._build_response(existing_quote, quote_result, policy, idempotent=True, document_packet=document_packet, schedule_packet=schedule_packet, initial_payment_packet=initial_payment_packet)
 
         quote = self._create_quote(company_id, request, quote_result, created_by)
         decision = self._create_underwriting_decision(company_id, quote, request, quote_result)
@@ -68,7 +70,8 @@ class ProductPolicyAcquisitionService:
 
         document_packet = self._document_packet(company_id, policy, request)
         schedule_packet = self._premium_schedule_packet(company_id, policy, request)
-        return self._build_response(quote, quote_result, policy, idempotent=False, document_packet=document_packet, schedule_packet=schedule_packet)
+        initial_payment_packet = self._initial_payment_packet(company_id, policy, request)
+        return self._build_response(quote, quote_result, policy, idempotent=False, document_packet=document_packet, schedule_packet=schedule_packet, initial_payment_packet=initial_payment_packet)
 
     @staticmethod
     def _validate_acquisition_decision(quote_result: dict[str, Any], request: ProductPolicyAcquisitionRequest) -> None:
@@ -292,6 +295,27 @@ class ProductPolicyAcquisitionService:
             grace_period_days=request.premium_grace_period_days,
         )
 
+    def _initial_payment_packet(
+        self,
+        company_id: UUID,
+        policy: Optional[Policy],
+        request: ProductPolicyAcquisitionRequest,
+    ) -> dict[str, Any]:
+        initial_payment = request.initial_payment
+        if not initial_payment.collect_payment:
+            return {"status": "not_requested", "payment": None, "schedule_settlement_status": "not_requested", "settled_schedule_id": None, "loyalty_awarded": False}
+        if not policy:
+            return {"status": "not_available", "payment": None, "schedule_settlement_status": "not_available", "settled_schedule_id": None, "loyalty_awarded": False}
+        return ProductPolicyInitialPaymentService(self.db).collect_initial_payment(
+            company_id,
+            policy,
+            payment_details=initial_payment.payment_details,
+            amount=initial_payment.amount,
+            idempotency_key=request.idempotency_key,
+            settle_first_schedule=initial_payment.settle_first_premium_schedule,
+            award_loyalty_points=initial_payment.award_loyalty_points,
+        )
+
     @staticmethod
     def _generate_quote_number(product_code: Optional[str]) -> str:
         prefix = (product_code or "CATALOG")[:8].upper().replace("-", "_")
@@ -340,9 +364,11 @@ class ProductPolicyAcquisitionService:
         idempotent: bool,
         document_packet: Optional[dict[str, Any]] = None,
         schedule_packet: Optional[dict[str, Any]] = None,
+        initial_payment_packet: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
         document_packet = document_packet or {"status": "not_requested", "documents": []}
         schedule_packet = schedule_packet or {"status": "not_requested", "schedule": [], "summary": None}
+        initial_payment_packet = initial_payment_packet or {"status": "not_requested", "payment": None, "schedule_settlement_status": "not_requested", "settled_schedule_id": None, "loyalty_awarded": False}
         return {
             "status": "policy_issued" if policy else "quote_acquired",
             "quote_id": quote.id,
@@ -358,6 +384,11 @@ class ProductPolicyAcquisitionService:
             "premium_schedule_status": schedule_packet.get("status", "not_requested"),
             "premium_schedule": schedule_packet.get("schedule", []),
             "premium_schedule_summary": schedule_packet.get("summary"),
+            "initial_payment_status": initial_payment_packet.get("status", "not_requested"),
+            "initial_payment": initial_payment_packet.get("payment"),
+            "initial_payment_schedule_settlement_status": initial_payment_packet.get("schedule_settlement_status", "not_requested"),
+            "initial_payment_settled_schedule_id": initial_payment_packet.get("settled_schedule_id"),
+            "initial_payment_loyalty_awarded": initial_payment_packet.get("loyalty_awarded", False),
             "idempotent": idempotent,
         }
 
