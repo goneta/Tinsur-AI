@@ -1,0 +1,36 @@
+Tinsur.AI Sixth Backend Milestone Validation
+============================================
+
+Scope
+-----
+Milestone 6 implements automatic product-catalog policy acquisition orchestration. The new flow calculates a catalog-backed quote, persists it as a first-class quote, creates a policy-ready underwriting decision and quote snapshot, and optionally issues a policy through the existing canonical PolicyService path when the catalog decision is approved.
+
+Implemented Files
+-----------------
+- backend/app/services/product_policy_acquisition_service.py
+- backend/app/schemas/product_catalog.py
+- backend/app/api/v1/endpoints/product_catalog.py
+- backend/agents/a2a_policy_agent/tools.py
+- backend/tests/test_sixth_milestone_acquisition.py
+
+Validation Commands
+-------------------
+Executed from `/home/ubuntu/Tinsur-AI-kenbot-milestones-1777649530/backend` with an explicit backend `PYTHONPATH` and SQLite test database override:
+
+1. `python3 -m py_compile app/services/product_policy_acquisition_service.py app/schemas/product_catalog.py app/api/v1/endpoints/product_catalog.py agents/a2a_policy_agent/tools.py`
+2. `pytest -q tests/test_sixth_milestone_acquisition.py`
+
+Validation Results
+------------------
+- Syntax validation passed for the Milestone 6 acquisition service, product catalog schema extensions, endpoint wiring, and policy-agent tool update.
+- Focused Milestone 6 test suite passed: `5 passed`.
+- The first validation attempt without explicit `PYTHONPATH` exposed the repository's existing test import sensitivity around `app.main`; rerunning with the backend directory on `PYTHONPATH` resolved the environment issue without changing application code.
+- Remaining warnings are pre-existing or model-relationship warnings surfaced by SQLAlchemy/Pydantic during test startup; they did not block the focused Milestone 6 assertions.
+
+Coverage Notes
+--------------
+The focused tests validate four Milestone 6 behaviors: declined product quotes cannot be acquired, catalog quote output is shaped into a persisted first-class quote, underwriting snapshot payloads retain applicant/risk/coverage and policy-ready details, and the conversational policy-agent conversion path now delegates to the canonical PolicyService quote-to-policy workflow instead of manually inserting policy rows.
+
+Notes
+-----
+The implementation intentionally rejects declined catalog quotes, requires explicit permission before acquiring referred quotes, preserves idempotency through an optional acquisition idempotency key, and issues policies only when the catalog decision is approved and `auto_issue_policy` is requested.

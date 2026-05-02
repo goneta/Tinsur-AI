@@ -39,6 +39,8 @@ from app.schemas.product_catalog import (
     ProductCatalogSeedResponse,
     ProductCatalogSummaryItem,
     ProductCatalogSummaryResponse,
+    ProductPolicyAcquisitionRequest,
+    ProductPolicyAcquisitionResponse,
     ProductQuoteRecommendationRequest,
     ProductQuoteRecommendationResponse,
     ProductQuoteRequest,
@@ -57,6 +59,7 @@ from app.schemas.product_catalog import (
     RatingFactorUpdate,
 )
 from app.services.product_catalog_service import ProductCatalogService
+from app.services.product_policy_acquisition_service import ProductPolicyAcquisitionService
 from app.services.product_quote_engine_service import ProductQuoteEngineService
 
 router = APIRouter()
@@ -131,6 +134,23 @@ def recommend_product_quotes(
         "total": len(recommendations),
         "recommended_product_id": recommended.get("product_id") if recommended else None,
     }
+
+
+@router.post("/quote/acquire", response_model=ProductPolicyAcquisitionResponse, status_code=status.HTTP_201_CREATED)
+def acquire_product_policy(
+    acquisition_request: ProductPolicyAcquisitionRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Persist an approved catalog quote as a policy-ready quote and optionally issue a policy."""
+    try:
+        return ProductPolicyAcquisitionService(db).acquire_policy(
+            current_user.company_id,
+            acquisition_request,
+            current_user.id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.post("/products", response_model=InsuranceProductResponse, status_code=status.HTTP_201_CREATED)

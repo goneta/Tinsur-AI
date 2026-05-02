@@ -3,7 +3,7 @@ Pydantic schemas for the Milestone 4 product and coverage engine.
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Literal, Optional
 from uuid import UUID
@@ -439,3 +439,30 @@ class ProductQuoteRecommendationResponse(BaseModel):
     recommendations: list[ProductQuoteResponse]
     total: int
     recommended_product_id: Optional[UUID] = None
+
+
+class ProductPolicyAcquisitionRequest(BaseModel):
+    client_id: UUID
+    quote_request: ProductQuoteRequest
+    policy_type_id: Optional[UUID] = None
+    requested_start_date: Optional[date] = None
+    premium_frequency: str = "annual"
+    sale_channel: str = "online"
+    valid_for_days: int = Field(default=30, ge=1, le=90)
+    auto_issue_policy: bool = True
+    allow_referred_quote: bool = False
+    idempotency_key: Optional[str] = Field(default=None, max_length=120)
+    notes: Optional[str] = None
+
+
+class ProductPolicyAcquisitionResponse(BaseModel):
+    status: str
+    quote_id: UUID
+    quote_number: str
+    quote_status: str
+    policy_id: Optional[UUID] = None
+    policy_number: Optional[str] = None
+    policy_status: Optional[str] = None
+    decision: str
+    product_quote: ProductQuoteResponse
+    idempotent: bool = False

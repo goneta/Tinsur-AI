@@ -4,7 +4,7 @@ import uuid
 import json
 import logging
 from google.adk.tools import tool
-from datetime import datetime, timedelta
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +67,10 @@ def convert_quote_to_policy(quote_id: str, company_id: str, user_id: str, start_
         from app.core.database import SessionLocal
         from app.models.quote import Quote
         from app.models.policy import Policy
+        from app.repositories.endorsement_repository import EndorsementRepository
+        from app.repositories.policy_repository import PolicyRepository
+        from app.repositories.quote_repository import QuoteRepository
+        from app.services.policy_service import PolicyService
 
         db = SessionLocal()
         try:
@@ -90,8 +94,23 @@ def convert_quote_to_policy(quote_id: str, company_id: str, user_id: str, start_
             if not quote:
                 return json.dumps({"status": "error", "message": f"Quote '{quote_id}' not found."})
 
-            if quote.status == 'converted':
-                return json.dumps({"status": "error", "message": f"Quote {quote.quote_number} has already been converted to a policy."})
+            existing_policy = db.query(Policy).filter(Policy.quote_id == quote.id).first()
+            if existing_policy:
+                return json.dumps({
+                    "status": "success",
+                    "message": f"Quote {quote.quote_number} has already been converted to Policy {existing_policy.policy_number}.",
+                    "policy": {
+                        "policy_number": existing_policy.policy_number,
+                        "quote_number": quote.quote_number,
+                        "client_name": quote.client_name,
+                        "coverage_amount": float(existing_policy.coverage_amount) if existing_policy.coverage_amount else 0,
+                        "premium_amount": float(existing_policy.premium_amount) if existing_policy.premium_amount else 0,
+                        "start_date": existing_policy.start_date.isoformat() if existing_policy.start_date else "",
+                        "end_date": existing_policy.end_date.isoformat() if existing_policy.end_date else "",
+                        "status": existing_policy.status,
+                        "idempotent": True,
+                    },
+                })
 
             # Determine dates
             if start_date:
@@ -102,45 +121,26 @@ def convert_quote_to_policy(quote_id: str, company_id: str, user_id: str, start_
             else:
                 policy_start = datetime.now().date()
 
-            policy_end = policy_start + timedelta(days=365)
-
-            # Generate policy number
-            policy_number = f"POL-{uuid.uuid4().hex[:8].upper()}"
-
-            # Create policy
-            new_policy = Policy(
-                id=uuid.uuid4(),
-                company_id=quote.company_id,
-                client_id=quote.client_id,
-                policy_type_id=quote.policy_type_id,
-                quote_id=quote.id,
-                policy_number=policy_number,
-                coverage_amount=quote.coverage_amount,
-                premium_amount=quote.final_premium,
-                start_date=policy_start,
-                end_date=policy_end,
-                status='active',
-                created_by=uuid.UUID(user_id)
+            policy_service = PolicyService(
+                PolicyRepository(db),
+                QuoteRepository(db),
+                EndorsementRepository(db),
             )
-            db.add(new_policy)
-
-            # Update quote status
-            quote.status = 'converted'
-
-            db.commit()
+            new_policy = policy_service.create_from_quote(quote.id, policy_start, uuid.UUID(user_id))
 
             return json.dumps({
                 "status": "success",
-                "message": f"Policy {policy_number} created successfully from Quote {quote.quote_number}.",
+                "message": f"Policy {new_policy.policy_number} created successfully from Quote {quote.quote_number}.",
                 "policy": {
-                    "policy_number": policy_number,
+                    "policy_number": new_policy.policy_number,
                     "quote_number": quote.quote_number,
                     "client_name": quote.client_name,
-                    "coverage_amount": float(quote.coverage_amount) if quote.coverage_amount else 0,
-                    "premium_amount": float(quote.final_premium) if quote.final_premium else 0,
-                    "start_date": policy_start.isoformat(),
-                    "end_date": policy_end.isoformat(),
-                    "status": "active"
+                    "coverage_amount": float(new_policy.coverage_amount) if new_policy.coverage_amount else 0,
+                    "premium_amount": float(new_policy.premium_amount) if new_policy.premium_amount else 0,
+                    "start_date": new_policy.start_date.isoformat() if new_policy.start_date else "",
+                    "end_date": new_policy.end_date.isoformat() if new_policy.end_date else "",
+                    "status": new_policy.status,
+                    "idempotent": False,
                 }
             })
         finally:
