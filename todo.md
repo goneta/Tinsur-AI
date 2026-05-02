@@ -274,6 +274,12 @@ Milestone 9 implements **automatic initial payment orchestration for product-cat
 - [x] Run syntax compilation and targeted pytest validation with isolated SQLite `DATABASE_URL`.
 - [x] Create `PRODUCTION_LAUNCH_CONTROL_VALIDATION.txt` documenting scope, changed files, validation evidence, and remaining risks.
 - [x] Update `todo.md` for completion traceability.
-- [ ] Commit the Production Launch Control Layer locally on `kenbot_branche` with message `Add Production Launch Control Layer`.
-- [ ] Push the implementation commit to `origin/kenbot_branch`, `origin/main`, and `origin/master` using non-persistent authentication.
-- [ ] Verify `origin/kenbot_branch`, `origin/main`, and `origin/master` resolve to the implementation commit after push.
+- [x] Commit the Production Launch Control Layer locally on `kenbot_branche` with message `Add Production Launch Control Layer`.
+- [x] Push the implementation commit to requested remotes `origin/kenbot_branche`, `origin/main`, and `origin/master` using non-persistent authentication.
+- [x] Verify `origin/kenbot_branche`, `origin/main`, and `origin/master` resolve to the implementation commit after push.
+
+## Requested authenticated push to production branches
+- [x] Push local commit `fa2543ca664f44f52ca0988dd9e76a5c0ab1ac8c` to `origin/kenbot_branche` using non-persistent token authentication.
+- [x] Push local commit `fa2543ca664f44f52ca0988dd9e76a5c0ab1ac8c` to `origin/main` using non-persistent token authentication.
+- [x] Push local commit `fa2543ca664f44f52ca0988dd9e76a5c0ab1ac8c` to `origin/master` using non-persistent token authentication.
+- [x] Verify `origin/kenbot_branche`, `origin/main`, and `origin/master` all resolve to `fa2543ca664f44f52ca0988dd9e76a5c0ab1ac8c` after push.
