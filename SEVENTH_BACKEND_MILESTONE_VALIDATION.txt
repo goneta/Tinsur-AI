@@ -1,0 +1,44 @@
+Tinsur.AI Seventh Backend Milestone Validation
+=============================================
+
+Scope
+-----
+Milestone 7 implements automatic policy document and certificate packet orchestration after product-catalog policy acquisition. The acquisition flow now supports generating policy documents immediately after an approved catalog quote issues a policy, while returning existing policy documents idempotently on repeated acquisition requests.
+
+Implemented Capability
+----------------------
+1. Product policy acquisition requests now include `generate_policy_documents` and `regenerate_policy_documents` controls.
+2. Product policy acquisition responses now include `document_status` and `documents` metadata so callers can retrieve policy certificate details from the same acquisition response.
+3. A new `ProductPolicyDocumentPacketService` reuses the existing template-backed document generator, verifies tenant scope before document generation, returns existing policy documents without duplicate generation, and serializes compact document metadata.
+4. The acquisition service invokes the document packet service only when a policy exists and document generation is requested, preserving quote-only behavior for manual or referred acquisitions.
+
+Files Changed
+-------------
+- backend/app/schemas/product_catalog.py
+- backend/app/services/product_policy_acquisition_service.py
+- backend/app/services/product_policy_document_packet_service.py
+- backend/tests/test_seventh_milestone_policy_documents.py
+- todo.md
+
+Focused Test Coverage
+---------------------
+- Request defaults enable document generation but do not regenerate documents by default.
+- Existing policy documents are returned idempotently without calling the generator.
+- Missing policy documents are generated and surfaced through response-safe metadata.
+- Cross-tenant policy document packet generation is rejected.
+- Acquisition responses include generated document packet metadata.
+- Acquisition orchestration can skip document generation or report documents unavailable until a policy exists.
+
+Validation Evidence
+-------------------
+The focused validation suite passed with the following commands:
+
+1. `cd backend && PYTHONPATH=. DATABASE_URL='sqlite:///./test_milestone7.db' pytest tests/test_seventh_milestone_policy_documents.py tests/test_sixth_milestone_acquisition.py -q`
+   - Result: `11 passed`.
+   - Notes: The first two pytest attempts without explicit `PYTHONPATH=.` failed during test bootstrap because pytest imported the wrong application package path and summarized the app import as `ModuleNotFoundError: No module named 'app.main'`. A direct import showed the additional need for a SQLite test database override instead of the local MySQL DSN. The final command sets both overrides and validates the new Milestone 7 behavior plus Milestone 6 acquisition backward compatibility.
+2. `cd backend && PYTHONPATH=. DATABASE_URL='sqlite:///./test_milestone7.db' python3.11 -m py_compile app/schemas/product_catalog.py app/services/product_policy_acquisition_service.py app/services/product_policy_document_packet_service.py`
+   - Result: completed successfully with no syntax errors.
+
+Remaining Risks
+---------------
+The document generator depends on configured policy document templates. If a tenant has no active templates, the orchestration returns `no_templates` with no document metadata rather than fabricating policy documents. This is intentionally conservative and preserves the existing template-backed document-generation model.

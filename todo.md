@@ -70,8 +70,39 @@
 - [x] Create `SIXTH_BACKEND_MILESTONE_VALIDATION.txt` documenting scope, files changed, and validation evidence.
 - [x] Update `todo.md` for traceability.
 - [x] Commit Milestone 6 changes locally on `kenbot_branche`.
-- [ ] Report implementation status and request or use approved credentials before remote synchronization.
+- [x] Report implementation status and request or use approved credentials before remote synchronization.
 
 ### Milestone 6 Scope Decision
 
 Milestone 6 will implement **automatic policy acquisition orchestration** on top of the Milestone 4 product catalog and Milestone 5 product quote engine. The scope is to turn a catalog-backed customer recommendation into a persisted first-class quote, policy-ready underwriting snapshot, optional immediate policy issuance, and aligned conversational policy-agent conversion path. This directly supports the product goal that a customer can enter personal and car details, receive an automatic quote decision, and obtain an insurance policy without a manually assembled backend workflow.
+
+## Milestone 6 Remote Synchronization
+
+- [x] Push Milestone 6 commit `4584566db03a1362c828f21f08d9d889d8eaecb5` to `origin/kenbot_branche`.
+- [x] Push Milestone 6 commit `4584566db03a1362c828f21f08d9d889d8eaecb5` to `origin/main`.
+- [x] Push Milestone 6 commit `4584566db03a1362c828f21f08d9d889d8eaecb5` to `origin/master`.
+- [x] Fetch and verify all three remote heads match the local Milestone 6 commit using authoritative `git ls-remote` output.
+- [x] Confirm local repository status after synchronization; only traceability updates in `todo.md` remain uncommitted.
+
+### Token-Based Milestone 6 Synchronization Attempt
+
+- [x] Use the fresh user-provided GitHub PAT for this Milestone 6 synchronization attempt only; do not commit or persist the token value.
+- [x] Push Milestone 6 commit `4584566db03a1362c828f21f08d9d889d8eaecb5` to `origin/main`, `origin/master`, and `origin/kenbot_branche`.
+- [x] Verify all three remotes resolve to Milestone 6 commit `4584566db03a1362c828f21f08d9d889d8eaecb5`.
+
+## Tinsur.AI Seventh Backend Milestone Implementation
+
+- [ ] Re-read `/home/ubuntu/skills/tinsur-ai-repo-workflow/SKILL.md` and follow the repository workflow for Milestone 7.
+- [ ] Confirm the repository is on `kenbot_branche` and identify local traceability-only changes before implementation.
+- [x] Inspect Milestone 6 validation artifacts, roadmap notes, backend models, services, endpoints, agents, and tests to define the Milestone 7 scope.
+- [x] Implement the selected Milestone 7 backend capability using tenant-safe conventions and existing service boundaries.
+- [x] Add focused tests that validate the new Milestone 7 behavior without broad incompatible fixtures.
+- [x] Run syntax checks and targeted pytest validation.
+- [x] Create `SEVENTH_BACKEND_MILESTONE_VALIDATION.txt` documenting scope, files changed, validation evidence, and remaining risks.
+- [x] Update `todo.md` for traceability.
+- [ ] Commit Milestone 7 changes locally on `kenbot_branche`.
+- [ ] Report implementation status and request or use approved credentials before remote synchronization.
+### Milestone 7 Scope Decision
+
+Milestone 7 will implement **automatic policy document and certificate packet orchestration after product-catalog policy acquisition**. This is the next most impactful backend gap after Milestone 6 because the acquisition flow can already rate, persist, underwrite, and optionally issue a policy, while existing document infrastructure can generate policy certificates and related PDF documents only through a separate endpoint. The milestone will connect those pieces in a tenant-safe service boundary so an approved auto-issued policy can return generated document metadata immediately, while preserving idempotency and avoiding duplicate document generation on repeated acquisition requests.
+

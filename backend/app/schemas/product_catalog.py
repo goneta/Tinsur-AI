@@ -451,8 +451,18 @@ class ProductPolicyAcquisitionRequest(BaseModel):
     valid_for_days: int = Field(default=30, ge=1, le=90)
     auto_issue_policy: bool = True
     allow_referred_quote: bool = False
+    generate_policy_documents: bool = True
+    regenerate_policy_documents: bool = False
     idempotency_key: Optional[str] = Field(default=None, max_length=120)
     notes: Optional[str] = None
+
+
+class ProductPolicyDocumentItem(BaseModel):
+    document_id: Optional[UUID] = None
+    name: str
+    file_url: str
+    file_type: Optional[str] = None
+    verification_code: Optional[str] = None
 
 
 class ProductPolicyAcquisitionResponse(BaseModel):
@@ -465,4 +475,6 @@ class ProductPolicyAcquisitionResponse(BaseModel):
     policy_status: Optional[str] = None
     decision: str
     product_quote: ProductQuoteResponse
+    document_status: str = "not_requested"
+    documents: list[ProductPolicyDocumentItem] = Field(default_factory=list)
     idempotent: bool = False

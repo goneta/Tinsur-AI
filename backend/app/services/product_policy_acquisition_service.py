@@ -25,6 +25,7 @@ from app.repositories.policy_repository import PolicyRepository
 from app.repositories.quote_repository import QuoteRepository
 from app.schemas.product_catalog import ProductPolicyAcquisitionRequest
 from app.services.policy_service import PolicyService
+from app.services.product_policy_document_packet_service import ProductPolicyDocumentPacketService
 from app.services.product_quote_engine_service import ProductQuoteEngineService
 
 
@@ -50,7 +51,8 @@ class ProductPolicyAcquisitionService:
             policy = self._get_existing_policy(existing_quote.id)
             if request.auto_issue_policy and not policy and self._is_approved(quote_result):
                 policy = self._issue_policy(existing_quote, request, created_by)
-            return self._build_response(existing_quote, quote_result, policy, idempotent=True)
+            document_packet = self._document_packet(company_id, policy, request)
+            return self._build_response(existing_quote, quote_result, policy, idempotent=True, document_packet=document_packet)
 
         quote = self._create_quote(company_id, request, quote_result, created_by)
         decision = self._create_underwriting_decision(company_id, quote, request, quote_result)
@@ -62,7 +64,8 @@ class ProductPolicyAcquisitionService:
         if request.auto_issue_policy and self._is_approved(quote_result):
             policy = self._issue_policy(quote, request, created_by)
 
-        return self._build_response(quote, quote_result, policy, idempotent=False)
+        document_packet = self._document_packet(company_id, policy, request)
+        return self._build_response(quote, quote_result, policy, idempotent=False, document_packet=document_packet)
 
     @staticmethod
     def _validate_acquisition_decision(quote_result: dict[str, Any], request: ProductPolicyAcquisitionRequest) -> None:
@@ -250,6 +253,22 @@ class ProductPolicyAcquisitionService:
     def _get_existing_policy(self, quote_id: UUID) -> Optional[Policy]:
         return self.db.query(Policy).filter(Policy.quote_id == quote_id).first()
 
+    def _document_packet(
+        self,
+        company_id: UUID,
+        policy: Optional[Policy],
+        request: ProductPolicyAcquisitionRequest,
+    ) -> dict[str, Any]:
+        if not request.generate_policy_documents:
+            return {"status": "not_requested", "documents": []}
+        if not policy:
+            return {"status": "not_available", "documents": []}
+        return ProductPolicyDocumentPacketService(self.db).generate_packet(
+            company_id,
+            policy,
+            regenerate=request.regenerate_policy_documents,
+        )
+
     @staticmethod
     def _generate_quote_number(product_code: Optional[str]) -> str:
         prefix = (product_code or "CATALOG")[:8].upper().replace("-", "_")
@@ -290,7 +309,15 @@ class ProductPolicyAcquisitionService:
         return documents
 
     @classmethod
-    def _build_response(cls, quote: Quote, quote_result: dict[str, Any], policy: Optional[Policy], idempotent: bool) -> dict[str, Any]:
+    def _build_response(
+        cls,
+        quote: Quote,
+        quote_result: dict[str, Any],
+        policy: Optional[Policy],
+        idempotent: bool,
+        document_packet: Optional[dict[str, Any]] = None,
+    ) -> dict[str, Any]:
+        document_packet = document_packet or {"status": "not_requested", "documents": []}
         return {
             "status": "policy_issued" if policy else "quote_acquired",
             "quote_id": quote.id,
@@ -301,6 +328,8 @@ class ProductPolicyAcquisitionService:
             "policy_status": policy.status if policy else None,
             "decision": cls._mapped_decision(quote_result.get("decision")),
             "product_quote": quote_result,
+            "document_status": document_packet.get("status", "not_requested"),
+            "documents": document_packet.get("documents", []),
             "idempotent": idempotent,
         }
 
