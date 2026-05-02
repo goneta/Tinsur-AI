@@ -191,3 +191,19 @@ Milestone 9 implements **automatic initial payment orchestration for product-cat
 - [ ] Verify all three remote branch heads resolve to the expected current commit.
 - [ ] Remove any temporary credential-helper files after the push.
 - [ ] Report the verified branch heads to the user.
+
+
+## Tinsur.AI Milestone 10: AI Production Hardening
+
+- [x] Re-read `/home/ubuntu/skills/tinsur-ai-repo-workflow/SKILL.md` and follow the repository workflow for Milestone 10.
+- [x] Confirm the current repository branch (`kenbot_branche`), current commit (`e2ea5f64a8c77d84ec8a79e916475be8313d206a`), remote alignment, and working tree state before implementation; only the Milestone 10 checklist is pending.
+- [ ] Audit existing AI agents, AI services, prompts, configuration, tenant context, logging, safety, fallback, and tests.
+- [ ] Define a focused AI production hardening scope that fits existing backend service boundaries.
+- [ ] Implement the selected tenant-safe AI production hardening capability without broad unrelated changes.
+- [ ] Add focused tests for reliability, safety/fallback behavior, tenant isolation, and observability metadata.
+- [ ] Run syntax checks and targeted pytest validation.
+- [ ] Create `TENTH_BACKEND_MILESTONE_VALIDATION.txt` documenting scope, changed files, validation evidence, and remaining risks.
+- [ ] Update `todo.md` for completion traceability.
+- [ ] Commit Milestone 10 locally on `kenbot_branche`.
+- [ ] Push Milestone 10 to `origin/kenbot_branche`, `origin/main`, and `origin/master` only if explicitly continuing remote synchronization.
+- [ ] Verify all required remote branch heads resolve to the expected Milestone 10 commit if pushed.
