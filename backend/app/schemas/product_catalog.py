@@ -453,6 +453,8 @@ class ProductPolicyAcquisitionRequest(BaseModel):
     allow_referred_quote: bool = False
     generate_policy_documents: bool = True
     regenerate_policy_documents: bool = False
+    generate_premium_schedule: bool = True
+    premium_grace_period_days: int = Field(default=15, ge=0, le=90)
     idempotency_key: Optional[str] = Field(default=None, max_length=120)
     notes: Optional[str] = None
 
@@ -463,6 +465,23 @@ class ProductPolicyDocumentItem(BaseModel):
     file_url: str
     file_type: Optional[str] = None
     verification_code: Optional[str] = None
+
+
+class ProductPolicyScheduleItem(BaseModel):
+    schedule_id: Optional[UUID] = None
+    installment_number: str
+    due_date: date
+    amount: Decimal
+    status: str
+    grace_period_ends: Optional[date] = None
+
+
+class ProductPolicyScheduleSummary(BaseModel):
+    total_amount: Decimal = Decimal("0")
+    paid_amount: Decimal = Decimal("0")
+    outstanding_amount: Decimal = Decimal("0")
+    total_installments: int = 0
+    frequency: Optional[str] = None
 
 
 class ProductPolicyAcquisitionResponse(BaseModel):
@@ -477,4 +496,7 @@ class ProductPolicyAcquisitionResponse(BaseModel):
     product_quote: ProductQuoteResponse
     document_status: str = "not_requested"
     documents: list[ProductPolicyDocumentItem] = Field(default_factory=list)
+    premium_schedule_status: str = "not_requested"
+    premium_schedule: list[ProductPolicyScheduleItem] = Field(default_factory=list)
+    premium_schedule_summary: Optional[ProductPolicyScheduleSummary] = None
     idempotent: bool = False

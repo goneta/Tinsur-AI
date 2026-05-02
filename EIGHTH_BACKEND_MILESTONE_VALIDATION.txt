@@ -1,0 +1,29 @@
+Tinsur.AI Eighth Backend Milestone Validation
+=============================================
+
+Scope
+-----
+Milestone 8 implements automatic premium schedule orchestration for product-catalog policy acquisition. The acquisition flow can now generate first-class premium schedule rows immediately after an approved product-catalog quote is automatically issued as a policy. The response includes schedule status, installment metadata, and aggregate premium schedule summary information.
+
+Implementation Files
+--------------------
+- backend/app/schemas/product_catalog.py
+  Adds premium schedule request defaults and response metadata schemas.
+- backend/app/services/product_policy_premium_schedule_service.py
+  Adds tenant-scoped, idempotent schedule orchestration using the existing PremiumService and PremiumScheduleRepository conventions.
+- backend/app/services/product_policy_acquisition_service.py
+  Wires premium schedule packet generation into both new and idempotent acquisition paths.
+- backend/tests/test_eighth_milestone_premium_schedules.py
+  Adds focused tests for request defaults, schedule generation, idempotent reuse, cross-tenant rejection, acquisition response metadata, and skip behavior.
+
+Validation Evidence
+-------------------
+Executed focused validation commands:
+- PYTHONPATH=backend DATABASE_URL=sqlite:///./test_milestone8.db pytest backend/tests/test_eighth_milestone_premium_schedules.py backend/tests/test_seventh_milestone_policy_documents.py backend/tests/test_sixth_milestone_acquisition.py -q
+  Result: 17 passed.
+- PYTHONPATH=backend python3.11 -m py_compile backend/app/schemas/product_catalog.py backend/app/services/product_policy_acquisition_service.py backend/app/services/product_policy_premium_schedule_service.py backend/tests/test_eighth_milestone_premium_schedules.py
+  Result: passed with no compile errors.
+
+Result
+------
+Milestone 8 focused validation passed. The new premium schedule orchestration behavior is covered by six focused tests, and the Milestone 7 and Milestone 6 focused suites continued to pass as backward-compatibility checks.

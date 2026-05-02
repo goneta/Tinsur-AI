@@ -26,6 +26,7 @@ from app.repositories.quote_repository import QuoteRepository
 from app.schemas.product_catalog import ProductPolicyAcquisitionRequest
 from app.services.policy_service import PolicyService
 from app.services.product_policy_document_packet_service import ProductPolicyDocumentPacketService
+from app.services.product_policy_premium_schedule_service import ProductPolicyPremiumScheduleService
 from app.services.product_quote_engine_service import ProductQuoteEngineService
 
 
@@ -52,7 +53,8 @@ class ProductPolicyAcquisitionService:
             if request.auto_issue_policy and not policy and self._is_approved(quote_result):
                 policy = self._issue_policy(existing_quote, request, created_by)
             document_packet = self._document_packet(company_id, policy, request)
-            return self._build_response(existing_quote, quote_result, policy, idempotent=True, document_packet=document_packet)
+            schedule_packet = self._premium_schedule_packet(company_id, policy, request)
+            return self._build_response(existing_quote, quote_result, policy, idempotent=True, document_packet=document_packet, schedule_packet=schedule_packet)
 
         quote = self._create_quote(company_id, request, quote_result, created_by)
         decision = self._create_underwriting_decision(company_id, quote, request, quote_result)
@@ -65,7 +67,8 @@ class ProductPolicyAcquisitionService:
             policy = self._issue_policy(quote, request, created_by)
 
         document_packet = self._document_packet(company_id, policy, request)
-        return self._build_response(quote, quote_result, policy, idempotent=False, document_packet=document_packet)
+        schedule_packet = self._premium_schedule_packet(company_id, policy, request)
+        return self._build_response(quote, quote_result, policy, idempotent=False, document_packet=document_packet, schedule_packet=schedule_packet)
 
     @staticmethod
     def _validate_acquisition_decision(quote_result: dict[str, Any], request: ProductPolicyAcquisitionRequest) -> None:
@@ -269,6 +272,26 @@ class ProductPolicyAcquisitionService:
             regenerate=request.regenerate_policy_documents,
         )
 
+    def _premium_schedule_packet(
+        self,
+        company_id: UUID,
+        policy: Optional[Policy],
+        request: ProductPolicyAcquisitionRequest,
+    ) -> dict[str, Any]:
+        if not request.generate_premium_schedule:
+            return {"status": "not_requested", "schedule": [], "summary": None}
+        if not policy:
+            return {"status": "not_available", "schedule": [], "summary": None}
+        return ProductPolicyPremiumScheduleService(self.db).generate_schedule(
+            company_id,
+            policy,
+            frequency=request.premium_frequency,
+            total_premium=policy.premium_amount,
+            duration_months=max(1, ((policy.end_date.year - policy.start_date.year) * 12) + (policy.end_date.month - policy.start_date.month)) if policy.start_date and policy.end_date else 12,
+            start_date=policy.start_date,
+            grace_period_days=request.premium_grace_period_days,
+        )
+
     @staticmethod
     def _generate_quote_number(product_code: Optional[str]) -> str:
         prefix = (product_code or "CATALOG")[:8].upper().replace("-", "_")
@@ -316,8 +339,10 @@ class ProductPolicyAcquisitionService:
         policy: Optional[Policy],
         idempotent: bool,
         document_packet: Optional[dict[str, Any]] = None,
+        schedule_packet: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
         document_packet = document_packet or {"status": "not_requested", "documents": []}
+        schedule_packet = schedule_packet or {"status": "not_requested", "schedule": [], "summary": None}
         return {
             "status": "policy_issued" if policy else "quote_acquired",
             "quote_id": quote.id,
@@ -330,6 +355,9 @@ class ProductPolicyAcquisitionService:
             "product_quote": quote_result,
             "document_status": document_packet.get("status", "not_requested"),
             "documents": document_packet.get("documents", []),
+            "premium_schedule_status": schedule_packet.get("status", "not_requested"),
+            "premium_schedule": schedule_packet.get("schedule", []),
+            "premium_schedule_summary": schedule_packet.get("summary"),
             "idempotent": idempotent,
         }
 
