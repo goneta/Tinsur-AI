@@ -3,6 +3,8 @@ API v1 router.
 """
 from fastapi import APIRouter
 
+from app.core.config import settings as app_settings
+
 from app.api.v1.endpoints import (
     auth,
     twofa,
@@ -67,7 +69,8 @@ api_router = APIRouter()
 
 
 # Include endpoint routers
-api_router.include_router(dev.router, prefix="/dev", tags=["Development"])
+if app_settings.ENABLE_DEV_ENDPOINTS:
+    api_router.include_router(dev.router, prefix="/dev", tags=["Development"])
 api_router.include_router(qr_verification.router, prefix="/public/verify", tags=["Public Verification"])
 api_router.include_router(co_insurance.router, prefix="/co-insurance", tags=["Co-insurance"])
 api_router.include_router(pos.router, prefix="/pos", tags=["Point of Sale & Inventory"])

@@ -207,3 +207,18 @@ Milestone 9 implements **automatic initial payment orchestration for product-cat
 - [ ] Commit Milestone 10 locally on `kenbot_branche`.
 - [ ] Push Milestone 10 to `origin/kenbot_branche`, `origin/main`, and `origin/master` only if explicitly continuing remote synchronization.
 - [ ] Verify all required remote branch heads resolve to the expected Milestone 10 commit if pushed.
+
+## Milestone 11: Compliance, security, and operations
+
+- [x] Re-read `/home/ubuntu/skills/tinsur-ai-repo-workflow/SKILL.md` and follow the repository workflow for Milestone 11.
+- [x] Confirm the current repository branch (`kenbot_branche`), current commit (`ffd010f775a43def5bb08f55f9398db5174f3207`), remote alignment across `origin/kenbot_branche`, `origin/main`, and `origin/master`, and working tree state before implementation; only the Milestone 11 checklist is pending.
+- [x] Audit existing compliance, security, authentication, authorization, audit logging, configuration, health, readiness, and operational monitoring surfaces; key gaps are unauthenticated development mutation endpoints mounted in the main API router, security-header middleware present but not wired, and only a shallow health probe with no readiness evidence.
+- [x] Define a focused compliance/security/operations hardening scope that fits existing backend service boundaries and avoids unrelated product changes: add explicit development endpoint gating, wire reusable security and request-correlation middleware, and expose a sanitized readiness probe with database connectivity evidence.
+- [x] Implement the selected compliance, security, and operations hardening capability without broad unrelated changes.
+- [x] Add focused tests for compliance evidence, security safeguards, tenant isolation, and operational readiness behavior.
+- [x] Run syntax checks and targeted pytest validation.
+- [x] Create `ELEVENTH_BACKEND_MILESTONE_VALIDATION.txt` documenting scope, changed files, validation evidence, and remaining risks.
+- [x] Update `todo.md` for completion traceability.
+- [ ] Commit Milestone 11 locally on `kenbot_branche`.
+- [ ] Push Milestone 11 to `origin/kenbot_branche`, `origin/main`, and `origin/master` only if explicitly continuing remote synchronization.
+- [ ] Verify all required remote branch heads resolve to the expected Milestone 11 commit if pushed.

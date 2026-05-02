@@ -1,0 +1,64 @@
+Tinsur.AI Eleventh Backend Milestone Validation
+Milestone: Compliance, security, and operations
+Branch: kenbot_branche
+Base commit before implementation: ffd010f775a43def5bb08f55f9398db5174f3207
+
+Scope implemented
+-----------------
+Milestone 11 implements a focused backend hardening increment for compliance, security, and operations without broad product changes. The selected scope closes three production-readiness gaps discovered during the audit:
+
+1. Development mutation endpoints are no longer mounted by default. The /api/v1/dev helpers are now gated behind an explicit ENABLE_DEV_ENDPOINTS setting instead of being registered unconditionally.
+2. Existing reusable security-header middleware is now wired into the FastAPI application, adding response headers such as X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, and related browser-side hardening controls.
+3. Operational request correlation and readiness evidence are now available. The application emits a sanitized X-Request-ID response header, preserves an inbound request ID when supplied, logs structured access metadata without request bodies or sensitive data, and exposes /ready with sanitized database connectivity evidence.
+
+Changed files
+-------------
+backend/app/api/v1/router.py
+- Imports core settings under a non-conflicting alias.
+- Registers /api/v1/dev routes only when ENABLE_DEV_ENDPOINTS is explicitly true.
+
+backend/app/core/config.py
+- Adds ENABLE_DEV_ENDPOINTS with a secure default of false.
+- Adds REQUEST_ID_HEADER with default X-Request-ID for operational trace correlation.
+
+backend/app/core/operations_middleware.py
+- Adds RequestCorrelationMiddleware.
+- Generates or propagates a request correlation ID.
+- Adds the correlation ID to response headers.
+- Emits structured access logs with method, path, status, duration, and correlation ID while avoiding sensitive request payloads.
+
+backend/app/main.py
+- Wires SecurityHeadersMiddleware.
+- Wires RequestCorrelationMiddleware.
+- Extends /health into a liveness response with service/version metadata.
+- Adds /ready readiness probe with sanitized database dependency evidence and no secret leakage.
+
+tests/test_compliance_security_operations.py
+- Adds focused tests for security headers, propagated request IDs, readiness evidence, dev endpoint gating, and isolated middleware reusability.
+
+todo.md
+- Adds and updates Milestone 11 checklist traceability.
+
+Validation commands and evidence
+--------------------------------
+Command:
+cd /home/ubuntu/Tinsur-AI-kenbot-milestones-1777649530/backend && PYTHONPATH=. python3.11 -m py_compile app/core/config.py app/core/operations_middleware.py app/core/security_headers.py app/api/v1/router.py app/main.py tests/test_compliance_security_operations.py && echo SYNTAX_EXIT:$? && DATABASE_URL=sqlite:///./test_milestone11.db PYTHONPATH=. python3.11 -m pytest tests/test_compliance_security_operations.py -q; echo PYTEST_EXIT:$?
+
+Result:
+SYNTAX_EXIT:0
+4 passed, 4 warnings
+PYTEST_EXIT:0
+
+Focused behavior validated
+--------------------------
+- /health responses include the configured request-correlation header and browser security headers.
+- /ready returns status=ready, database=ok, dev_endpoints_enabled=false, and does not expose DATABASE_URL or password-like values.
+- /api/v1/dev/hash, /api/v1/dev/seed, and /api/v1/dev/topup-dev are absent from the mounted route table when ENABLE_DEV_ENDPOINTS is false.
+- RequestCorrelationMiddleware and SecurityHeadersMiddleware can be reused on an isolated FastAPI app.
+
+Remaining risks and follow-up recommendations
+---------------------------------------------
+- The readiness probe intentionally validates only basic database connectivity. Future milestones should add optional dependency checks for cache, queue, object storage, and external payment/AI providers once those dependencies have consistent health abstractions.
+- The development endpoint gate is configuration-driven. Deployment environments should keep ENABLE_DEV_ENDPOINTS unset or false by default and only enable it in isolated local development contexts.
+- Security headers are now wired globally, but CSP policy strength should be revisited after frontend asset origins and deployment domains are finalized.
+- Existing broader pytest fixtures still emit unrelated dependency warnings from passlib and pydantic protected namespace conflicts; these warnings predate this milestone and did not block focused validation.

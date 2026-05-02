@@ -4,6 +4,7 @@ Main FastAPI application entry point.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 from fastapi.staticfiles import StaticFiles
 import os
 import logging
@@ -19,6 +20,8 @@ load_dotenv(os.path.join(backend_root, ".env"))
 load_dotenv(os.path.join(project_root, ".env"))
 
 from app.core.config import settings
+from app.core.operations_middleware import RequestCorrelationMiddleware
+from app.core.security_headers import SecurityHeadersMiddleware
 # Force reload trigger - KYC Auth Fix
 from app.core.database import Base, engine
 
@@ -73,6 +76,8 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestCorrelationMiddleware, header_name=settings.REQUEST_ID_HEADER)
 
 
 # Mount uploads directory
@@ -101,8 +106,43 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy"}
+    """Lightweight liveness check for load balancers and container supervisors."""
+    return {"status": "healthy", "service": settings.APP_NAME, "version": settings.APP_VERSION}
+
+
+@app.get("/ready")
+async def readiness_check():
+    """Readiness probe with sanitized operational dependency evidence."""
+    checks = {
+        "database": "unknown",
+        "dev_endpoints_enabled": bool(settings.ENABLE_DEV_ENDPOINTS),
+    }
+
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        checks["database"] = "ok"
+    except Exception as exc:  # pragma: no cover - defensive operational path
+        checks["database"] = "error"
+        logger.warning("readiness_database_check_failed", extra={"error_type": type(exc).__name__})
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "not_ready",
+                "service": settings.APP_NAME,
+                "version": settings.APP_VERSION,
+                "environment": settings.ENVIRONMENT,
+                "checks": checks,
+            },
+        )
+
+    return {
+        "status": "ready",
+        "service": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "environment": settings.ENVIRONMENT,
+        "checks": checks,
+    }
 
 @app.get("/test_main")
 def test_main():

@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     ENVIRONMENT: str = "development"
+    ENABLE_DEV_ENDPOINTS: bool = False
+    REQUEST_ID_HEADER: str = "X-Request-ID"
     
     # Database
     DATABASE_URL: str = "sqlite:///./insurance.db"
