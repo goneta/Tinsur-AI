@@ -9,6 +9,13 @@ import secrets
 
 class Settings(BaseSettings):
     """Application settings."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",        # 👈 THIS is the key fix
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
+
     PROJECT_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
     
@@ -21,12 +28,12 @@ class Settings(BaseSettings):
     REQUEST_ID_HEADER: str = "X-Request-ID"
     
     # Database
-    DATABASE_URL: str = "sqlite:///./insurance.db"
+    DATABASE_URL: str 
     MONGODB_URL: str = "mongodb://localhost:27017/insurance_saas_logs"
     REDIS_URL: str = "redis://localhost:6379/0"
 
     # Security
-    SECRET_KEY: str = ""
+    SECRET_KEY: str 
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
