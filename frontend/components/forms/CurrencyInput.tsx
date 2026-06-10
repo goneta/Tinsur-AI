@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from 'react-i18next';
 import { formatAmountForInput, parseAmount, getDecimalSeparator } from '@/lib/currency';
 
 interface CurrencyInputProps {

@@ -24,7 +24,7 @@ interface PolicyActionsProps {
     onView: (id: string) => void
     onEdit: (policy: Policy) => void
     onDelete: (id: string) => void
-    t: (key: string) => string
+    t: (key: string, fallback?: string) => string
 }
 
 const PolicyActions = ({ row, onView, onEdit, onDelete, t }: PolicyActionsProps) => {
@@ -81,7 +81,7 @@ export const columns = (
     onView: (id: string) => void,
     onEdit: (policy: Policy) => void,
     onDelete: (id: string) => void,
-    t: (key: string) => string,
+    t: (key: string, fallback?: string) => string,
     formatPrice: (amount: number) => string
 ): ColumnDef<Policy>[] => [
         {

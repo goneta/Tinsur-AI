@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CurrencyDisplay } from '@/components/CurrencyDisplay';
