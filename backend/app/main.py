@@ -51,12 +51,15 @@ async def lifespan(app: FastAPI):
 
 
 # Create FastAPI app
+ENV = os.getenv("ENVIRONMENT", "development")
+
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description="Multi-tenant Insurance Management SaaS Platform",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url=None if ENV == "production" else "/docs",
+    redoc_url=None if ENV == "production" else "/redoc",
+    openapi_url=None if ENV == "production" else "/openapi.json",
     lifespan=lifespan,
 )
 
@@ -91,18 +94,26 @@ if not os.path.exists(UPLOADS_DIR):
     
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
-
 @app.get("/")
 async def root():
     """Root endpoint."""
-    return {
+    response = {
         "name": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "status": "running",
-        "docs": "/docs",
-        "redoc": "/redoc"
     }
 
+    if ENV != "production":
+        response.update({
+            "docs": "/docs",
+            "redoc": "/redoc"
+        })
+
+    return response
+
+@app.get("/api")
+async def api_root():
+    return {"message": "API running"}
 
 @app.get("/health")
 async def health_check():

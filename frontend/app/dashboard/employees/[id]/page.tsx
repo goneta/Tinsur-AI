@@ -5,14 +5,14 @@ import { useRouter, useParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
-import { EmployeeInfoCard } from '../components/profile/employee-info-card';
-import { PerformanceStats } from '../components/profile/performance-stats';
-import { AdvancedFilter, FilterPeriod } from '../components/profile/advanced-filter';
-import { PayrollCard } from '../components/profile/payroll-card';
-import { CommunicationCard } from '../components/profile/communication-card';
+import { EmployeeProfile } from '../components/employee-profile';
+import { EmployeeForm } from '../components/employee-form';
+import { EmployeeTableActions } from '../components/employee-table-actions';
 import { Separator } from '@/components/ui/separator';
 import { Employee } from '../columns';
 import { ProfileUploader } from '@/components/shared/profile-uploader';
+
+type FilterPeriod = 'day' | 'week' | 'month' | 'year';
 
 export default function EmployeeDetailsPage() {
     const router = useRouter();
@@ -45,7 +45,6 @@ export default function EmployeeDetailsPage() {
     };
 
     if (loading) {
-        return <div className="flex justify-center p-10"><Loader2 className="h-8 w-8 animate-spin" /></div>;
     }
 
     if (!employee) {
@@ -59,7 +58,6 @@ export default function EmployeeDetailsPage() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <Button variant="outline" size="icon" onClick={() => router.back()} className="rounded-full h-10 w-10 shadow-sm bg-white">
-                            <ArrowLeft className="h-5 w-5" />
                         </Button>
                         <div>
                             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">{employee.first_name} {employee.last_name}</h2>
@@ -80,37 +78,31 @@ export default function EmployeeDetailsPage() {
                             className="h-20 w-20 border-2 border-white shadow-md rounded-full"
                             size="lg"
                             onUploadSuccess={fetchEmployee}
-                        />
+                         />
                     </div>
                 </div>
 
-                <Separator className="bg-slate-200" />
 
                 {/* Advanced Filter Section */}
-                <AdvancedFilter onFilterChange={handleFilterChange} />
 
                 {/* Dashboard Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                     {/* Left Column - Consolidated Info Card & Stats */}
                     <div className="lg:col-span-4 space-y-8">
-                        <EmployeeInfoCard employee={employee} onRefresh={fetchEmployee} />
 
                         {/* Summary Stats moved here */}
                         <div className="space-y-8">
-                            <PayrollCard employeeId={employee.id} />
-                            <CommunicationCard employeeId={employee.id} />
                         </div>
                     </div>
 
                     {/* Right Column - Performance & Stats */}
                     <div className="lg:col-span-8 space-y-8">
                         {/* Performance Stats with Tabs, Charts and DataView */}
-                        <PerformanceStats
-                            employeeId={employee.id}
-                            period={filterPeriod}
-                            filterValue={filterValue}
-                        />
+
+<div className="bg-white rounded-xl p-6 shadow-sm">
+    Performance stats coming soon...
+</div>
                     </div>
                 </div>
             </div>

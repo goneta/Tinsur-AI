@@ -32,28 +32,28 @@ const PolicyActions = ({ row, onView, onEdit, onDelete, t }: PolicyActionsProps)
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0">
-                    <span className="sr-only">{t('table.open_menu', 'Open menu')}</span>
+                    <span className="sr-only">{t('table.open_menu')}</span>
                     <MoreHorizontal className="h-4 w-4" />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{t('table.actions', 'Actions')}</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('table.actions')}</DropdownMenuLabel>
                 <DropdownMenuItem onClick={() => setTimeout(() => onView(row.id), 0)}>
                     <FileText className="mr-2 h-4 w-4" />
-                    {t('table.view_details', 'View Details')}
+                    {t('table.view_details')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigator.clipboard.writeText(row.policy_number)}>
-                    {t('table.copy_number', 'Copy number')}
+                    {t('table.copy_number')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setTimeout(() => onEdit(row), 0)}>
-                    {t('btn.edit', 'Edit')}
+                    {t('btn.edit')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                     className="text-red-600 focus:text-red-600"
                     onClick={() => setTimeout(() => onDelete(row.id), 0)}
                 >
-                    {t('btn.delete', 'Delete')}
+                    {t('btn.delete')}
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
@@ -67,7 +67,7 @@ const getStatusBadge = (status: string, t: (key: string, fallback: string) => st
         case 'expired':
             return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" /> {t('status.expired', 'Expired')}</Badge>;
         case 'canceled':
-            return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" /> {t('status.cancelled', 'Cancelled')}</Badge>;
+            return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" /> {t('status.cancelled', 'Canceled')}</Badge>;
         case 'lapsed':
             return <Badge variant="destructive" className="bg-orange-500"><AlertCircle className="w-3 h-3 mr-1" /> {t('status.lapsed', 'Lapsed')}</Badge>;
         default:

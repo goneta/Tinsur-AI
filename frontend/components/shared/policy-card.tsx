@@ -142,13 +142,13 @@ export function PolicyCard({ policy, onViewDocuments, onMakeClaim, onMakePayment
 
             financials={[
                 {
-                    label: <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t("Amount (Annual)", "Amount (Annual)")}:</span>,
+                    label: t("Amount (Annual)", "Amount (Annual)"),
                     amount: <span className="text-lg font-black text-[#00539F]">{formatPrice ? formatPrice(annualPremium) : policy.premium}</span>,
                     isTotal: false
                 },
                 // Monthly Breakdown
                 monthlyPremium > 0 ? {
-                    label: <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t("Amount (Per Month)", "Amount (Per Month)")}:</span>,
+                    label: t("Amount (Per Month)", "Amount (Per Month)"),
                     amount: <span className="text-lg font-black text-[#00539F] opacity-80">{formatPrice ? formatPrice(monthlyPremium) : (monthlyPremium).toFixed(2)}</span>,
                     isTotal: false
                 } : null

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, ReactNode } from "react";
-import { GoogleOAuthProvider } from '@react-oauth/google';
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import { ThemeProvider } from "./theme-provider";
 import { LanguageProvider } from "../contexts/language-context";
 import { QueryProvider } from "./query-provider";
@@ -9,7 +9,6 @@ import { AuthProvider } from "../lib/auth";
 import { BrandingProvider } from "./branding-provider";
 import { Toaster as SonnerToaster } from "sonner";
 import { Toaster } from "./ui/toaster";
-import Script from "next/script";
 
 interface ProvidersProps {
     children: ReactNode;

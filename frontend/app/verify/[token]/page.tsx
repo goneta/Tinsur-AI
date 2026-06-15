@@ -30,7 +30,7 @@ export default function VerificationPage() {
     useEffect(() => {
         const verify = async () => {
             try {
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/public/verify/verify/${token}`);
+                const response = await fetch(`/api/v1/public/verify/verify/${token}`);
                 const result = await response.json();
                 setData(result);
             } catch (error) {

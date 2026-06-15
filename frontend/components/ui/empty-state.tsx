@@ -23,6 +23,8 @@ export function EmptyState({
     action,
     className
 }: EmptyStateProps) {
+    const ActionIcon = action?.icon;
+
     return (
         <div className={cn(
             "flex flex-col items-center justify-center p-12 text-center",
@@ -50,7 +52,7 @@ export function EmptyState({
                     size="lg"
                     className="shadow-lg hover:shadow-primary/20 transition-all duration-300 transform hover:-translate-y-1"
                 >
-                    {action.icon && <action.icon className="mr-2 h-5 w-5" />}
+                    {ActionIcon && <ActionIcon className="mr-2 h-5 w-5" />}
                     {action.label}
                 </Button>
             )}

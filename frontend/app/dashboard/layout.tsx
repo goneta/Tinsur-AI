@@ -32,9 +32,5 @@ export default function DashboardLayout({
         return null;
     }
 
-    return (
-        <ChatProvider>
-            <DashboardShell>{children}</DashboardShell>
-        </ChatProvider>
-    );
+    return <>{children}</>;
 }

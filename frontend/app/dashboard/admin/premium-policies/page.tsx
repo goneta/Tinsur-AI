@@ -150,7 +150,7 @@ export default function PremiumPoliciesPage() {
                     items={allItems}
                     financials={[
                         {
-                            label: <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">{t('premium_policies.cover_amount', 'Cover amount')}:</span>,
+                            label: t('premium_policies.cover_amount', 'Cover amount'),
                             amount: <FormattedCurrency amount={totalPremium} className="text-sm font-black text-[#00539F] ml-2" />,
                             isTotal: false
                         }

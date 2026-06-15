@@ -432,7 +432,7 @@ export default function PolicyDetailsPage({ params }: { params: Promise<{ id: st
                                     <Button
                                         onClick={async () => {
                                             try {
-                                                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/public/verify/generate/${policy.id}`, { method: 'POST' });
+                                                const res = await fetch(`/api/v1/public/verify/generate/${policy.id}`, { method: 'POST' });
                                                 const data = await res.json();
                                                 setPolicy({ ...policy, qr_code_data: data.token });
                                             } catch (e) {

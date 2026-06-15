@@ -87,7 +87,10 @@ export function UniversalEntityCard({
         }
     };
 
-    const Icon = header.icon || ShieldCheck;
+    const IconComponent =
+    typeof header.icon === "function"
+        ? header.icon
+        : ShieldCheck;
 
     return (
         <Card
@@ -110,7 +113,7 @@ export function UniversalEntityCard({
                         <div className="flex items-start gap-4">
                             {/* Icon Circle */}
                             <div className="h-12 w-12 rounded-full bg-[#00539F] flex items-center justify-center shrink-0">
-                                <Icon className="h-6 w-6 text-white" />
+                                <IconComponent className="h-6 w-6 text-white" />
                             </div>
 
                             <div className="flex flex-col">
