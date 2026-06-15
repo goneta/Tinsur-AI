@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from 'react-i18next';
 import { useState, useEffect } from 'react';
 import { CurrencyDisplay } from '@/components/CurrencyDisplay';
 import axios from 'axios';

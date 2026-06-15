@@ -1,15 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/components/theme-provider";
 import { BrandingProvider } from "@/components/branding-provider";
 
 import { Toaster } from "@/components/ui/toaster";
-
-const inter = Inter({
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Tinsur.AI",
@@ -43,7 +38,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning translate="no" className="notranslate">
-      <body className={`${inter.className} antialiased`}>
+      <body className="antialiased">
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
         <ThemeProvider defaultTheme="light" storageKey="insurance-saas-theme">
           <LanguageProvider>
