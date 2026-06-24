@@ -1,19 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { NavigationSidebar } from '@/components/layout/navigation-sidebar';
 import { TopHeader } from '@/components/layout/top-header';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
-import {
-    ResizableHandle,
-    ResizablePanel,
-    ResizablePanelGroup,
-} from "@/components/ui/resizable"
-import { ImperativePanelHandle } from "react-resizable-panels";
 import { AgentWorkspace } from "@/components/ai-agent/agent-workspace";
-import { X, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import { useChat } from "@/context/chat-context";
 
 import { useLanguage } from '@/contexts/language-context';
@@ -28,14 +22,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Mobile specific
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Desktop specific
     const [isMobile, setIsMobile] = useState(false);
-    const [isMounted, setIsMounted] = useState(false);
     const { isAiOpen, setIsAiOpen } = useChat();
     const pathname = usePathname();
-    const sidebarRef = useRef<ImperativePanelHandle>(null);
-
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
 
     // Handle responsive behavior and route-based collapsing
     useEffect(() => {
@@ -52,33 +40,20 @@ export function DashboardShell({ children }: DashboardShellProps) {
         // Initial check
         checkMobile();
 
-        // Check if we should auto-collapse sidebar (AI Manager)
         if (pathname?.includes('/dashboard/ai-manager')) {
-            if (sidebarRef.current && !isMobile) {
-                sidebarRef.current.resize(4);
-                setIsSidebarCollapsed(true);
-            }
+            setIsSidebarCollapsed(true);
         }
 
         // Event listener
         window.addEventListener('resize', checkMobile);
         return () => window.removeEventListener('resize', checkMobile);
-    }, [pathname, isMobile]);
+    }, [pathname]);
 
     const toggleSidebar = () => {
         if (isMobile) {
             setIsSidebarOpen(!isSidebarOpen);
         } else {
-            const sidebar = sidebarRef.current;
-            if (sidebar) {
-                if (isSidebarCollapsed) {
-                    sidebar.resize(20); // Expand to ~20%
-                    setIsSidebarCollapsed(false);
-                } else {
-                    sidebar.resize(4); // Collapse to ~4%
-                    setIsSidebarCollapsed(true);
-                }
-            }
+            setIsSidebarCollapsed((collapsed) => !collapsed);
         }
     };
 
@@ -142,53 +117,37 @@ export function DashboardShell({ children }: DashboardShellProps) {
                         )}
                     </main>
                 </>
-            ) : isMounted ? (
-                /* Desktop Layout (Resizable) - Only render on client to avoid hydration mismatch */
-                <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-                    <ResizablePanel
-                        ref={sidebarRef}
-                        defaultSize={20}
-                        minSize={4}
-                        maxSize={40}
-                        collapsible={false}
-                        onResize={(size) => {
-                            const isCollapsed = size < 6;
-                            if (isCollapsed !== isSidebarCollapsed) {
-                                setIsSidebarCollapsed(isCollapsed);
-                            }
-                        }}
+            ) : (
+                /* Desktop Layout */
+                <>
+                    <aside
                         className={cn(
-                            "flex flex-col border-r bg-sidebar transition-all duration-300 ease-in-out relative",
-                            isSidebarCollapsed && "min-w-[60px]"
+                            "flex h-full shrink-0 flex-col border-r bg-sidebar transition-[width] duration-300 ease-in-out",
+                            isSidebarCollapsed ? "w-[72px]" : "w-72"
                         )}
                     >
                         <NavigationSidebar isCollapsed={isSidebarCollapsed} onToggleCollapse={toggleSidebar} />
-                    </ResizablePanel>
+                    </aside>
 
-                    <ResizableHandle withHandle />
+                    <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
+                        <TopHeader
+                            onMobileMenuToggle={() => setIsSidebarOpen(true)}
+                            onAiToggle={() => setIsAiOpen(!isAiOpen)}
+                            className="border-b"
+                        />
 
-                    <ResizablePanel defaultSize={isAiOpen ? 55 : 80}>
-                        <main className="flex h-full flex-col overflow-hidden">
-                            <TopHeader
-                                onMobileMenuToggle={() => setIsSidebarOpen(true)}
-                                onAiToggle={() => setIsAiOpen(!isAiOpen)}
-                                className="border-b"
-                            />
-
-                            <div className="flex-1 overflow-y-auto p-6 lg:p-8 bg-background">
-                                <div className={cn(
-                                    "mx-auto space-y-8 animate-in fade-in duration-500",
-                                    pathname?.includes('/dashboard/ai-manager') ? "max-w-full h-full p-0" : "max-w-6xl"
-                                )}>
-                                    {children}
-                                </div>
+                        <div className="flex-1 overflow-y-auto bg-background p-6 lg:p-8">
+                            <div className={cn(
+                                "mx-auto space-y-8 animate-in fade-in duration-500",
+                                pathname?.includes('/dashboard/ai-manager') ? "h-full max-w-full p-0" : "max-w-6xl"
+                            )}>
+                                {children}
                             </div>
-                        </main>
-                    </ResizablePanel>
+                        </div>
+                    </main>
 
-                    {isAiOpen && <ResizableHandle withHandle />}
                     {isAiOpen && (
-                        <ResizablePanel defaultSize={35} minSize={25} maxSize={50} className="bg-background">
+                        <aside className="hidden h-full w-[35vw] min-w-[360px] max-w-[420px] shrink-0 border-l bg-background lg:block">
                             <div className="flex h-full flex-col">
                                 <div className="flex h-14 items-center justify-between border-b px-4 bg-muted/30">
                                     <div className="flex items-center gap-2">
@@ -206,10 +165,10 @@ export function DashboardShell({ children }: DashboardShellProps) {
                                     <AgentWorkspace isGlobal />
                                 </div>
                             </div>
-                        </ResizablePanel>
+                        </aside>
                     )}
-                </ResizablePanelGroup>
-            ) : null}
+                </>
+            )}
         </div>
     );
 }
