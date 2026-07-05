@@ -94,7 +94,7 @@ def get_sales_leaderboard(
         SalesTransaction, SalesTransaction.employee_id == User.id
     ).filter(
         SalesTransaction.company_id == current_user.company_id,
-        User.role.in_(['agent', 'manager'])
+        User.user_type.in_(['agent', 'manager'])
     ).group_by(User.id).order_by(desc("revenue")).limit(limit).all()
     
     return [

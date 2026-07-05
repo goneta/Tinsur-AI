@@ -11,8 +11,9 @@ Nearest DOX: `backend/agents/AGENTS.md`
 
 ## Notes
 
-- Add concise operational details here when editing the source file.
-- Prefer stable contracts, exported APIs, route behavior, data shape, permissions, side effects, and important dependencies over change history.
+- Exposes `generate_payment_schedule_pdf(db, policy_id, user_id)` and `generate_policy_agreement_pdf(db, policy_id, user_id)`; both build a reportlab PDF, persist it under `static/documents/<client_id>/`, and create a `Document` row.
+- `Document` rows are written with `company_id=policy.company_id` (FK to companies — required, must not be a client id), plus `policy_id` and `client_id` populated.
+- Consumed by the `POST /policies/{id}/generate-schedule` and `.../generate-agreement` endpoints.
 
 ## Verification
 

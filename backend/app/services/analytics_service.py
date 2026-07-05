@@ -171,7 +171,7 @@ class AnalyticsService:
             Policy.company_id == filters.company_id,
             Policy.created_at >= start,
             Policy.created_at <= end,
-            User.role.in_(['agent', 'manager'])
+            User.user_type.in_(['agent', 'manager'])
         ).group_by(User.id).order_by(desc('total')).limit(5).all()
         
         top_agents = [

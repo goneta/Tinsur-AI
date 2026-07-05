@@ -108,6 +108,29 @@ class LLMRouter:
         self.model = model or _DEFAULT_MODELS.get(self.provider, "gemini-2.0-flash")
         self.system_prompt = system_prompt
 
+    def _provider_key(self, provider: str) -> Optional[str]:
+        """Resolve the API key for a given provider.
+
+        The primary provider uses the key this router was built with. Fallback
+        providers only work if a dedicated env key exists for them — a single
+        key is provider-specific (a Gemini key cannot authenticate OpenAI), so
+        we never reuse the primary key across providers.
+        """
+        if provider == self.provider:
+            return self.api_key
+        env_key = {
+            "gemini": "GOOGLE_API_KEY",
+            "openai": "OPENAI_API_KEY",
+            "anthropic": "ANTHROPIC_API_KEY",
+        }.get(provider)
+        return os.getenv(env_key) if env_key else None
+
+    _PROVIDER_AVAILABLE = {
+        "gemini": lambda: GEMINI_AVAILABLE,
+        "openai": lambda: OPENAI_AVAILABLE,
+        "anthropic": lambda: ANTHROPIC_AVAILABLE,
+    }
+
     # ── Public API ─────────────────────────────────────────────────────────────
 
     async def generate(
@@ -171,11 +194,18 @@ class LLMRouter:
     # ── Internal helpers ───────────────────────────────────────────────────────
 
     def _priority_list(self) -> List[str]:
-        """Return provider order: preferred first, then available fallbacks."""
+        """Return provider order: preferred first, then only fallbacks that have
+        both their SDK installed and a usable (dedicated) API key. This prevents
+        misleading errors like trying Anthropic with a Gemini key."""
         order = [self.provider]
         for p in ("gemini", "openai", "anthropic"):
-            if p not in order:
-                order.append(p)
+            if p in order:
+                continue
+            if not self._PROVIDER_AVAILABLE.get(p, lambda: False)():
+                continue
+            if not self._provider_key(p):
+                continue
+            order.append(p)
         return order
 
     async def _call_provider(
@@ -205,11 +235,12 @@ class LLMRouter:
     ) -> LLMResponse:
         if not GEMINI_AVAILABLE:
             return LLMResponse(text="", provider="gemini", model=self.model, error="google-generativeai not installed")
-        if not self.api_key:
+        api_key = self._provider_key("gemini")
+        if not api_key:
             return LLMResponse(text="", provider="gemini", model=self.model, error="No Gemini API key")
 
         def _sync_call():
-            _genai.configure(api_key=self.api_key)
+            _genai.configure(api_key=api_key)
             model_name = self.model if self.provider == "gemini" else _DEFAULT_MODELS["gemini"]
             genai_model = _genai.GenerativeModel(
                 model_name,
@@ -249,7 +280,8 @@ class LLMRouter:
     ) -> LLMResponse:
         if not OPENAI_AVAILABLE:
             return LLMResponse(text="", provider="openai", model=self.model, error="openai not installed")
-        if not self.api_key:
+        api_key = self._provider_key("openai")
+        if not api_key:
             return LLMResponse(text="", provider="openai", model=self.model, error="No OpenAI API key")
 
         model_name = self.model if self.provider == "openai" else _DEFAULT_MODELS["openai"]
@@ -262,7 +294,7 @@ class LLMRouter:
         messages.append({"role": "user", "content": prompt})
 
         try:
-            client = _AsyncOpenAI(api_key=self.api_key)
+            client = _AsyncOpenAI(api_key=api_key)
             completion = await client.chat.completions.create(
                 model=model_name,
                 messages=messages,
@@ -292,7 +324,8 @@ class LLMRouter:
     ) -> LLMResponse:
         if not ANTHROPIC_AVAILABLE:
             return LLMResponse(text="", provider="anthropic", model=self.model, error="anthropic not installed")
-        if not self.api_key:
+        api_key = self._provider_key("anthropic")
+        if not api_key:
             return LLMResponse(text="", provider="anthropic", model=self.model, error="No Anthropic API key")
 
         model_name = self.model if self.provider == "anthropic" else _DEFAULT_MODELS["anthropic"]
@@ -303,7 +336,7 @@ class LLMRouter:
         messages.append({"role": "user", "content": prompt})
 
         try:
-            client = _anthropic.AsyncAnthropic(api_key=self.api_key)
+            client = _anthropic.AsyncAnthropic(api_key=api_key)
             kwargs: Dict[str, Any] = {
                 "model": model_name,
                 "max_tokens": max_tokens,

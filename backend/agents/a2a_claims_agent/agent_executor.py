@@ -5,6 +5,8 @@ from a2a.utils import new_agent_text_message
 from google.adk.agents import Agent
 from .models import ClaimRequest, ClaimResponse
 import json
+import uuid
+from datetime import datetime
 from app.core.database import SessionLocal
 from app.core.security_context import SecurityService
 from app.services.ai_action_control_service import (

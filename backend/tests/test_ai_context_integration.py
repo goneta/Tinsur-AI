@@ -132,6 +132,7 @@ def test_tenant_context_summary_uses_company_scoped_queries_and_records():
         "active_policies": 1,
         "clients": 1,
         "premium_products": 1,
+        "product_catalog": 0,
     }
     assert payload["quotes"][0]["quote_number"] == "QA-1001"
     assert payload["policies"][0]["policy_number"] == "PA-1001"

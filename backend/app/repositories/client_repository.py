@@ -6,6 +6,7 @@ from typing import List, Optional
 import uuid
 
 from app.models.client import Client, client_company
+from app.models.company import Company
 from app.schemas.client import ClientCreate, ClientUpdate
 
 
@@ -47,7 +48,7 @@ class ClientRepository:
         if company_id:
             query = query.join(Client.companies).filter(
                 Client.id == client_id,
-                client_company.c.company_id == company_id
+                Company.id == company_id
             )
         else:
             query = query.filter(Client.id == client_id)
@@ -65,11 +66,11 @@ class ClientRepository:
         """Get all clients with pagination and filters. If company_id is None, return all (Admin/Public)."""
         query = self.db.query(Client)
         if company_id:
-            query = query.join(Client.companies).filter(client_company.c.company_id == company_id)
-        
+            query = query.join(Client.companies).filter(Company.id == company_id)
+
         if status:
             query = query.filter(Client.status == status)
-        
+
         if search:
             search_filter = f"%{search}%"
             query = query.filter(
@@ -86,7 +87,7 @@ class ClientRepository:
         """Count clients for a company."""
         query = self.db.query(Client)
         if company_id:
-            query = query.join(Client.companies).filter(client_company.c.company_id == company_id)
+            query = query.join(Client.companies).filter(Company.id == company_id)
         if status:
             query = query.filter(Client.status == status)
         return query.count()

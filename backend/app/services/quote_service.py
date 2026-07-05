@@ -17,6 +17,10 @@ from app.models.company import Company
 from app.models.user import User
 from app.models.underwriting import QuoteUnderwritingSnapshot
 from app.core.time import utcnow
+from app.services.underwriting_service import (
+    APPROVED_UNDERWRITING_DECISIONS,
+    snapshot_is_expired,
+)
 
 
 class QuoteService:
@@ -620,7 +624,7 @@ class QuoteService:
         if snapshot.company_id != quote.company_id:
             raise ValueError("Underwriting snapshot company does not match quote company.")
 
-        if snapshot.valid_until and snapshot.valid_until < utcnow():
+        if snapshot_is_expired(snapshot.valid_until):
             raise ValueError("Underwriting snapshot has expired. Re-run underwriting before issuing a policy.")
 
         decision = None
@@ -629,12 +633,12 @@ class QuoteService:
         if not decision and snapshot.decision:
             decision = snapshot.decision.decision
 
-        if decision not in {"approve", "approved"}:
+        if decision not in APPROVED_UNDERWRITING_DECISIONS:
             raise ValueError(f"Quote cannot be issued because underwriting decision is '{decision or 'missing'}'.")
 
         ready_payload = snapshot.policy_ready_payload or {}
         ready_decision = ready_payload.get("decision")
-        if ready_decision and ready_decision not in {"approve", "approved"}:
+        if ready_decision and ready_decision not in APPROVED_UNDERWRITING_DECISIONS:
             raise ValueError(f"Policy-ready payload is not approved: '{ready_decision}'.")
 
         snapshot_premium = ready_payload.get("premium") or (snapshot.decision_snapshot or {}).get("final_premium")

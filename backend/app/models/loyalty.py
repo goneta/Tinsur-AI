@@ -2,7 +2,7 @@
 Loyalty model for tracking client points.
 """
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from app.core.guid import GUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
@@ -14,9 +14,9 @@ class LoyaltyPoint(Base):
     """Loyalty points model."""
     __tablename__ = "loyalty_points"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
-    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
+    client_id = Column(GUID(), ForeignKey("clients.id", ondelete="CASCADE"))
     
     points_earned = Column(Integer, default=0)
     points_redeemed = Column(Integer, default=0)

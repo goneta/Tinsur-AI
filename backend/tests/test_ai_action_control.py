@@ -64,9 +64,9 @@ def test_restricted_response_json_is_stable_and_auditable():
 
 
 def test_agent_and_chat_prompts_include_consequential_action_policy():
-    policy_executor = (BACKEND_ROOT / "agents/a2a_policy_agent/agent_executor.py").read_text()
-    support_executor = (BACKEND_ROOT / "agents/a2a_support_agent/agent_executor.py").read_text()
-    ai_service = (BACKEND_ROOT / "app/services/ai_service.py").read_text()
+    policy_executor = (BACKEND_ROOT / "agents/a2a_policy_agent/agent_executor.py").read_text(encoding="utf-8")
+    support_executor = (BACKEND_ROOT / "agents/a2a_support_agent/agent_executor.py").read_text(encoding="utf-8")
+    ai_service = (BACKEND_ROOT / "app/services/ai_service.py").read_text(encoding="utf-8")
 
     for source in (policy_executor, support_executor, ai_service):
         assert "AI_CONSEQUENTIAL_ACTION_INSTRUCTIONS" in source
@@ -79,9 +79,9 @@ def test_agent_and_chat_prompts_include_consequential_action_policy():
 
 
 def test_restricted_agent_tools_return_handoff_instead_of_mutating_records():
-    policy_tools = (BACKEND_ROOT / "agents/a2a_policy_agent/tools.py").read_text()
-    support_tools = (BACKEND_ROOT / "agents/a2a_support_agent/tools.py").read_text()
-    claims_executor = (BACKEND_ROOT / "agents/a2a_claims_agent/agent_executor.py").read_text()
+    policy_tools = (BACKEND_ROOT / "agents/a2a_policy_agent/tools.py").read_text(encoding="utf-8")
+    support_tools = (BACKEND_ROOT / "agents/a2a_support_agent/tools.py").read_text(encoding="utf-8")
+    claims_executor = (BACKEND_ROOT / "agents/a2a_claims_agent/agent_executor.py").read_text(encoding="utf-8")
 
     assert "restricted_response_json" in policy_tools
     assert "policy_service.create_from_quote" not in policy_tools

@@ -2,7 +2,7 @@
 Notification model for tracking sent notifications.
 """
 from sqlalchemy import Column, String, DateTime, ForeignKey, Boolean, Text, JSON
-from sqlalchemy.dialects.postgresql import UUID
+from app.core.guid import GUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
@@ -15,12 +15,12 @@ class Notification(Base):
     """Notification model for tracking all sent notifications."""
     __tablename__ = "notifications"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
     
     # Recipients
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
-    client_id = Column(UUID(as_uuid=True), ForeignKey("clients.id", ondelete="CASCADE"), nullable=True)
+    user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    client_id = Column(GUID(), ForeignKey("clients.id", ondelete="CASCADE"), nullable=True)
     
     # Notification details
     notification_type = Column(String(50), nullable=False)  # 'payment_reminder', 'policy_renewal', 'quote_sent', 'payment_received', etc.

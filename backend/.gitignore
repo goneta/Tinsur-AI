@@ -21,9 +21,12 @@ ai_docs/references/walkthroughs/
 ai_docs/references/implementation_plan/
 ai_docs/references/ai_tasks/
 
-# Environment
+# Environment (never commit real secrets in any .env variant)
 .env
 .env.local
+.env.backup
+.env.bak
+.env.*.local
 
 # Testing
 .pytest_cache/
@@ -46,3 +49,6 @@ uploads/
 # OS
 .DS_Store
 Thumbs.db
+
+# Runtime-generated documents
+static/documents/

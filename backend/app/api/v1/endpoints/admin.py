@@ -43,7 +43,7 @@ async def get_dashboard_stats(
     
     agents_count = db.query(User).filter(
         User.company_id == company_id,
-        User.role == "agent"
+        User.user_type == "agent"
     ).count()
     
     # Risk profile distribution

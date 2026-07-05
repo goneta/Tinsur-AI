@@ -35,7 +35,11 @@ class ClientService:
         """
         # 1. Create the Client Record with user_id
         client = self.repo.create(client_data, user_id=user_id)
-            
+
+        # Always link the client to its company (multi-tenant M2M), regardless
+        # of client type — quote/policy lookups join through client_company.
+        self._link_company(client, client_data.company_id)
+
         # 2. Automatic Driver Card Generation
         if client.client_type == 'individual' or (client.first_name and client.last_name):
             print(f"DEBUG_CLIENT_SERVICE: Triggering _create_automatic_driver for client_id: {client.id}")
@@ -75,6 +79,16 @@ class ClientService:
         
         self.db.commit()
         return client
+
+    def _link_company(self, client: Client, company_id: Optional[uuid.UUID]) -> None:
+        """Idempotently link a client to a company via the client_company table."""
+        if not company_id:
+            return
+        from app.models.company import Company
+        company = self.db.query(Company).filter(Company.id == company_id).first()
+        if company and company not in client.companies:
+            client.companies.append(company)
+            self.db.flush()
 
     def _create_automatic_driver(self, client: Client, company_id: Optional[uuid.UUID] = None) -> None:
         """
@@ -118,17 +132,6 @@ class ClientService:
             )
             
             self.db.add(driver)
-            
-            # Establish many-to-many linkage with the company
-            if company_id:
-                from app.models.company import Company
-                company = self.db.query(Company).filter(Company.id == company_id).first()
-                if company and company not in client.companies:
-                    print(f"DEBUG_CLIENT_SERVICE: Linking client {client.id} to company {company_id} via M2M")
-                    client.companies.append(company)
-                else:
-                    print(f"DEBUG_CLIENT_SERVICE: Skipping linkage. Company found? {bool(company)}, Already linked? {company in client.companies if company else False}")
-
             self.db.flush()
             print(f"DEBUG_CLIENT_SERVICE: Successfully created automatic driver for client_id: {client.id}")
         except Exception as e:

@@ -255,7 +255,7 @@ class NotificationService:
         from app.models.user import User
         admins = self.db.query(User).filter(
             User.company_id == company_id,
-            User.role == 'admin' # Assuming Role field exists
+            User.user_type == 'company_admin'
         ).all()
         
         notifications = []

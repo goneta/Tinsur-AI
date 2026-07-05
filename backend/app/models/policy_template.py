@@ -2,7 +2,7 @@
 Policy Template model for customizable insurance policy templates.
 """
 from sqlalchemy import Column, String, Boolean, DateTime, Text, ForeignKey, Integer, JSON
-from sqlalchemy.dialects.postgresql import UUID
+from app.core.guid import GUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
@@ -15,9 +15,9 @@ class PolicyTemplate(Base):
     """Policy Template model for customizable policy templates."""
     __tablename__ = "policy_templates"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
-    policy_type_id = Column(UUID(as_uuid=True), ForeignKey("policy_types.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
+    policy_type_id = Column(GUID(), ForeignKey("policy_types.id", ondelete="CASCADE"))
     
     # Template identification
     name = Column(String(200), nullable=False)
@@ -40,7 +40,7 @@ class PolicyTemplate(Base):
     legal_clauses = Column(JSON, default=[])
     
     # Audit
-    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_by = Column(GUID(), ForeignKey("users.id"))
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     

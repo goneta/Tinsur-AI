@@ -2,7 +2,7 @@
 Employee Profile model for extended user information related to HR and Payroll.
 """
 from sqlalchemy import Column, String, ForeignKey, Numeric
-from sqlalchemy.dialects.postgresql import UUID
+from app.core.guid import GUID
 from sqlalchemy.orm import relationship, backref
 import uuid
 
@@ -15,8 +15,8 @@ class EmployeeProfile(Base):
     """
     __tablename__ = "employee_profiles"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), unique=True)
     
     # Payment preferences
     payment_method = Column(String(50)) # 'mobile_money', 'bank_transfer'

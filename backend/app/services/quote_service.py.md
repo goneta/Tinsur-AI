@@ -11,8 +11,9 @@ Nearest DOX: `backend/app/AGENTS.md`
 
 ## Notes
 
-- Add concise operational details here when editing the source file.
-- Prefer stable contracts, exported APIs, route behavior, data shape, permissions, side effects, and important dependencies over change history.
+- Handles premium calculation and quote lifecycle (create / accept).
+- `validate_policy_ready_underwriting(quote)` requires a current approved `QuoteUnderwritingSnapshot`; it uses the shared `APPROVED_UNDERWRITING_DECISIONS` set and `snapshot_is_expired()` from `underwriting_service` (single source of truth for decision vocabulary + tz-tolerant expiry).
+- Do not re-inline a `{"approve","approved"}` literal here — the engine emits `"accept"`, so use the shared constant or issue will wrongly reject accepted quotes.
 
 ## Verification
 

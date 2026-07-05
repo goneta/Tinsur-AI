@@ -2,7 +2,7 @@
 Commission model for tracking agent/broker earnings.
 """
 from sqlalchemy import Column, String, DateTime, ForeignKey, Numeric
-from sqlalchemy.dialects.postgresql import UUID
+from app.core.guid import GUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
@@ -15,10 +15,10 @@ class Commission(Base):
     """Commission model."""
     __tablename__ = "commissions"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
-    agent_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
-    policy_id = Column(UUID(as_uuid=True), ForeignKey("policies.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
+    agent_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"))
+    policy_id = Column(GUID(), ForeignKey("policies.id", ondelete="CASCADE"))
     
     amount = Column(Numeric(15, 2), nullable=False)
     status = Column(String(50), default='pending')  # 'pending', 'paid', 'canceled'

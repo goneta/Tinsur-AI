@@ -2,7 +2,7 @@
 Reinsurance models.
 """
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Date, Text, Numeric, JSON
-from sqlalchemy.dialects.postgresql import UUID
+from app.core.guid import GUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime, date
@@ -16,8 +16,8 @@ class ReinsuranceTreaty(Base):
     """
     __tablename__ = "reinsurance_treaties"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
     reinsurer_name = Column(String(255), nullable=False)
     treaty_number = Column(String(100), unique=True, nullable=False)
     
@@ -26,7 +26,7 @@ class ReinsuranceTreaty(Base):
     commission_percentage = Column(Numeric(5, 2), default=0.00) # Commission paid back to insurer
     
     treaty_type = Column(String(50), default='quota_share') # 'quota_share', 'excess_of_loss'
-    policy_type_id = Column(UUID(as_uuid=True), ForeignKey("policy_types.id"), nullable=True) # If restricted to one type
+    policy_type_id = Column(GUID(), ForeignKey("policy_types.id"), nullable=True) # If restricted to one type
     
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
@@ -42,10 +42,10 @@ class ReinsuranceCession(Base):
     """
     __tablename__ = "reinsurance_cessions"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
-    policy_id = Column(UUID(as_uuid=True), ForeignKey("policies.id", ondelete="CASCADE"))
-    treaty_id = Column(UUID(as_uuid=True), ForeignKey("reinsurance_treaties.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
+    policy_id = Column(GUID(), ForeignKey("policies.id", ondelete="CASCADE"))
+    treaty_id = Column(GUID(), ForeignKey("reinsurance_treaties.id", ondelete="CASCADE"))
     
     gross_premium = Column(Numeric(15, 2), nullable=False)
     ceded_premium = Column(Numeric(15, 2), nullable=False)
@@ -64,10 +64,10 @@ class ReinsuranceRecovery(Base):
     """
     __tablename__ = "reinsurance_recoveries"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
-    claim_id = Column(UUID(as_uuid=True), ForeignKey("claims.id", ondelete="CASCADE"))
-    treaty_id = Column(UUID(as_uuid=True), ForeignKey("reinsurance_treaties.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
+    claim_id = Column(GUID(), ForeignKey("claims.id", ondelete="CASCADE"))
+    treaty_id = Column(GUID(), ForeignKey("reinsurance_treaties.id", ondelete="CASCADE"))
     
     gross_claim_amount = Column(Numeric(15, 2), nullable=False)
     recoverable_amount = Column(Numeric(15, 2), nullable=False)

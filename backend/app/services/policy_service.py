@@ -19,7 +19,11 @@ from app.repositories.endorsement_repository import EndorsementRepository
 from app.repositories.pos_inventory_repository import POSInventoryRepository
 from app.services.reinsurance_service import ReinsuranceService
 from app.services.archive_service import ArchiveService
-from app.services.underwriting_service import UnderwritingService
+from app.services.underwriting_service import (
+    UnderwritingService,
+    APPROVED_UNDERWRITING_DECISIONS,
+    snapshot_is_expired,
+)
 from app.services.regulatory_service import RegulatoryService
 from app.services.document_service import document_service
 from app.models.underwriting import QuoteUnderwritingSnapshot
@@ -91,10 +95,10 @@ class PolicyService:
             decision = snapshot.decision_snapshot.get("decision")
         if not decision and snapshot.decision:
             decision = snapshot.decision.decision
-        if decision not in {"approve", "approved"}:
+        if decision not in APPROVED_UNDERWRITING_DECISIONS:
             return None
 
-        if snapshot.valid_until and snapshot.valid_until < utcnow():
+        if snapshot_is_expired(snapshot.valid_until):
             return None
 
         ProductionActionControlService(self.policy_repo.db).enforce_action(
@@ -182,7 +186,7 @@ class PolicyService:
             client_repo = ClientRepository(self.policy_repo.db)
             company_repo = CompanyRepository(self.policy_repo.db)
             
-            client = client_repo.get_by_id(policy.client_id)
+            client = client_repo.get_by_id(policy.client_id, policy.company_id)
             company = company_repo.get_by_id(policy.company_id)
             
             if client and company:
@@ -299,7 +303,7 @@ class PolicyService:
             client_repo = ClientRepository(self.policy_repo.db)
             company_repo = CompanyRepository(self.policy_repo.db)
             
-            client = client_repo.get_by_id(created_policy.client_id)
+            client = client_repo.get_by_id(created_policy.client_id, created_policy.company_id)
             company = company_repo.get_by_id(created_policy.company_id)
             
             if client and company:

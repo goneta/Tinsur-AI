@@ -51,7 +51,7 @@ class _FakePaymentService:
         self.repo.payments.append(payment)
         return payment
 
-    def process_payment(self, payment_id, payment_details):
+    def process_payment(self, payment_id, payment_details, **kwargs):
         self.process_calls += 1
         payment = next(payment for payment in self.repo.payments if payment.id == payment_id)
         payment.status = self.created_status

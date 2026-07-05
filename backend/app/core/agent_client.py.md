@@ -11,8 +11,9 @@ Nearest DOX: `backend/app/AGENTS.md`
 
 ## Notes
 
-- Add concise operational details here when editing the source file.
-- Prefer stable contracts, exported APIs, route behavior, data shape, permissions, side effects, and important dependencies over change history.
+- `AgentClient.send_message()` posts to a discovered agent URL (`agent_discovery.get_agent_url`) and returns the parsed JSON.
+- When an agent is unreachable it returns `{"error": ...}` — it never fabricates a fake success payload (e.g. a "claim filed" message). Callers must treat `{"error": ...}` as failure and run their own fallback.
+- HTTP/connection failures are logged and surfaced as `{"error": ...}`; they do not raise.
 
 ## Verification
 

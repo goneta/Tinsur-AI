@@ -156,7 +156,9 @@ def generate_payment_schedule_pdf(db: Session, policy_id: str, user_id: str) -> 
 
     # 4. Create Document Record
     new_doc = Document(
-        company_id=policy.client_id, 
+        company_id=policy.company_id,
+        policy_id=policy.id,
+        client_id=policy.client_id,
         name=f"Payment Schedule - {policy.policy_number}",
         file_url=file_url,
         file_type="pdf",
@@ -168,109 +170,120 @@ def generate_payment_schedule_pdf(db: Session, policy_id: str, user_id: str) -> 
     db.add(new_doc)
     db.commit()
     db.refresh(new_doc)
-    
+
     return new_doc
+
+
+def generate_policy_agreement_pdf(db: Session, policy_id: str, user_id: str) -> Document:
+    """Generate a policy agreement (contract) PDF for an issued policy."""
     # 1. Fetch Data
     policy = db.query(Policy).filter(Policy.id == policy_id).first()
     if not policy:
         raise ValueError("Policy not found")
-    
+
     client = db.query(Client).filter(Client.id == policy.client_id).first()
     if not client:
-         # Fallback if client is stored differently, but Policy has client_id which usually links to Client
-         raise ValueError("Client not found")
+        raise ValueError("Client not found")
 
     insurer_company = db.query(Company).filter(Company.id == policy.company_id).first()
-    # If policy.company_id is the insurer.
-    
-    # 2. Read Template
-    # Assuming template is at a known path. I will use the path discovered earlier.
-    template_path = os.path.join(settings.PROJECT_ROOT, "..", "ai_docs", "references", "examples", "KEN_informations_precontractuelles_credit.html")
-    # Adjust path logic as needed. PROJECT_ROOT is usually backend/app or backend/
-    # If not accessible via settings, hardcode relative for now or fix path.
-    # Let's assume user.OS path for now to be safe or use absolute if possible. 
-    # C:\Users\user\Desktop\Tinsur.AI\ai_docs\references\examples\KEN_informations_precontractuelles_credit.html
-    
-    with open(r"C:\Users\user\Desktop\Tinsur.AI\ai_docs\references\examples\KEN_informations_precontractuelles_credit.html", "r", encoding="utf-8") as f:
-        html_content = f.read()
 
-    # 3. Prepare Data
-    premium = float(policy.premium_amount)
-    # Frequency: Monthly. 
-    # Logic: "frequence de paiement": amount paid per month.
-    # If premium is annual, divide by 11 (as per template text "11 mois").
-    # If strictly following template logic: "11 remboursements mensuels".
-    if policy.premium_frequency == 'annual':
-        monthly_payment = premium / 11
-    else:
-        monthly_payment = premium # simplify or adjust logic
-        
-    insurance_levy = 5.0 # Placeholder or fetch from policy details/company config. "insurance levy"
-    
-    # Replace keys
-    # <premium policy amount>
-    # <frequence de paiement>
-    # <Prime finale>
-    # <téléphone de la compagnie d’assurance>
-    # <adresse de la compagnie d’assurance>
-    # <Nom de la compagnie d’assurance>
-    # <website de la compagnie d’assurance>
-    # <insurance levy>
-    
-    replacements = {
-        "<premium policy amount>": f"{premium:,.2f}".replace(",", " ").replace(".", ","),
-        "<frequence de paiement>": f"{monthly_payment:,.2f} FCFA".replace(",", " ").replace(".", ","),
-        "<Prime finale>": f"{(premium * (1 + insurance_levy/100)):,.2f}".replace(",", " ").replace(".", ","), # Adding interest? "Prime finale" usually total paid.
-        "<téléphone de la compagnie d’assurance>": insurer_company.phone if insurer_company else "+254 700 000 000",
-        "<adresse de la compagnie d’assurance>": insurer_company.address if insurer_company else "Nairobi, Kenya",
-        "<Nom de la compagnie d’assurance>": insurer_company.name if insurer_company else "Tinsur Insurance",
-        "<Nom de la compagnie dassurance>": insurer_company.name if insurer_company else "Tinsur Insurance", # variant without apostrophe in tag?
-        "<website de la compagnie d’assurance>": "www.tinsur.ai", # Company has no website field
-        "<insurance levy>": str(insurance_levy)
-    }
+    company_name = insurer_company.name if insurer_company else "Tinsur Insurance"
+    company_address = insurer_company.address if insurer_company and insurer_company.address else "Address Pending"
+    company_phone = insurer_company.phone if insurer_company and insurer_company.phone else "N/A"
 
-    # Also handle the variants found in the HTML file (e.g. <Nom de la compagnie dassurance> vs <Nom de la compagnie d’assurance>)
-    # I saw `<Nom de la compagnie dassurance>` in the `view_file` output (line 416).
-    # And `<adresse de la compagnie dassurance>` (line 420).
-    # And `<téléphone de la compagnie dassurance>` (line 424).
-    # And `<website de la compagnie dassurance>` (line 428).
-    # And `<insurance levy>`
-    
-    normalized_replacements = {
-        "<premium policy amount>": f"{premium:,.2f}",
-        "<frequence de paiement>": f"{monthly_payment:,.2f} FCFA",
-        "<Prime finale>": f"{(premium * (1 + insurance_levy/100)):,.2f}", # Assuming interest added
-        "<téléphone de la compagnie dassurance>": insurer_company.phone if insurer_company and insurer_company.phone else "+254 700 000 000",
-        "<adresse de la compagnie dassurance>": insurer_company.address if insurer_company and insurer_company.address else "Address Pending",
-        "<Nom de la compagnie dassurance>": insurer_company.name if insurer_company else "Tinsur Insurance",
-        "<website de la compagnie dassurance>": "www.tinsur.ai",
-        "<insurance levy>": str(insurance_levy)
-    }
+    client_name = (
+        client.business_name
+        if client.client_type == "corporate" and client.business_name
+        else f"{client.first_name or ''} {client.last_name or ''}".strip() or client.email
+    )
 
-    for key, value in normalized_replacements.items():
-        html_content = html_content.replace(key, value)
+    premium = float(policy.premium_amount or 0)
+    coverage = float(policy.coverage_amount or 0)
 
-    # 4. Save File
-    # Define a storage location.
+    def _fmt_date(value):
+        return value.strftime("%d/%m/%Y") if value else "N/A"
+
+    # 2. Build PDF
     output_dir = os.path.join(settings.PROJECT_ROOT, "static", "documents", str(policy.client_id))
     os.makedirs(output_dir, exist_ok=True)
-    
-    filename = f"Payment_Schedule_{policy.policy_number}_{uuid.uuid4().hex[:6]}.html"
+
+    filename = f"Policy_Agreement_{policy.policy_number}_{uuid.uuid4().hex[:6]}.pdf"
     file_path = os.path.join(output_dir, filename)
-    
-    with open(file_path, "w", encoding="utf-8") as f:
-        f.write(html_content)
-        
-    # Relative URL for access
     file_url = f"/static/documents/{policy.client_id}/{filename}"
-    
-    # 5. Create Document Record
+
+    doc = SimpleDocTemplate(file_path, pagesize=A4)
+    elements = []
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'AgreementTitle', parent=styles['Heading1'], fontSize=16,
+        textColor=colors.HexColor('#003da5'), spaceAfter=20, alignment=1,
+    )
+    section_style = ParagraphStyle(
+        'AgreementSection', parent=styles['Heading2'], fontSize=12,
+        textColor=colors.HexColor('#003da5'), spaceBefore=15, spaceAfter=10,
+    )
+    small_style = ParagraphStyle('AgreementSmall', parent=styles['Normal'], fontSize=8, textColor=colors.gray)
+
+    def create_table(data, col_widths):
+        t = Table(data, colWidths=col_widths)
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.whitesmoke),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('PADDING', (0, 0), (-1, -1), 8),
+        ]))
+        return t
+
+    elements.append(Paragraph("POLICY AGREEMENT / CONTRAT D'ASSURANCE", title_style))
+    elements.append(Spacer(1, 0.5 * cm))
+
+    elements.append(Paragraph("1. Insurer / Assureur", section_style))
+    elements.append(create_table([
+        ["Company", company_name],
+        ["Address", company_address],
+        ["Phone", company_phone],
+    ], [5 * cm, 11 * cm]))
+
+    elements.append(Paragraph("2. Policyholder / Assuré", section_style))
+    elements.append(create_table([
+        ["Name", client_name],
+        ["Email", client.email or "N/A"],
+        ["Phone", client.phone or "N/A"],
+    ], [5 * cm, 11 * cm]))
+
+    elements.append(Paragraph("3. Policy Details / Détails de la Police", section_style))
+    elements.append(create_table([
+        ["Policy Number", policy.policy_number],
+        ["Status", str(policy.status)],
+        ["Coverage Amount", f"{coverage:,.2f}"],
+        ["Premium", f"{premium:,.2f}"],
+        ["Frequency", str(policy.premium_frequency or "annual")],
+        ["Start Date", _fmt_date(policy.start_date)],
+        ["End Date", _fmt_date(policy.end_date)],
+    ], [5 * cm, 11 * cm]))
+
+    elements.append(Spacer(1, 1 * cm))
+    elements.append(Paragraph(
+        "This agreement confirms the insurance coverage described above, subject to the "
+        "policy's terms and conditions.", styles['Normal']))
+    elements.append(Spacer(1, 0.5 * cm))
+    elements.append(Paragraph(f"Document généré le : {datetime.now().strftime('%d/%m/%Y')}", small_style))
+
+    doc.build(elements)
+
+    # 3. Create Document Record
     new_doc = Document(
-        company_id=policy.client_id, # Owner is the client
-        name=f"Payment Schedule - {policy.policy_number}",
+        company_id=policy.company_id,
+        policy_id=policy.id,
+        client_id=policy.client_id,
+        name=f"Policy Agreement - {policy.policy_number}",
         file_url=file_url,
-        file_type="html",
-        file_size=len(html_content),
+        file_type="pdf",
+        file_size=os.path.getsize(file_path),
         label=DocumentLabel.DOCUMENT,
         visibility='PRIVATE',
         uploaded_by=user_id
@@ -278,5 +291,5 @@ def generate_payment_schedule_pdf(db: Session, policy_id: str, user_id: str) -> 
     db.add(new_doc)
     db.commit()
     db.refresh(new_doc)
-    
+
     return new_doc

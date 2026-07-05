@@ -11,8 +11,14 @@ Nearest DOX: `backend/app/AGENTS.md`
 
 ## Notes
 
-- Add concise operational details here when editing the source file.
-- Prefer stable contracts, exported APIs, route behavior, data shape, permissions, side effects, and important dependencies over change history.
+- `POST /` is the orchestrator chat entrypoint. It degrades through three strategies so a single failing layer never returns a raw 500:
+  1. In-process `MultiAgentExecutor` (any import/runtime failure — including dependency conflicts — falls through, and an `"Orchestrator Error:"`/`"Error calling Gemini"` text response is treated as a failure).
+  2. HTTP `AgentClient` to a running agent service.
+  3. Direct `LLMRouter.generate()` (same provider hierarchy as the websocket path).
+- If every strategy fails it raises `503` with the real provider error (e.g. an invalid/leaked API key), never a fabricated success message.
+- `WS /ws` streams tokens via `AiService.get_llm_router(...)`; auth is by `token` query param.
+- Prompt-safety (`AiHardeningService`) and AI-credit checks (`get_effective_ai_config`) run before any provider call; CREDIT plans consume usage via `log_and_consume_usage`.
+- Requires a valid AI provider key in the environment/company config; the chat is only as reliable as that credential.
 
 ## Verification
 

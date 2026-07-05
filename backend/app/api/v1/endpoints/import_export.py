@@ -109,7 +109,7 @@ async def export_data(
         ]
     elif data_type == 'employees':
         from app.models.user import User
-        employees = db.query(User).filter(User.company_id == current_user.company_id, User.role != 'client').all()
+        employees = db.query(User).filter(User.company_id == current_user.company_id, User.user_type != 'client').all()
         data = [
             {
                 "id": str(e.id),

@@ -11,7 +11,9 @@ Nearest DOX: `backend/app/AGENTS.md`
 
 ## Notes
 
-- Add concise operational details here when editing the source file.
+- Builds the SQLAlchemy `engine`/`SessionLocal`, plus MongoDB and Redis clients, from `settings`.
+- The engine is created with a tolerant `json_serializer` (`json.dumps(..., default=str)`) so JSON/JSONB columns can persist UUID, Decimal, datetime and date values instead of raising `TypeError: Object of type UUID is not JSON serializable`.
+- SQLite URLs get WAL + `synchronous=NORMAL` pragmas via a connect listener.
 - Prefer stable contracts, exported APIs, route behavior, data shape, permissions, side effects, and important dependencies over change history.
 
 ## Verification

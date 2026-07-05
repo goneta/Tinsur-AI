@@ -44,29 +44,12 @@ class AgentClient:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.ConnectionError:
-            # Fallback for development/demo when agents aren't running
-            logger.warning(f"Agent {agent_name} unreachable at {url}. Returning mock response.")
-            
-            # Context-aware mock responses
-            if agent_name == "orchestrator_agent":
-                 return {
-                    "messages": [
-                        {
-                            "type": "agent_text_message",
-                            # user wants a realistic response, not a "Simulated" warning.
-                            "content": f"I have received the details of your incident: *'{message}'*.\n\nI have initiated a claim file for you. Our system has recorded the event and a claims adjuster will review the details shortly. You can track the status of this claim in your dashboard."
-                        }
-                    ]
-                }
-            
-            return {
-                "messages": [
-                    {
-                        "type": "agent_text_message",
-                        "content": f"**[OFFLINE MODE]**\n\nReferenced agent '{agent_name}' is currently unavailable. \nMessage received: *'{message}'*"
-                    }
-                ]
-            }
+            # Never fabricate a success message here: pretending an action
+            # happened (e.g. "claim filed") is worse than an honest error.
+            # Callers treat {"error": ...} as a signal to use their own
+            # fallback (e.g. direct LLM call in the chat endpoint).
+            logger.warning(f"Agent {agent_name} unreachable at {url}.")
+            return {"error": f"Agent {agent_name} is unreachable"}
         except requests.HTTPError as e:
             logger.error(f"Error calling agent {agent_name}: {e.response.text}")
             return {"error": f"Agent {agent_name} returned error: {e.response.status_code}"}

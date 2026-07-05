@@ -68,6 +68,10 @@ def calculate_quote(
             selected_services=calculation_request.selected_services
         )
         return result
+    except HTTPException:
+        # Preserve intentional 4xx errors (e.g. client not found) instead of
+        # masking them as opaque 500s.
+        raise
     except Exception as e:
         logger.error(f"Error calculating premium: {str(e)}")
         import traceback

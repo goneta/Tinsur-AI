@@ -2,7 +2,7 @@
 Payroll Transaction model for tracking employee payments.
 """
 from sqlalchemy import Column, String, DateTime, ForeignKey, Numeric, Text
-from sqlalchemy.dialects.postgresql import UUID
+from app.core.guid import GUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
@@ -17,9 +17,9 @@ class PayrollTransaction(Base):
     """
     __tablename__ = "payroll_transactions"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    employee_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"))
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
     
     # Payment Details
     amount = Column(Numeric(15, 2), nullable=False)
@@ -52,7 +52,7 @@ class PayrollTransaction(Base):
     failure_reason = Column(Text)
     
     # Audit
-    processed_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    processed_by = Column(GUID(), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 

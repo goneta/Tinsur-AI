@@ -134,7 +134,9 @@ async def chat(
             from backend.agents.a2a_multi_agent.agent_executor import MultiAgentExecutor
         except ImportError:
             from agents.a2a_multi_agent.agent_executor import MultiAgentExecutor
-    except ImportError as e:
+    except Exception as e:
+        # Any import-time failure (missing package, dependency version
+        # conflict, etc.) must degrade to the fallback strategies, never 500.
         logger.warning(f"Direct agent import unavailable, will use HTTP fallback: {e}")
         use_direct = False
 
@@ -179,6 +181,12 @@ async def chat(
                     elif hasattr(event, "content"):
                         response_text = event.content
                     break
+
+            # The executor reports internal failures as text; treat them as
+            # failures so the fallback strategies get a chance to answer.
+            _error_markers = ("Orchestrator Error:", "Error calling Gemini", "Error processing claim:")
+            if isinstance(response_text, str) and response_text.startswith(_error_markers):
+                raise RuntimeError(response_text)
 
             if plan == "CREDIT":
                 ai_service.log_and_consume_usage(
@@ -249,11 +257,53 @@ async def chat(
                 response_text = last_msg.get("text") or last_msg.get("content") or response_text
 
         return ChatResponse(response=response_text)
-    except HTTPException:
-        raise
+    except HTTPException as http_exc:
+        if http_exc.status_code < 500:
+            raise
+        logger.error(f"HTTP agent client returned an error: {http_exc.detail}")
     except Exception as e:
         logger.error(f"HTTP agent client also failed: {e}")
-        raise HTTPException(status_code=500, detail=f"AI service temporarily unavailable: {str(e)}")
+
+    # --- Strategy 3: Direct LLM call (same path as the websocket chat) ---
+    llm_router = ai_service.get_llm_router(
+        company_id=company_id,
+        system_prompt=(
+            "You are an AI assistant for an insurance platform. "
+            "Answer concisely and professionally."
+        ),
+    )
+    if llm_router is None:
+        raise HTTPException(status_code=503, detail="AI service temporarily unavailable: no AI provider configured")
+
+    llm_response = await llm_router.generate(
+        safety.sanitized_prompt,
+        history=[h.dict() for h in request.history] if request.history else [],
+    )
+    if llm_response.error or not llm_response.text:
+        raise HTTPException(status_code=503, detail=f"AI service temporarily unavailable: {llm_response.error}")
+
+    if plan == "CREDIT":
+        ai_service.log_and_consume_usage(
+            str(current_user.company_id),
+            str(current_user.id),
+            "orchestrator_agent",
+            request_payload=hardening.build_observability_payload(
+                company_id=current_user.company_id,
+                user_id=current_user.id,
+                agent_name="orchestrator_agent",
+                action="chat_request",
+                route="api.chat.http.llm_fallback",
+                safety=safety,
+                history_count=len(request.history or []),
+                status="completed",
+                provider=llm_router.provider,
+                model=llm_router.model,
+                attempt_count=1,
+                fallback_used=True,
+            ),
+        )
+
+    return ChatResponse(response=llm_response.text)
 
 
 @router.websocket("/ws")

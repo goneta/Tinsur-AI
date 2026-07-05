@@ -56,7 +56,12 @@ class TestClientCreation:
         assert data["client_type"] == "corporate"
     
     def test_create_client_no_auth(self, client):
-        """Test creating client without authentication."""
+        """Unauthenticated self-registration requires a password.
+
+        The endpoint intentionally supports public self-registration when a
+        password is supplied; without one it must reject the request with 400
+        rather than silently creating an unusable account.
+        """
         response = client.post(
             "/api/v1/clients/",
             json={
@@ -67,8 +72,8 @@ class TestClientCreation:
                 "phone": "+225 07 11 22 33 44"
             }
         )
-        
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 class TestClientRetrieval:
@@ -230,16 +235,32 @@ class TestClientMultiTenancy:
         )
         db_session.add(other_company)
         db_session.flush()
-        
-        # Create client for other company
-        other_client = Client(
+
+        # Backing user (clients.user_id is NOT NULL)
+        from app.models.user import User
+        from app.core.security import get_password_hash
+        other_user = User(
             company_id=other_company.id,
+            email="other@example.com",
+            password_hash=get_password_hash("otherpass123"),
+            first_name="Other",
+            last_name="Client",
+            user_type="client",
+            is_active=True,
+        )
+        db_session.add(other_user)
+        db_session.flush()
+
+        # Create client for other company (link via M2M; company_id is read-only)
+        other_client = Client(
+            user_id=other_user.id,
             client_type="individual",
             first_name="Other",
             last_name="Client",
             email="other@example.com",
             phone="+225 07 00 00 00 00"
         )
+        other_client.companies.append(other_company)
         db_session.add(other_client)
         db_session.commit()
         

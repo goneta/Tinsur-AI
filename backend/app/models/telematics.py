@@ -2,7 +2,7 @@
 Telematics model for usage-based insurance data.
 """
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Numeric, Date
-from sqlalchemy.dialects.postgresql import UUID
+from app.core.guid import GUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
@@ -14,8 +14,8 @@ class TelematicsData(Base):
     """Telematics data model."""
     __tablename__ = "telematics_data"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    policy_id = Column(UUID(as_uuid=True), ForeignKey("policies.id", ondelete="CASCADE"))
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    policy_id = Column(GUID(), ForeignKey("policies.id", ondelete="CASCADE"))
     
     device_id = Column(String(255), nullable=False)
     trip_date = Column(Date, nullable=False)

@@ -11,8 +11,12 @@ Nearest DOX: `backend/app/AGENTS.md`
 
 ## Notes
 
-- Add concise operational details here when editing the source file.
-- Prefer stable contracts, exported APIs, route behavior, data shape, permissions, side effects, and important dependencies over change history.
+- `deterministic_quote_underwriting()` runs the rule engine and, when persisting, writes an `UnderwritingDecision` and a `QuoteUnderwritingSnapshot` (with `valid_until = utcnow() + 30 days`, timezone-aware).
+- Exposes shared helpers used by the quote/policy issue paths:
+  - `APPROVED_UNDERWRITING_DECISIONS = {"accept","accepted","approve","approved"}` — the decision vocabulary that clears a quote for policy issue (the engine emits `"accept"`).
+  - `snapshot_is_expired(valid_until)` — tz-tolerant expiry check that treats naive stored datetimes as UTC.
+- `quote_service` and `policy_service` import both helpers; keep the vocabulary/expiry logic here as the single source of truth.
+- Snapshot JSON columns hold UUID/Decimal values; persistence relies on the engine's tolerant `json_serializer` (see `core/database.py`).
 
 ## Verification
 

@@ -26,7 +26,7 @@ def send_payment_reminders():
             notification_service = NotificationService(db)
             
             # Get schedules due in next 7 days
-            upcoming_schedules = schedule_repo.get_upcoming_due(company.id, days=7)
+            upcoming_schedules = schedule_repo.get_upcoming_due(company.id, days_ahead=7)
             
             for schedule in upcoming_schedules:
                 # Get policy and client info

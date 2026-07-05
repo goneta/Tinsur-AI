@@ -15,6 +15,9 @@
 ## Local Contracts
 
 - Keep API, model, schema, service, and migration changes consistent; do not change one layer without checking dependent layers.
+- UUID primary/foreign keys must use the cross-dialect `app.core.guid.GUID` type, never `sqlalchemy.dialects.postgresql.UUID` directly. Raw postgres `UUID` fails to compile on SQLite (used for local dev/tests); `GUID` renders native `UUID` on Postgres and `CHAR(36)` elsewhere.
+- JSON/JSONB columns may hold UUID/Decimal/datetime values; the engine's tolerant `json_serializer` (see `app/core/database.py`) handles them. Do not assume JSON columns only contain JSON-native types.
+- Underwriting decision vocabulary and snapshot-expiry logic live in `app/services/underwriting_service.py` (`APPROVED_UNDERWRITING_DECISIONS`, `snapshot_is_expired`); reuse them rather than re-inlining `{"approve",...}` literals or naive datetime comparisons.
 - Important backend source files use sibling Markdown docs named by appending `.md` to the source filename; update the sibling doc when source responsibilities, public behavior, side effects, dependencies, or verification expectations change.
 - Treat `backend/libs/` as vendored dependency code and avoid editing it unless explicitly required.
 - Treat `backend/data/` and `backend/static/documents/` as runtime/generated stores; avoid broad manual edits unless the task is specifically about those artifacts.

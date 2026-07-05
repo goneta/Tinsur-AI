@@ -133,7 +133,7 @@ def get_outstanding_premiums(
     overdue = schedule_repo.get_overdue(current_user.company_id)
     
     # Get upcoming due (next 7 days)
-    upcoming = schedule_repo.get_upcoming_due(current_user.company_id, days=7)
+    upcoming = schedule_repo.get_upcoming_due(current_user.company_id, days_ahead=7)
     
     overdue_total = sum(s.amount + s.late_fee for s in overdue)
     upcoming_total = sum(s.amount for s in upcoming)
@@ -208,7 +208,7 @@ def get_financial_dashboard(
     
     # Outstanding premiums
     overdue = schedule_repo.get_overdue(current_user.company_id)
-    upcoming = schedule_repo.get_upcoming_due(current_user.company_id, days=7)
+    upcoming = schedule_repo.get_upcoming_due(current_user.company_id, days_ahead=7)
     
     overdue_total = sum(s.amount + s.late_fee for s in overdue)
     upcoming_total = sum(s.amount for s in upcoming)

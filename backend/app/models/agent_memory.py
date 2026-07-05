@@ -2,7 +2,7 @@
 Model for storing agent long-term memories and conversation state.
 """
 from sqlalchemy import Column, String, Text, DateTime, ForeignKey, JSON
-from sqlalchemy.dialects.postgresql import UUID
+from app.core.guid import GUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
@@ -14,8 +14,8 @@ class AgentMemory(Base):
     """Model for storing agent long-term memories and conversation state."""
     __tablename__ = "agent_memories"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     agent_id = Column(String(255), nullable=False) # Name of the agent (e.g., 'quote_agent')
     memory_key = Column(String(255), nullable=False) # Unique key for the memory (e.g., 'user_preference')
     content = Column(Text, nullable=False)

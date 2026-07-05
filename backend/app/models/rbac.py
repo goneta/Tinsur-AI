@@ -2,7 +2,7 @@
 RBAC models: Role, Permission, RolePermission.
 """
 from sqlalchemy import Column, String, ForeignKey, Table, Text
-# from sqlalchemy.dialects.postgresql import UUID
+# from app.core.guid import GUID
 from sqlalchemy.orm import relationship
 import uuid
 from app.core.guid import GUID

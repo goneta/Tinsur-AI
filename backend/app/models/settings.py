@@ -2,7 +2,7 @@
 User Settings model for storing user preferences.
 """
 from sqlalchemy import Column, String, ForeignKey, DateTime
-from sqlalchemy.dialects.postgresql import UUID
+from app.core.guid import GUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
@@ -15,8 +15,8 @@ class Settings(Base):
     """User settings model for theme, language, and other preferences."""
     __tablename__ = "settings"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
     
     # Appearance
     theme = Column(String(20), default="light")  # 'light' or 'dark'

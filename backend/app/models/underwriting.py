@@ -2,7 +2,7 @@
 Underwriting models for authority, referrals, deterministic quote decisions, and quote snapshots.
 """
 from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Numeric, Integer, Boolean, Date, JSON, UniqueConstraint
-from sqlalchemy.dialects.postgresql import UUID
+from app.core.guid import GUID
 from sqlalchemy.orm import relationship
 import uuid
 from app.core.time import utcnow
@@ -16,19 +16,19 @@ class UnderwritingReferral(Base):
     """
     __tablename__ = "underwriting_referrals"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
-    quote_id = Column(UUID(as_uuid=True), ForeignKey("quotes.id", ondelete="CASCADE"), nullable=True, unique=True)
-    endorsement_id = Column(UUID(as_uuid=True), ForeignKey("endorsements.id", ondelete="CASCADE"), nullable=True, unique=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    quote_id = Column(GUID(), ForeignKey("quotes.id", ondelete="CASCADE"), nullable=True, unique=True)
+    endorsement_id = Column(GUID(), ForeignKey("endorsements.id", ondelete="CASCADE"), nullable=True, unique=True)
     
-    referred_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    assigned_to_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    referred_by_id = Column(GUID(), ForeignKey("users.id"), nullable=False)
+    assigned_to_id = Column(GUID(), ForeignKey("users.id"), nullable=True)
     
     status = Column(String(50), default='pending') # 'pending', 'approved', 'rejected'
     reason = Column(String(500)) # e.g., "Exceeds authority limit ($10k)"
     decision_notes = Column(Text)
     
-    decided_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    decided_by_id = Column(GUID(), ForeignKey("users.id"), nullable=True)
     decided_at = Column(DateTime, nullable=True)
     
     created_at = Column(DateTime, default=utcnow)

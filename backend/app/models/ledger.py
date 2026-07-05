@@ -2,7 +2,7 @@
 General Ledger models for double-entry accounting.
 """
 from sqlalchemy import Column, String, DateTime, ForeignKey, Numeric, Text, Boolean, Integer
-from sqlalchemy.dialects.postgresql import UUID
+from app.core.guid import GUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
@@ -17,8 +17,8 @@ class Account(Base):
     """
     __tablename__ = "accounts"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     
     code = Column(String(20), nullable=False) # e.g., '1010' for Cash
     name = Column(String(100), nullable=False) # e.g., 'Cash at Bank'
@@ -43,15 +43,15 @@ class JournalEntry(Base):
     """
     __tablename__ = "journal_entries"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
     
     entry_date = Column(DateTime, default=utcnow)
     description = Column(String(500))
     reference = Column(String(100)) # e.g., Invoice # or Payroll ID
     
     # Audit trail
-    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_by = Column(GUID(), ForeignKey("users.id"))
     created_at = Column(DateTime, default=utcnow)
     
     # Relationships
@@ -70,9 +70,9 @@ class LedgerEntry(Base):
     """
     __tablename__ = "ledger_entries"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    journal_entry_id = Column(UUID(as_uuid=True), ForeignKey("journal_entries.id", ondelete="CASCADE"), nullable=False)
-    account_id = Column(UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    journal_entry_id = Column(GUID(), ForeignKey("journal_entries.id", ondelete="CASCADE"), nullable=False)
+    account_id = Column(GUID(), ForeignKey("accounts.id"), nullable=False)
     
     debit = Column(Numeric(15, 2), default=0)
     credit = Column(Numeric(15, 2), default=0)

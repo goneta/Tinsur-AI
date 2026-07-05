@@ -196,7 +196,7 @@ class ImportService:
         email = record.get('email')
         phone = record.get('phone')
         
-        query = self.db.query(User).filter(User.company_id == company_id, User.role != 'client')
+        query = self.db.query(User).filter(User.company_id == company_id, User.user_type != 'client')
         
         filters = []
         if email:

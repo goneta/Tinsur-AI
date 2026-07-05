@@ -119,9 +119,23 @@ def test_agent_user(db_session, test_company):
 
 @pytest.fixture
 def test_client_record(db_session, test_company):
-    """Create a test client record."""
-    client = Client(
+    """Create a test client record (with its backing user, as the API does)."""
+    # clients.user_id is NOT NULL; the real create_client flow always creates a
+    # backing user, so the fixture must too.
+    client_user = User(
         company_id=test_company.id,
+        email="john.doe@example.com",
+        password_hash=get_password_hash("clientpass123"),
+        first_name="John",
+        last_name="Doe",
+        user_type="client",
+        is_active=True,
+    )
+    db_session.add(client_user)
+    db_session.flush()
+
+    client = Client(
+        user_id=client_user.id,
         client_type="individual",
         first_name="John",
         last_name="Doe",
@@ -130,6 +144,9 @@ def test_client_record(db_session, test_company):
         city="Abidjan",
         country="Côte d'Ivoire"
     )
+    # Client.company_id is a read-only hybrid over the companies M2M; link via
+    # the relationship instead of assigning company_id directly.
+    client.companies.append(test_company)
     db_session.add(client)
     db_session.commit()
     db_session.refresh(client)

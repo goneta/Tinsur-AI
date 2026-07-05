@@ -2,7 +2,7 @@
 Premium Schedule model for tracking payment schedules.
 """
 from sqlalchemy import Column, String, DateTime, ForeignKey, Numeric, Date, Boolean
-from sqlalchemy.dialects.postgresql import UUID
+from app.core.guid import GUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
@@ -15,10 +15,10 @@ class PremiumSchedule(Base):
     """Premium Schedule model for payment schedules."""
     __tablename__ = "premium_schedules"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
-    policy_id = Column(UUID(as_uuid=True), ForeignKey("policies.id", ondelete="CASCADE"))
-    payment_id = Column(UUID(as_uuid=True), ForeignKey("payments.id", ondelete="SET NULL"), nullable=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"))
+    policy_id = Column(GUID(), ForeignKey("policies.id", ondelete="CASCADE"))
+    payment_id = Column(GUID(), ForeignKey("payments.id", ondelete="SET NULL"), nullable=True)
     
     # Schedule details
     installment_number = Column(String(50), nullable=False)  # e.g., "1 of 12"

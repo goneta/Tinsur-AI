@@ -2,7 +2,7 @@
 Archive models for policy document integrity.
 """
 from sqlalchemy import Column, String, DateTime, ForeignKey, Integer
-from sqlalchemy.dialects.postgresql import UUID
+from app.core.guid import GUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
@@ -16,9 +16,9 @@ class PolicyArchive(Base):
     """
     __tablename__ = "policy_archives"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
-    policy_id = Column(UUID(as_uuid=True), ForeignKey("policies.id", ondelete="CASCADE"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    policy_id = Column(GUID(), ForeignKey("policies.id", ondelete="CASCADE"), nullable=False)
     
     # Cryptographic Fingerprint
     document_hash = Column(String(64), nullable=False, index=True) # SHA-256 hash (64 hex chars)

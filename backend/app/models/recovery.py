@@ -2,7 +2,7 @@
 Recovery models for Subrogation and Salvage.
 """
 from sqlalchemy import Column, String, DateTime, ForeignKey, Numeric, JSON, Text
-from sqlalchemy.dialects.postgresql import UUID
+from app.core.guid import GUID
 from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
@@ -16,9 +16,9 @@ class ClaimRecovery(Base):
     """
     __tablename__ = "claim_recoveries"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
-    claim_id = Column(UUID(as_uuid=True), ForeignKey("claims.id", ondelete="CASCADE"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    company_id = Column(GUID(), ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    claim_id = Column(GUID(), ForeignKey("claims.id", ondelete="CASCADE"), nullable=False)
     
     # Type & Status
     recovery_type = Column(String(50), nullable=False) # 'subrogation', 'salvage'
@@ -36,7 +36,7 @@ class ClaimRecovery(Base):
     notes = Column(Text)
     
     # Audit
-    assigned_to_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    assigned_to_id = Column(GUID(), ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
     

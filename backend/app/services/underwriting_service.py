@@ -13,6 +13,21 @@ from app.models.underwriting import UnderwritingReferral
 from app.models.user import User
 from app.models.quote import Quote
 
+# Deterministic underwriting emits "accept"; some legacy flows store
+# "approve"/"approved". All of these mean the quote is clear to issue.
+APPROVED_UNDERWRITING_DECISIONS = {"accept", "accepted", "approve", "approved"}
+
+
+def snapshot_is_expired(valid_until) -> bool:
+    """Tz-tolerant expiry check (legacy snapshots stored naive UTC datetimes)."""
+    if not valid_until:
+        return False
+    if valid_until.tzinfo is None:
+        from datetime import timezone
+        valid_until = valid_until.replace(tzinfo=timezone.utc)
+    return valid_until < utcnow()
+
+
 class UnderwritingService:
     def __init__(self, db: Session):
         self.db = db
@@ -516,7 +531,7 @@ class UnderwritingService:
                 "decision": decision,
                 "required_documents": required_documents,
             }
-            snapshot.valid_until = datetime.utcnow() + timedelta(days=30)
+            snapshot.valid_until = utcnow() + timedelta(days=30)
             self.db.flush()
             result["snapshot_id"] = snapshot.id
 

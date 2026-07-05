@@ -79,6 +79,14 @@ async def create_client(
             
             service = ClientService(db)
             
+            # Duplicate emails must fail with a clear 409, not a raw 500.
+            existing_user = db.query(User).filter(User.email == client_data.email).first()
+            if existing_user:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="A user with this email already exists"
+                )
+
             # If password provided, create a new User for this client
             if client_data.password:
                 client = await service.register_client(client_data)
@@ -105,6 +113,12 @@ async def create_client(
                 
                 # Create client with the new user_id
                 client = await service.create_client(client_data, user_id=user.id)
+
+            # Persist the new client. Without this, the session is rolled
+            # back at request end and the client silently disappears while
+            # the API still returns 201.
+            db.commit()
+            db.refresh(client)
         else:
             # Unauthenticated self-registration flow
             if not client_data.password:
@@ -163,17 +177,23 @@ async def create_client(
         
         if "messages" in response and response["messages"]:
             last_msg = response["messages"][-1]
-            compliance_data = json.loads(last_msg["text"])
-            
+            compliance_data = json.loads(last_msg.get("text") or last_msg.get("content") or "{}")
+
             client.compliance_status = compliance_data.get("status", "flagged")
             client.is_high_risk = compliance_data.get("is_high_risk", False)
             client.compliance_notes = compliance_data.get("notes", "No notes provided.")
-            
+
             if client.compliance_status == "flagged" or client.is_high_risk:
                 client.status = "suspended"
-            
+
             db.commit()
             db.refresh(client)
+        elif "error" in response:
+            # Screening agent unavailable: keep the client but record that
+            # compliance screening still needs to run.
+            client.compliance_status = "pending"
+            client.compliance_notes = f"Compliance screening unavailable: {response['error']}"
+            db.commit()
     except Exception as e:
         print(f"Client Compliance Agent Error: {str(e)}")
         client.compliance_status = "error"
@@ -234,11 +254,11 @@ async def get_client(
     
     # Ensure user can only access clients in their company
     if current_user.company_id:
-        from app.models.client import client_company
+        from app.models.company import Company
         client = client.join(Client.companies).filter(
-            client_company.c.company_id == current_user.company_id
+            Company.id == current_user.company_id
         )
-         
+
     client = client.first()
     
     if not client:

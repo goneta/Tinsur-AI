@@ -43,7 +43,7 @@ def list_users(
         query = query.filter(search_filter)
         
     if role:
-        query = query.filter(User.role == role)
+        query = query.filter(User.user_type == role)
         
     users = query.offset(skip).limit(limit).all()
     return users

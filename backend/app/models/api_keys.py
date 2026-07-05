@@ -2,7 +2,7 @@
 API Key model for AI Agents.
 """
 from sqlalchemy import Column, String, DateTime, ForeignKey, Boolean
-from sqlalchemy.dialects.postgresql import UUID
+from app.core.guid import GUID
 import uuid
 from datetime import datetime
 from app.core.time import utcnow
@@ -13,7 +13,7 @@ class ApiKey(Base):
     """API Key model for AI Agents."""
     __tablename__ = "api_keys"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     key_hash = Column(String(255), nullable=False)  # We store the hash, not the key itself
     key_prefix = Column(String(10), nullable=False) # Store first few chars for identification
     name = Column(String(100), nullable=False)      # e.g., "OCR Agent Key"

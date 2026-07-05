@@ -31,7 +31,7 @@ async def verify_claim_creation():
         # The agent checks permission `claim:write`.
         
         # We'll try to find a user and assign permission if needed or assume super_admin
-        user = db.query(User).filter(User.role == "super_admin").first()
+        user = db.query(User).filter(User.user_type == "super_admin").first()
         if not user:
              user = db.query(User).first()
              print(f"Warning: Using normal user {user.email}, promoting to super_admin for valid test.")

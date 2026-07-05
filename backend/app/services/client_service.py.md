@@ -11,8 +11,9 @@ Nearest DOX: `backend/app/AGENTS.md`
 
 ## Notes
 
-- Add concise operational details here when editing the source file.
-- Prefer stable contracts, exported APIs, route behavior, data shape, permissions, side effects, and important dependencies over change history.
+- `create_client()` / `register_client()` create the Client (and, for self-registration, its backing User) and always link it to the company via the `client_company` M2M using `_link_company()` — regardless of client type. Quote/policy/underwriting lookups join through `client_company`, so this link is required for the client to be visible.
+- The API endpoint (`clients.create_client`) is responsible for committing; the service flushes and links but the request handler must `db.commit()` or the client silently disappears.
+- `Client.company_id` is a read-only hybrid over the M2M; never assign it directly — append to `client.companies`.
 
 ## Verification
 

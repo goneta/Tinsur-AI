@@ -1,6 +1,8 @@
 """
 Database configuration and session management.
 """
+import json
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from pymongo import MongoClient
@@ -10,12 +12,20 @@ from app.core.config import settings
 
 from sqlalchemy.pool import NullPool
 
+
+def _json_serializer(obj):
+    """Serialize JSON columns tolerantly: UUID, Decimal, datetime, date and
+    other non-native types are stored as strings instead of crashing inserts."""
+    return json.dumps(obj, default=str)
+
+
 # PostgreSQL / SQLite
 
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
-    poolclass=NullPool
+    poolclass=NullPool,
+    json_serializer=_json_serializer,
 )
 
 # Enable Write-Ahead Logging (WAL) for SQLite to prevent locking

@@ -180,7 +180,7 @@ def generate_payment_schedule_document(
     current_user: User = Depends(get_current_user)
 ):
     """Generate the 'Informations Précontractuelles' document."""
-    from agents.a2a_document_agent.tools import generate_payment_schedule_html, generate_payment_schedule_pdf
+    from agents.a2a_document_agent.tools import generate_payment_schedule_pdf
     print(f"Generating payment schedule for policy {policy_id}")
     
     # Verify policy access
