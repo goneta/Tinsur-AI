@@ -86,6 +86,7 @@ When the user requests a durable behavior change, record it here or in the relev
 - `app/AGENTS.md` - Root-level Next.js App Router routes, layouts, and route-local UI.
 - `backend/AGENTS.md` - FastAPI backend, migrations, agents, tests, scripts, runtime data, and backend docs.
 - `components/AGENTS.md` - Root-level shared React components and UI primitives.
+- `deploy/AGENTS.md` - VPS deployment tooling (venv bootstrap, PM2 process management via root `ecosystem.config.js`).
 - `docs/AGENTS.md` - Durable onboarding and project documentation.
 - `frontend/AGENTS.md` - `tinsur-ai-frontend` npm workspace and its Next.js app.
 - `lib/AGENTS.md` - Root-level frontend API clients, auth utilities, shared types, and helpers.

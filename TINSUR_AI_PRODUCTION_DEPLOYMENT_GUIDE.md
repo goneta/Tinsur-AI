@@ -188,6 +188,46 @@ sudo systemctl start tinsur-ai
 sudo systemctl status tinsur-ai
 ```
 
+### Option 4: PM2 Deployment (VPS) — Current Production Setup
+
+The production VPS runs both services under PM2 using the repository-root
+`ecosystem.config.js`:
+
+| PM2 process          | What it runs                                             | Port |
+|----------------------|----------------------------------------------------------|------|
+| `tinsur-ai-backend`  | `backend/venv/bin/python -m uvicorn app.main:app`        | 8000 |
+| `tinsur-ai-frontend` | `next start` (requires a prior `npm run build`)          | 3000 |
+
+**Rule: the backend always runs through the project virtualenv at
+`backend/venv`. Never point PM2 at a bare `uvicorn` command — a globally
+installed uvicorn is not guaranteed to exist on the server.**
+
+```bash
+# Step 1: Get the code (first time: git clone; afterwards:)
+cd /path/to/Tinsur-AI
+git pull origin main
+
+# Step 2: Bootstrap or repair the backend environment + PM2 processes
+bash deploy/setup_vps.sh                 # venv + deps + restart backend
+bash deploy/setup_vps.sh --migrate      # also run alembic upgrade head
+bash deploy/setup_vps.sh --frontend     # also build + start the frontend
+
+# Step 3: Persist across reboots (setup_vps.sh already runs `pm2 save`)
+pm2 startup                              # once per server, follow the printed command
+
+# Step 4: Verify
+pm2 status
+curl -s http://127.0.0.1:8000/health
+```
+
+Day-to-day operations:
+
+```bash
+pm2 restart tinsur-ai-backend            # restart after a code pull
+pm2 logs tinsur-ai-backend --lines 100   # inspect backend logs
+pm2 restart tinsur-ai-frontend
+```
+
 ---
 
 ## POST-DEPLOYMENT VERIFICATION
@@ -333,6 +373,38 @@ Create dashboards for:
 ---
 
 ## TROUBLESHOOTING
+
+### PM2 Backend Errored / "No module named uvicorn"
+
+Symptoms on the VPS:
+
+- `pm2 status` shows `tinsur-ai-backend` as `stopped` or `errored`
+- Logs show `ModuleNotFoundError: No module named uvicorn` or
+  `uvicorn: command not found`
+- `backend/venv/` is missing
+
+Root cause: the PM2 process was pointed at a uvicorn binary that was never
+installed, because the backend virtualenv was never created (or was deleted).
+
+Fix — one command from the repository root:
+
+```bash
+bash deploy/setup_vps.sh
+```
+
+The script creates `backend/venv` if missing, installs
+`backend/requirements.txt`, verifies `fastapi`/`uvicorn`/`sqlalchemy` import,
+recreates the `tinsur-ai-backend` PM2 process from `ecosystem.config.js`, and
+runs `pm2 save`. If venv creation itself fails on Debian/Ubuntu, install the
+venv module first: `sudo apt-get install -y python3-venv`.
+
+Verify afterwards:
+
+```bash
+pm2 status                                   # tinsur-ai-backend online
+pm2 logs tinsur-ai-backend --lines 50        # no import errors
+curl -s http://127.0.0.1:8000/health
+```
 
 ### Application Won't Start
 
