@@ -8,7 +8,7 @@ on:
 
 env:
   PYTHON_VERSION: "3.11"
-  NODE_VERSION: "20"
+  NODE_VERSION: "22"
 
 jobs:
   # ── Backend: Lint + Test ───────────────────────────────────────────────────
@@ -113,13 +113,32 @@ jobs:
     needs: [backend-test, frontend-build]
     if: github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/main'
 
+    # Surface the secret into an env var so step-level `if:` can gate on it.
+    # (Job-level `if:` cannot reference the secrets context.) When Docker Hub
+    # credentials are not configured, the publish steps are skipped and the job
+    # succeeds instead of failing with "Username and password required".
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check Docker Hub credentials
+        id: docker_creds
+        run: |
+          if [ -n "$DOCKER_USERNAME" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::DOCKER_USERNAME/DOCKER_PASSWORD secrets are not set — skipping Docker image build & push."
+          fi
+
       - name: Set up Docker Buildx
+        if: steps.docker_creds.outputs.configured == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
+        if: steps.docker_creds.outputs.configured == 'true'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -127,6 +146,7 @@ jobs:
 
       - name: Extract metadata
         id: meta
+        if: steps.docker_creds.outputs.configured == 'true'
         uses: docker/metadata-action@v5
         with:
           images: ${{ secrets.DOCKER_USERNAME }}/tinsur-backend
@@ -135,6 +155,7 @@ jobs:
             type=sha,prefix=sha-
 
       - name: Build and push backend image
+        if: steps.docker_creds.outputs.configured == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./backend
@@ -147,6 +168,7 @@ jobs:
 
       - name: Extract frontend metadata
         id: meta-frontend
+        if: steps.docker_creds.outputs.configured == 'true'
         uses: docker/metadata-action@v5
         with:
           images: ${{ secrets.DOCKER_USERNAME }}/tinsur-frontend
@@ -155,6 +177,7 @@ jobs:
             type=sha,prefix=sha-
 
       - name: Build and push frontend image
+        if: steps.docker_creds.outputs.configured == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
