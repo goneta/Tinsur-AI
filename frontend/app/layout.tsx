@@ -28,7 +28,11 @@ export default function RootLayout({
         */}
       </head>
       <body className="antialiased">
-        <ClientProviders googleClientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "mock-client-id"}>
+        <ClientProviders
+          googleClientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "mock-client-id"}
+          posthogKey={process.env.NEXT_PUBLIC_POSTHOG_KEY}
+          posthogHost={process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://eu.i.posthog.com"}
+        >
           {children}
         </ClientProviders>
         

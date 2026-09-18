@@ -12,6 +12,7 @@ Nearest DOX: `frontend/app/AGENTS.md`
 
 - Uses the system font stack through global CSS and intentionally avoids `next/font/google` so local builds do not require outbound Google Fonts access.
 - Wraps pages in `ClientProviders`.
+- Reads `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_POSTHOG_HOST` server-side (host defaults to the EU cloud) and passes them to `ClientProviders`, the same pattern as `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
 
 ## Verification
 

@@ -39,6 +39,7 @@
     "lucide-react": "^0.561.0",
     "next": "^15.5.9",
     "next-i18next": "^16.0.7",
+    "posthog-js": "^1.434.0",
     "qrcode.react": "^4.2.0",
     "react": "18.3.1",
     "react-day-picker": "9.13.0",
