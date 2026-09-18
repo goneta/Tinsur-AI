@@ -11,6 +11,8 @@ Nearest DOX: `frontend/components/AGENTS.md`
 
 ## Notes
 
+- Wraps the app in `PostHogProvider` (see `posthog-provider.tsx`), then `Providers`.
+- `PostHogProvider` is the outermost wrapper, so PostHog starts before the `Providers` mount gate and captures the first pageview.
 - Add concise operational details here when editing the source file.
 - Prefer stable contracts, exported APIs, route behavior, data shape, permissions, side effects, and important dependencies over change history.
 
